@@ -2,7 +2,7 @@ const Destination = require('../models/destination');
 
 exports.getAll = async (req, res) => {
   try {
-    const destinations = await Destination.find({});
+    const destinations = await Destination.find();
     res.json(destinations);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -12,7 +12,9 @@ exports.getAll = async (req, res) => {
 exports.getById = async (req, res) => {
   try {
     const dest = await Destination.findById(req.params.id);
-    if (!dest) return res.status(404).json({ message: 'Destination not found' });
+    if (!dest) {
+      return res.status(404).json({ message: 'Destination not found' });
+    }
     res.json(dest);
   } catch (err) {
     res.status(500).json({ message: err.message });

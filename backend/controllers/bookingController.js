@@ -3,9 +3,9 @@ const Booking = require('../models/booking');
 // Get all bookings
 exports.getAll = async (req, res) => {
   try {
-    const bookings = await Booking.find({})
-      .populate('user', 'name email')            // include user details
-      .populate('destination', 'name location'); // include destination details
+    const bookings = await Booking.find()
+      .populate('user', 'username email')            // include user details
+      .populate('destination', 'name location');     // include destination details
     res.json(bookings);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -16,9 +16,12 @@ exports.getAll = async (req, res) => {
 exports.getById = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id)
-      .populate('user', 'name email')
+      .populate('user', 'username email')
       .populate('destination', 'name location');
-    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
     res.json(booking);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -43,7 +46,10 @@ exports.updateStatus = async (req, res) => {
       { status: req.body.status },
       { new: true }
     );
-    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
     res.json(booking);
   } catch (err) {
     res.status(500).json({ message: err.message });
