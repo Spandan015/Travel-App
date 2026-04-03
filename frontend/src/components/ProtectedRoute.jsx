@@ -14,7 +14,8 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   }
 
   if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/unauthorized" replace />;
+    // Redirect to login with error message for insufficient permissions
+    return <Navigate to="/login" state={{ error: `Access denied. Required role: ${allowedRoles.join(', ')}` }} replace />;
   }
 
   return children;

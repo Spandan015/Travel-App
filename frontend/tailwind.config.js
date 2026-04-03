@@ -20,6 +20,10 @@ export default {
           900: '#1e3a8a',
         },
       },
+      fontFamily: {
+        sans: ['Roboto', 'sans-serif'],
+      },
+
     },
   },
   plugins: [],

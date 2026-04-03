@@ -1,69 +1,111 @@
-import { createContext, useState, useContext, useEffect } from 'react';
-import authService from '../services/authService';
+import { createContext, useContext, useState, useEffect } from 'react';
+import axios from 'axios';
 
-const AuthContext = createContext();
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-  return context;
-};
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser]     = useState(null);
+  const [token, setToken]   = useState(() => localStorage.getItem('nt_token'));
   const [loading, setLoading] = useState(true);
 
+  // Restore session on mount
   useEffect(() => {
-    // Check if user is logged in on mount
-    const currentUser = authService.getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser);
+    const stored = localStorage.getItem('nt_user');
+    if (token && stored) {
+      try { setUser(JSON.parse(stored)); } catch { clearSession(); }
     }
     setLoading(false);
   }, []);
 
-  const login = async (credentials) => {
-    const data = await authService.login(credentials);
-    setUser(data.user);
-    return data;
+  const saveSession = (token, user) => {
+    localStorage.setItem('nt_token', token);
+    localStorage.setItem('nt_user', JSON.stringify(user));
+    setToken(token);
+    setUser(user);
   };
 
-  const register = async (userData) => {
-    const data = await authService.register(userData);
-    setUser(data.user);
-    return data;
-  };
-
-  const registerAdmin = async (userData) => {
-    const data = await authService.registerAdmin(userData);
-    setUser(data.user);
-    return data;
-  };
-
-  const logout = () => {
-    authService.logout();
+  const clearSession = () => {
+    localStorage.removeItem('nt_token');
+    localStorage.removeItem('nt_user');
+    setToken(null);
     setUser(null);
   };
 
-  const updateUser = (updatedUser) => {
-    setUser(updatedUser);
+  // ── Unified Login (all roles: user / guide / admin) ──────────────────────
+  const login = async ({ email, password }) => {
+    const { data } = await axios.post(`${API}/auth/login`, { email, password });
+    saveSession(data.token, data.user);
+    return data;
   };
 
-  const value = {
-    user,
-    loading,
-    login,
-    register,
-    registerAdmin,
-    logout,
-    updateUser,
-    isAuthenticated: !!user,
-    isAdmin: user?.role === 'admin',
-    isGuide: user?.role === 'guide',
-    isUser: user?.role === 'user'
+  // ── User Registration (OTP flow) ─────────────────────────────────────────
+  const sendRegistrationOTP = async (payload) => {
+    const { data } = await axios.post(`${API}/auth/register/send-otp`, payload);
+    return data;
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  const verifyRegistrationOTP = async (payload) => {
+    const { data } = await axios.post(`${API}/auth/register/verify-otp`, payload);
+    saveSession(data.token, data.user);
+    return data;
+  };
+
+  // ── Admin Registration (secret key + OTP flow) ───────────────────────────
+  const sendAdminRegistrationOTP = async (payload) => {
+    const { data } = await axios.post(`${API}/auth/register-admin/send-otp`, payload);
+    return data;
+  };
+
+  const verifyAdminRegistrationOTP = async (payload) => {
+    const { data } = await axios.post(`${API}/auth/register-admin/verify-otp`, payload);
+    saveSession(data.token, data.user);
+    return data;
+  };
+
+  // ── Guide Registration (OTP + profile fields) ────────────────────────────
+  const sendGuideRegistrationOTP = async (payload) => {
+    const { data } = await axios.post(`${API}/auth/register-guide/send-otp`, payload);
+    return data;
+  };
+
+  const verifyGuideRegistrationOTP = async (payload) => {
+    const { data } = await axios.post(`${API}/auth/register-guide/verify-otp`, payload);
+    return data; // guide accounts are pending — no token yet
+  };
+
+  // ── Logout ────────────────────────────────────────────────────────────────
+  const logout = () => clearSession();
+
+  // ── Axios auth header ─────────────────────────────────────────────────────
+  axios.defaults.headers.common['Authorization'] = token ? `Bearer ${token}` : '';
+
+  const isAuthenticated = !!token && !!user;
+  const isAdmin  = user?.role === 'admin';
+  const isGuide  = user?.role === 'guide';
+  const isUser   = user?.role === 'user';
+
+  return (
+    <AuthContext.Provider value={{
+      user, token, loading,
+      isAuthenticated, isAdmin, isGuide, isUser,
+      login,
+      sendRegistrationOTP, verifyRegistrationOTP,
+      sendAdminRegistrationOTP, verifyAdminRegistrationOTP,
+      sendGuideRegistrationOTP, verifyGuideRegistrationOTP,
+      logout,
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
+
+export const useAuth = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
+  return ctx;
+};
+
+export default AuthContext;
+export { AuthContext };

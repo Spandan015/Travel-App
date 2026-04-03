@@ -22,14 +22,16 @@ exports.protect = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // Get user from database (without password)
-    const user = await User.findById(decoded.id).select('-password');
+    const userId = decoded.id || decoded.userId;
+    const user = await User.findById(userId).select('-password');
     
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
     
-    if (!user.isActive) {
-      return res.status(401).json({ message: "User account is inactive" });
+    const status = user.status || (user.isActive ? 'active' : 'suspended');
+    if (status !== 'active') {
+      return res.status(401).json({ message: status === 'pending' ? 'Account pending approval' : 'Account suspended' });
     }
     
     req.user = user; // Attach full user object to request
@@ -45,10 +47,17 @@ exports.adminOnly = (req, res, next) => {
     return res.status(401).json({ message: "Not authorized" });
   }
   
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ message: "Access denied. Admin only." });
-  }
+  if (req.user.role !== 'admin') return res.status(403).json({ message: "Access denied. Admin only." });
   
+  next();
+};
+
+// Admin or hotel owner middleware (for shared dashboard routes)
+exports.adminOrHotelOwner = (req, res, next) => {
+  if (!req.user) return res.status(401).json({ message: "Not authorized" });
+  if (req.user.role !== 'admin' && req.user.role !== 'hotel_owner') {
+    return res.status(403).json({ message: "Access denied. Admin or Hotel Owner only." });
+  }
   next();
 };
 

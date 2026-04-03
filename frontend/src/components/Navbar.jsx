@@ -1,96 +1,270 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useContext, useState, useEffect, useRef } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 
-const Navbar = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+const AUTH_ROUTES = ['/login', '/register', '/register-admin', '/apply-guide', '/admin-login', '/admin/login'];
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+function Navbar() {
+  const { user, isAuthenticated, isAdmin, isGuide, logout } = useContext(AuthContext);
+  const navigate     = useNavigate();
+  const location     = useLocation();
+  const [menuOpen,    setMenuOpen]    = useState(false);
+  const [scrolled,    setScrolled]    = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [toolsOpen,   setToolsOpen]   = useState(false);
+  const profileRef = useRef(null);
+  const toolsRef   = useRef(null);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    setMenuOpen(false);
+    setProfileOpen(false);
+    setToolsOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) setProfileOpen(false);
+      if (toolsRef.current   && !toolsRef.current.contains(e.target))   setToolsOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  if (AUTH_ROUTES.includes(location.pathname)) return null;
+
+  const handleLogout = () => { logout(); navigate('/'); };
+
+  const isHome      = location.pathname === '/';
+  const transparent = isHome && !scrolled && !menuOpen;
+
+  const navLinks = [
+    { label: 'Hotels',       to: '/browse-hotels' },
+    { label: 'Packages',     to: '/browse-packages' },
+    { label: 'Guides',       to: '/browse-guides' },
+    { label: 'Destinations', to: '/browse-destinations' },  // ← added
+  ];
+
+  const toolLinks = [
+    { label: 'Budget Planner',     to: '/budget-planner',     icon: '💰' },
+    { label: 'Itinerary Planner',  to: '/itinerary-planner',  icon: '🗺️' },
+    { label: 'Currency Exchanger', to: '/currency-exchanger', icon: '💱' },
+  ];
+
+  const getDashboardLink = () => {
+    if (isAdmin) return '/admin/dashboard';
+    if (isGuide) return '/guide/dashboard';
+    return '/dashboard';
   };
 
   return (
-    <nav className="bg-white shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <Link to="/" className="text-2xl font-bold text-blue-600">
-              ✈️ TravelApp
-            </Link>
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+        .navbar {
+          position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+          transition: background 0.3s, box-shadow 0.3s;
+          font-family: 'DM Sans', sans-serif;
+        }
+        .navbar.transparent { background: transparent; box-shadow: none; }
+        .navbar.solid { background: rgba(255,255,255,0.97); box-shadow: 0 1px 0 #e2e8f0; backdrop-filter: blur(12px); }
+        .nav-inner {
+  max-width: 1280px; margin: 0 auto; padding: 0 24px 0 16px;
+  height: 68px; display: flex; align-items: center; justify-content: space-between;
+}
+        .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
+        .nav-logo-icon {
+          width: 36px; height: 36px; border-radius: 10px;
+          background: linear-gradient(135deg, #0369a1, #0284c7);
+          display: flex; align-items: center; justify-content: center; font-size: 18px;
+        }
+        .nav-logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+        .nav-logo-name { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; color: #0f172a; transition: color 0.3s; }
+        .navbar.transparent .nav-logo-name { color: #fff; }
+        .nav-logo-sub { font-size: 10px; font-weight: 500; letter-spacing: 0.8px; text-transform: uppercase; color: #64748b; transition: color 0.3s; }
+        .navbar.transparent .nav-logo-sub { color: rgba(255,255,255,0.65); }
+        .nav-links { display: flex; align-items: center; gap: 2px; }
+        @media(max-width:900px){ .nav-links { display: none; } }
+        .nav-link { padding: 8px 14px; border-radius: 8px; font-size: 14px; font-weight: 500; text-decoration: none; transition: background 0.2s, color 0.2s; color: #374151; }
+        .navbar.transparent .nav-link { color: rgba(255,255,255,0.9); }
+        .nav-link:hover { background: rgba(0,0,0,0.06); }
+        .navbar.transparent .nav-link:hover { background: rgba(255,255,255,0.12); }
+        .nav-link.active { color: #0369a1; font-weight: 600; }
+        .navbar.transparent .nav-link.active { color: #fff; background: rgba(255,255,255,0.15); }
+        .nav-tools-wrap { position: relative; }
+        .nav-tools-btn {
+          display: flex; align-items: center; gap: 5px; padding: 8px 14px; border-radius: 8px;
+          font-size: 14px; font-weight: 500; border: none; background: none; cursor: pointer;
+          color: #374151; font-family: 'DM Sans', sans-serif; transition: background 0.2s;
+        }
+        .navbar.transparent .nav-tools-btn { color: rgba(255,255,255,0.9); }
+        .nav-tools-btn:hover { background: rgba(0,0,0,0.06); }
+        .navbar.transparent .nav-tools-btn:hover { background: rgba(255,255,255,0.12); }
+        .nav-chevron { font-style: normal; font-size: 10px; transition: transform 0.2s; display: inline-block; }
+        .nav-chevron.open { transform: rotate(180deg); }
+        .nav-dropdown {
+          position: absolute; top: calc(100% + 8px); left: 0;
+          background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.12); padding: 8px; min-width: 200px;
+        }
+        .nav-dropdown-item {
+          display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px;
+          text-decoration: none; font-size: 14px; font-weight: 500; color: #374151; transition: background 0.15s;
+        }
+        .nav-dropdown-item:hover { background: #f1f5f9; }
+        .nav-right { display: flex; align-items: center; gap: 10px; }
+        @media(max-width:900px){ .nav-sign-in, .nav-get-started { display: none !important; } }
+        .nav-sign-in { padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; color: #374151; }
+        .navbar.transparent .nav-sign-in { color: #fff; }
+        .nav-get-started { padding: 9px 18px; border-radius: 8px; font-size: 14px; font-weight: 700; text-decoration: none; background: #0369a1; color: #fff; transition: background 0.2s; }
+        .navbar.transparent .nav-get-started { background: rgba(255,255,255,0.18); border: 1.5px solid rgba(255,255,255,0.4); }
+        .nav-get-started:hover { background: #0284c7; }
+        .nav-profile-wrap { position: relative; }
+        .nav-profile-btn {
+          display: flex; align-items: center; gap: 8px; padding: 5px 5px 5px 10px;
+          border-radius: 24px; border: 1.5px solid #e2e8f0; background: #fff;
+          cursor: pointer; font-family: 'DM Sans', sans-serif; transition: border-color 0.2s;
+        }
+        .nav-profile-btn:hover { border-color: #94a3b8; }
+        .nav-profile-name { font-size: 13px; font-weight: 600; color: #374151; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .nav-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #0369a1, #0ea5e9); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; }
+        .nav-profile-dropdown { position: absolute; top: calc(100% + 8px); right: 0; background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); padding: 8px; min-width: 220px; }
+        .nav-profile-header { padding: 10px 12px 12px; border-bottom: 1px solid #f1f5f9; margin-bottom: 6px; }
+        .nav-profile-full-name { font-size: 14px; font-weight: 700; color: #0f172a; }
+        .nav-profile-email { font-size: 12px; color: #64748b; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .nav-profile-role { display: inline-block; margin-top: 6px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; background: #e0f2fe; color: #0369a1; }
+        .nav-profile-role.admin { background: #ede9fe; color: #6d28d9; }
+        .nav-profile-role.guide { background: #d1fae5; color: #065f46; }
+        .nav-profile-link { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500; color: #374151; transition: background 0.15s; }
+        .nav-profile-link:hover { background: #f1f5f9; }
+        .nav-profile-divider { height: 1px; background: #f1f5f9; margin: 6px 0; }
+        .nav-logout-btn { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; font-size: 14px; font-weight: 500; color: #ef4444; background: none; border: none; cursor: pointer; width: 100%; text-align: left; font-family: 'DM Sans', sans-serif; transition: background 0.15s; }
+        .nav-logout-btn:hover { background: #fef2f2; }
+        .nav-hamburger { display: none; flex-direction: column; justify-content: center; gap: 5px; width: 36px; height: 36px; background: none; border: none; cursor: pointer; padding: 6px; border-radius: 8px; }
+        @media(max-width:900px){ .nav-hamburger { display: flex; } }
+        .hamburger-line { width: 20px; height: 2px; border-radius: 1px; background: #374151; transition: transform 0.25s, opacity 0.2s; }
+        .navbar.transparent .hamburger-line { background: #fff; }
+        .hamburger-line.l1 { transform: none; }
+        .hamburger-line.l1.open { transform: translateY(7px) rotate(45deg); }
+        .hamburger-line.l2.open { opacity: 0; }
+        .hamburger-line.l3 { transform: none; }
+        .hamburger-line.l3.open { transform: translateY(-7px) rotate(-45deg); }
+        .nav-mobile { display: none; position: fixed; top: 68px; left: 0; right: 0; bottom: 0; background: #fff; z-index: 999; overflow-y: auto; padding: 16px; flex-direction: column; gap: 4px; }
+        .nav-mobile.open { display: flex; }
+        .mobile-link { display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-radius: 10px; text-decoration: none; font-size: 15px; font-weight: 500; color: #374151; transition: background 0.15s; }
+        .mobile-link:hover, .mobile-link.active { background: #f1f5f9; color: #0369a1; }
+        .mobile-divider { height: 1px; background: #f1f5f9; margin: 8px 0; }
+        .mobile-section-label { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.8px; padding: 4px 16px 2px; }
+        .mobile-auth-btns { display: flex; flex-direction: column; gap: 10px; padding: 12px 0; }
+        .mobile-btn-signin { display: block; text-align: center; padding: 13px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 15px; font-weight: 600; color: #374151; text-decoration: none; }
+        .mobile-btn-start { display: block; text-align: center; padding: 13px; background: #0369a1; border-radius: 10px; font-size: 15px; font-weight: 700; color: #fff; text-decoration: none; }
+      `}</style>
+
+      <nav className={`navbar ${transparent ? 'transparent' : 'solid'}`}>
+        <div className="nav-inner">
+          <Link to="/" className="nav-logo">
+            <div className="nav-logo-icon">🏔</div>
+            <div className="nav-logo-text">
+              <span className="nav-logo-name">My Travel Buddy</span>
+              <span className="nav-logo-sub">Explore Nepal</span>
+            </div>
+          </Link>
+
+          <div className="nav-links">
+            {navLinks.map(link => (
+              <Link key={link.to} to={link.to} className={`nav-link${location.pathname === link.to ? ' active' : ''}`}>
+                {link.label}
+              </Link>
+            ))}
+            <div className="nav-tools-wrap" ref={toolsRef}>
+              <button className="nav-tools-btn" onClick={() => setToolsOpen(v => !v)}>
+                Tools <i className={`nav-chevron${toolsOpen ? ' open' : ''}`}>▾</i>
+              </button>
+              {toolsOpen && (
+                <div className="nav-dropdown">
+                  {toolLinks.map(t => (
+                    <Link key={t.to} to={t.to} className="nav-dropdown-item" onClick={() => setToolsOpen(false)}>
+                      <span>{t.icon}</span>{t.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+            <Link to="/about" className={`nav-link${location.pathname === '/about' ? ' active' : ''}`}>About</Link>
           </div>
 
-          <div className="flex items-center space-x-4">
-            {!user ? (
-              <>
-                <Link to="/login" className="text-gray-700 hover:text-blue-600">
-                  Login
-                </Link>
-                <Link to="/register" className="btn-primary">
-                  Register
-                </Link>
-              </>
+          <div className="nav-right">
+            {isAuthenticated && user ? (
+              <div className="nav-profile-wrap" ref={profileRef}>
+                <button className="nav-profile-btn" onClick={() => setProfileOpen(v => !v)}>
+                  <span className="nav-profile-name">{user.firstName || user.username || 'Account'}</span>
+                  <div className="nav-avatar">{(user.firstName?.[0] || user.username?.[0] || 'U').toUpperCase()}</div>
+                </button>
+                {profileOpen && (
+                  <div className="nav-profile-dropdown">
+                    <div className="nav-profile-header">
+                      <div className="nav-profile-full-name">
+                        {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.username}
+                      </div>
+                      <div className="nav-profile-email">{user.email}</div>
+                      <span className={`nav-profile-role ${user.role}`}>
+                        {user.role === 'hotel_owner' ? 'Hotel Owner' : user.role}
+                      </span>
+                    </div>
+                    <Link to={getDashboardLink()} className="nav-profile-link" onClick={() => setProfileOpen(false)}>📊 My Dashboard</Link>
+                    <Link to="/bookings" className="nav-profile-link" onClick={() => setProfileOpen(false)}>🎒 My Bookings</Link>
+                    <div className="nav-profile-divider" />
+                    <button className="nav-logout-btn" onClick={handleLogout}>🚪 Sign out</button>
+                  </div>
+                )}
+              </div>
             ) : (
               <>
-                {user.role === 'user' && (
-                  <>
-                    <Link to="/dashboard" className="text-gray-700 hover:text-blue-600">
-                      Dashboard
-                    </Link>
-                    <Link to="/guides" className="text-gray-700 hover:text-blue-600">
-                      Browse Guides
-                    </Link>
-                    <Link to="/bookings" className="text-gray-700 hover:text-blue-600">
-                      My Bookings
-                    </Link>
-                  </>
-                )}
-
-                {user.role === 'guide' && (
-                  <>
-                    <Link to="/guide/dashboard" className="text-gray-700 hover:text-blue-600">
-                      Dashboard
-                    </Link>
-                    <Link to="/guide/requests" className="text-gray-700 hover:text-blue-600">
-                      Booking Requests
-                    </Link>
-                    <Link to="/guide/profile" className="text-gray-700 hover:text-blue-600">
-                      Profile
-                    </Link>
-                  </>
-                )}
-
-                {user.role === 'admin' && (
-                  <>
-                    <Link to="/admin/dashboard" className="text-gray-700 hover:text-blue-600">
-                      Dashboard
-                    </Link>
-                    <Link to="/admin/applications" className="text-gray-700 hover:text-blue-600">
-                      Applications
-                    </Link>
-                    <Link to="/admin/hotels" className="text-gray-700 hover:text-blue-600">
-                      Hotels
-                    </Link>
-                    <Link to="/admin/packages" className="text-gray-700 hover:text-blue-600">
-                      Packages
-                    </Link>
-                  </>
-                )}
-
-                <div className="flex items-center space-x-3">
-                  <span className="text-gray-700">👤 {user.username}</span>
-                  <span className="badge badge-info">{user.role}</span>
-                  <button onClick={handleLogout} className="btn-secondary">
-                    Logout
-                  </button>
-                </div>
+                <Link to="/login" className="nav-sign-in">Sign In</Link>
+                <Link to="/register" className="nav-get-started">Get Started</Link>
               </>
             )}
+            <button className="nav-hamburger" onClick={() => setMenuOpen(v => !v)} aria-label="Menu">
+              <span className={`hamburger-line l1${menuOpen ? ' open' : ''}`} />
+              <span className={`hamburger-line l2${menuOpen ? ' open' : ''}`} />
+              <span className={`hamburger-line l3${menuOpen ? ' open' : ''}`} />
+            </button>
           </div>
         </div>
+      </nav>
+
+      <div className={`nav-mobile${menuOpen ? ' open' : ''}`}>
+        {navLinks.map(link => (
+          <Link key={link.to} to={link.to} className={`mobile-link${location.pathname === link.to ? ' active' : ''}`}>{link.label}</Link>
+        ))}
+        <div className="mobile-divider" />
+        <div className="mobile-section-label">Planning Tools</div>
+        {toolLinks.map(t => (
+          <Link key={t.to} to={t.to} className="mobile-link">{t.icon} {t.label}</Link>
+        ))}
+        <Link to="/about" className={`mobile-link${location.pathname === '/about' ? ' active' : ''}`}>About</Link>
+        <div className="mobile-divider" />
+        {isAuthenticated && user ? (
+          <>
+            <Link to={getDashboardLink()} className="mobile-link">📊 My Dashboard</Link>
+            <Link to="/bookings" className="mobile-link">🎒 My Bookings</Link>
+            <div className="mobile-divider" />
+            <button className="nav-logout-btn" onClick={handleLogout}>🚪 Sign out</button>
+          </>
+        ) : (
+          <div className="mobile-auth-btns">
+            <Link to="/login" className="mobile-btn-signin">Sign In</Link>
+            <Link to="/register" className="mobile-btn-start">Get Started Free</Link>
+          </div>
+        )}
       </div>
-    </nav>
+    </>
   );
-};
+}
 
 export default Navbar;
