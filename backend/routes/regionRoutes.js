@@ -9,18 +9,21 @@ const {
   update,
   delete: deleteRegion,
   toggleStatus,
+  uploadImage,
+  uploadMiddleware,
 } = require('../controllers/regionController');
 
 // ─── Public routes ────────────────────────────────────────────────────────────
 router.get('/', getAll);
 
-// ✅ IMPORTANT: /admin/all MUST come BEFORE /:slug
-// If /:slug is first, Express matches "admin" as a slug and returns 404
-router.get('/admin/all', protect, adminOnly, getAllAdmin);
+// IMPORTANT: /admin/all and /upload-image must come BEFORE /:slug
+// so Express does not treat "admin" or "upload-image" as a slug value
+router.get('/admin/all',     protect, adminOnly, getAllAdmin);
+router.post('/upload-image', protect, adminOnly, uploadMiddleware, uploadImage);
 
 router.get('/:slug', getBySlug);
 
-// ─── Admin routes ─────────────────────────────────────────────────────────────
+// ─── Admin CRUD routes ────────────────────────────────────────────────────────
 router.post('/',                 protect, adminOnly, create);
 router.put('/:id',               protect, adminOnly, update);
 router.delete('/:id',            protect, adminOnly, deleteRegion);

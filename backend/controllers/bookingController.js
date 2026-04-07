@@ -4,8 +4,9 @@ const Booking = require('../models/booking');
 exports.getAll = async (req, res) => {
   try {
     const bookings = await Booking.find()
-      .populate('user', 'username email')            // include user details
-      .populate('destination', 'name location');     // include destination details
+      .populate('user', 'username email')
+      .populate('package', 'name price duration images mainImage')
+      .populate('destination', 'name location');
     res.json(bookings);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -16,6 +17,7 @@ exports.getAll = async (req, res) => {
 exports.getUserBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({ user: req.user._id })
+      .populate('package', 'name price duration images mainImage')
       .populate('destination', 'name location')
       .sort({ createdAt: -1 });
     res.json({ bookings });
@@ -29,14 +31,14 @@ exports.getById = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id)
       .populate('user', 'username email')
+      .populate('package', 'name price duration images mainImage')
       .populate('destination', 'name location');
-    
+
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found' });
     }
 
-    // Check if user owns this booking or is admin
-    if (booking.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    if (booking.user._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized to view this booking' });
     }
 
@@ -55,6 +57,7 @@ exports.create = async (req, res) => {
     };
     const booking = await Booking.create(bookingData);
     const populatedBooking = await Booking.findById(booking._id)
+      .populate('package', 'name price duration images mainImage')
       .populate('destination', 'name location');
     res.status(201).json(populatedBooking);
   } catch (err) {
@@ -71,7 +74,6 @@ exports.updateStatus = async (req, res) => {
       return res.status(404).json({ message: 'Booking not found' });
     }
 
-    // Check if user owns this booking
     if (booking.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized to update this booking' });
     }
@@ -80,7 +82,9 @@ exports.updateStatus = async (req, res) => {
       req.params.id,
       { status: req.body.status },
       { new: true }
-    ).populate('destination', 'name location');
+    )
+      .populate('package', 'name price duration images mainImage')
+      .populate('destination', 'name location');
 
     res.json(updatedBooking);
   } catch (err) {
@@ -92,12 +96,11 @@ exports.updateStatus = async (req, res) => {
 exports.cancelBooking = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id);
-    
+
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found' });
     }
 
-    // Check if user owns this booking
     if (booking.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Not authorized to cancel this booking' });
     }
@@ -106,7 +109,9 @@ exports.cancelBooking = async (req, res) => {
       req.params.id,
       { status: 'cancelled' },
       { new: true }
-    ).populate('destination', 'name location');
+    )
+      .populate('package', 'name price duration images mainImage')
+      .populate('destination', 'name location');
 
     res.json(updatedBooking);
   } catch (err) {

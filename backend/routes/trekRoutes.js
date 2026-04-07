@@ -10,7 +10,7 @@ const {
 // ── Public ────────────────────────────────────────────────────────────────────
 router.get('/',                    getAll);
 router.get('/region/:regionId',    getByRegion);
-router.get('/admin/all',           protect, adminOnly, getAllAdmin);  // must be before /:slug
+router.get('/admin/all',           protect, adminOnly, getAllAdmin);
 router.get('/:slug',               getBySlug);
 
 // ── Admin ─────────────────────────────────────────────────────────────────────

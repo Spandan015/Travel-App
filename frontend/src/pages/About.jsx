@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;0,800;1,600;1,700&family=DM+Sans:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  .ab-root { font-family: 'DM Sans', sans-serif; background: #f8faf8; padding-top: 68px; }
+  .ab-root { font-family: 'Roboto', sans-serif; background: #f8faf8; padding-top: 68px; }
 
   /* ── HERO ── */
   .ab-hero {
@@ -46,7 +46,7 @@ const STYLES = `
   .ab-eyebrow span { width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block; }
 
   .ab-hero h1 {
-    font-family: 'Fraunces', serif;
+    font-family: 'Roboto', sans-serif;
     font-size: clamp(2.6rem, 6vw, 4.4rem); font-weight: 700;
     color: white; margin: 0 0 20px; line-height: 1.1; letter-spacing: -0.02em;
   }
@@ -59,13 +59,13 @@ const STYLES = `
   .ab-btn-primary {
     background: #16a34a; color: white; padding: 13px 30px; border-radius: 10px;
     font-weight: 700; font-size: 0.9rem; text-decoration: none;
-    font-family: 'DM Sans', sans-serif; transition: all 0.2s;
+    font-family: 'Roboto', sans-serif; transition: all 0.2s;
   }
   .ab-btn-primary:hover { background: #15803d; transform: translateY(-2px); }
   .ab-btn-secondary {
     background: rgba(255,255,255,0.1); color: white; padding: 13px 30px; border-radius: 10px;
     font-weight: 600; font-size: 0.9rem; text-decoration: none;
-    border: 1px solid rgba(255,255,255,0.25); font-family: 'DM Sans', sans-serif;
+    border: 1px solid rgba(255,255,255,0.25); font-family: 'Roboto', sans-serif;
     transition: all 0.2s; backdrop-filter: blur(8px);
   }
   .ab-btn-secondary:hover { background: rgba(255,255,255,0.18); transform: translateY(-2px); }
@@ -82,7 +82,7 @@ const STYLES = `
   }
   .ab-stat:last-child { border-right: none; }
   .ab-stat-num {
-    font-family: 'Fraunces', serif; font-size: 2.4rem; font-weight: 700;
+    font-family: 'Roboto', sans-serif; font-size: 2.4rem; font-weight: 700;
     color: white; display: block; line-height: 1;
   }
   .ab-stat-num span { color: #4ade80; }
@@ -97,7 +97,7 @@ const STYLES = `
     text-transform: uppercase; color: #16a34a; margin-bottom: 12px; display: block;
   }
   .ab-section-title {
-    font-family: 'Fraunces', serif;
+    font-family: 'Roboto', sans-serif;
     font-size: clamp(1.8rem,4vw,2.6rem); font-weight: 700;
     color: #0f172a; margin: 0; line-height: 1.2;
   }
@@ -111,7 +111,7 @@ const STYLES = `
   .ab-mission-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
   @media(max-width:840px) { .ab-mission-grid { grid-template-columns: 1fr; gap: 40px; } }
   .ab-mission-text h2 {
-    font-family: 'Fraunces', serif; font-size: clamp(1.8rem,4vw,2.4rem);
+    font-family: 'Roboto', sans-serif; font-size: clamp(1.8rem,4vw,2.4rem);
     font-weight: 700; color: #0f172a; margin: 0 0 20px; line-height: 1.2;
   }
   .ab-mission-text p { color: #64748b; line-height: 1.8; font-size: 0.95rem; font-weight: 300; margin-bottom: 16px; }
@@ -122,7 +122,7 @@ const STYLES = `
   .ab-mission-card-header { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
   .ab-mission-card-icon { font-size: 2.5rem; }
   .ab-mission-card-title {
-    font-family: 'Fraunces', serif; font-size: 1.2rem;
+    font-family: 'Roboto', sans-serif; font-size: 1.2rem;
     font-weight: 700; color: #0f172a; margin: 0;
   }
   .ab-mission-card-sub { font-size: 0.78rem; color: #64748b; margin: 3px 0 0; }
@@ -132,7 +132,7 @@ const STYLES = `
     text-align: center; border: 1px solid #bbf7d0;
   }
   .ab-impact-num {
-    font-family: 'Fraunces', serif; font-size: 1.8rem;
+    font-family: 'Roboto', sans-serif; font-size: 1.8rem;
     font-weight: 700; color: #16a34a; display: block;
   }
   .ab-impact-label { font-size: 0.75rem; color: #64748b; margin-top: 4px; }
@@ -152,7 +152,7 @@ const STYLES = `
   .ab-value-card:hover { transform: translateY(-6px); box-shadow: 0 16px 48px rgba(22,163,74,0.12); }
   .ab-value-icon { font-size: 2.4rem; margin-bottom: 18px; display: block; }
   .ab-value-title {
-    font-family: 'Fraunces', serif; font-size: 1.1rem;
+    font-family: 'Roboto', sans-serif; font-size: 1.1rem;
     font-weight: 700; color: #0f172a; margin: 0 0 12px;
   }
   .ab-value-desc { font-size: 0.875rem; color: #64748b; line-height: 1.7; font-weight: 300; margin: 0; }
@@ -176,7 +176,7 @@ const STYLES = `
     justify-content: center; font-size: 1.6rem; margin: 0 auto 16px;
   }
   .ab-why-title {
-    font-family: 'Fraunces', serif; font-size: 0.95rem;
+    font-family: 'Roboto', sans-serif; font-size: 0.95rem;
     font-weight: 700; color: white; margin: 0 0 8px;
   }
   .ab-why-desc { font-size: 0.78rem; color: rgba(255,255,255,0.5); line-height: 1.65; font-weight: 300; margin: 0; }
@@ -195,11 +195,11 @@ const STYLES = `
     border: 1px solid rgba(74,222,128,0.2);
   }
   .ab-story-img-badge strong {
-    display: block; font-family: 'Fraunces', serif;
+    display: block; font-family: 'Roboto', sans-serif;
     font-size: 1rem; font-weight: 700; margin-bottom: 2px; color: #4ade80;
   }
   .ab-story-text h2 {
-    font-family: 'Fraunces', serif; font-size: clamp(1.6rem,3.5vw,2.2rem);
+    font-family: 'Roboto', sans-serif; font-size: clamp(1.6rem,3.5vw,2.2rem);
     font-weight: 700; color: #0f172a; margin: 0 0 20px;
   }
   .ab-story-text p { color: #64748b; line-height: 1.8; font-size: 0.95rem; font-weight: 300; margin-bottom: 14px; }
@@ -225,7 +225,7 @@ const STYLES = `
   }
   .ab-cta-inner { position: relative; z-index: 1; max-width: 580px; margin: 0 auto; }
   .ab-cta h2 {
-    font-family: 'Fraunces', serif; font-size: clamp(2rem,5vw,3.2rem);
+    font-family: 'Roboto', sans-serif; font-size: clamp(2rem,5vw,3.2rem);
     color: white; margin: 0 0 16px; font-weight: 700; line-height: 1.2;
   }
   .ab-cta h2 em { font-style: italic; color: #4ade80; }
@@ -234,13 +234,13 @@ const STYLES = `
   .ab-cta-a {
     background: #16a34a; color: white; padding: 14px 32px; border-radius: 10px;
     font-weight: 700; font-size: 0.9rem; text-decoration: none;
-    font-family: 'DM Sans', sans-serif; transition: all 0.2s;
+    font-family: 'Roboto', sans-serif; transition: all 0.2s;
   }
   .ab-cta-a:hover { background: #15803d; transform: translateY(-2px); }
   .ab-cta-b {
     background: rgba(255,255,255,0.1); color: white; padding: 14px 32px; border-radius: 10px;
     font-weight: 600; font-size: 0.9rem; text-decoration: none;
-    border: 1px solid rgba(255,255,255,0.25); font-family: 'DM Sans', sans-serif;
+    border: 1px solid rgba(255,255,255,0.25); font-family: 'Roboto', sans-serif;
     transition: all 0.2s; backdrop-filter: blur(8px);
   }
   .ab-cta-b:hover { background: rgba(255,255,255,0.18); transform: translateY(-2px); }

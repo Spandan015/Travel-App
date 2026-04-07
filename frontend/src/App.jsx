@@ -8,7 +8,6 @@ import Home               from './pages/Home';
 import Login              from './pages/Login';
 import Register           from './pages/Register';
 import AdminLogin         from './pages/AdminLogin';
-import BookingDashboard   from './pages/BookingDashboard';
 import GuideDashboard     from './pages/GuideDashboard';
 import GuideProfile       from './pages/GuideProfile';
 import BrowseGuides       from './pages/BrowseGuides';
@@ -40,16 +39,22 @@ import GuideApplications  from './pages/admin/GuideApplications';
 import ManageUsers        from './pages/admin/ManageUsers';
 import ManageBookings     from './pages/admin/ManageBookings';
 
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentFailure from './pages/PaymentFailure';
+
 function AppContent() {
-  const location    = useLocation();
-  const isAdmin     = location.pathname.startsWith('/admin');
-  const isDashboard = ['/dashboard', '/guide/dashboard'].includes(location.pathname);
+  const location = useLocation();
+  const isAdmin  = location.pathname.startsWith('/admin');
+  const isGuide  = location.pathname.startsWith('/guide');
+  const hideFooter = isAdmin || isGuide;
+
   return (
-    <div style={{ display:'flex', flexDirection:'column', minHeight:'100vh' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       {!isAdmin && <Navbar />}
-      <main style={{ flex:1 }}>
+      <main style={{ flex: 1 }}>
         <Routes>
-          {/* Public */}
+
+          {/* ── Public ── */}
           <Route path="/"               element={<Home />} />
           <Route path="/login"          element={<Login />} />
           <Route path="/register"       element={<Register />} />
@@ -59,7 +64,11 @@ function AppContent() {
           <Route path="/contact"        element={<Contact />} />
           <Route path="/blog"           element={<Blog />} />
 
-          {/* Browse */}
+          {/* ── Payment ── eSewa appends ?data=<base64> to these URLs */}
+          <Route path="/payment/success" element={<PaymentSuccess />} />
+          <Route path="/payment/failure" element={<PaymentFailure />} />
+
+          {/* ── Browse ── */}
           <Route path="/browse-hotels"       element={<BrowseHotels />} />
           <Route path="/browse-packages"     element={<BrowsePackages />} />
           <Route path="/browse-guides"       element={<BrowseGuides />} />
@@ -67,41 +76,43 @@ function AppContent() {
           <Route path="/packages/:id"        element={<PackageDetails />} />
           <Route path="/guides/:id"          element={<GuideDetails />} />
 
-          {/* Destinations flow */}
+          {/* ── Destinations ── */}
           <Route path="/browse-destinations" element={<BrowseDestinations />} />
           <Route path="/destinations/:slug"  element={<RegionDetail />} />
-          <Route path="/treks/:slug"         element={<TrekDetail />} />   {/* ✅ NEW */}
+          <Route path="/treks/:slug"         element={<TrekDetail />} />
 
-          {/* Tools */}
+          {/* ── Tools ── */}
           <Route path="/currency-exchanger"  element={<CurrencyExchanger />} />
           <Route path="/itinerary-planner"   element={<ItineraryPlanner />} />
           <Route path="/budget-planner"      element={<BudgetPlanner />} />
 
-          {/* User */}
-          <Route path="/dashboard"   element={<ProtectedRoute allowedRoles={['user']}><BookingDashboard /></ProtectedRoute>} />
+          {/* ── User (logged in) ── */}
+          <Route path="/dashboard"   element={<ProtectedRoute allowedRoles={['user']}><Home /></ProtectedRoute>} />
           <Route path="/my-bookings" element={<ProtectedRoute allowedRoles={['user']}><UserBookings /></ProtectedRoute>} />
           <Route path="/apply-guide" element={<ProtectedRoute allowedRoles={['user']}><ApplyGuide /></ProtectedRoute>} />
 
-          {/* Guide */}
+          {/* ── Guide ── */}
           <Route path="/guide/dashboard" element={<ProtectedRoute allowedRoles={['guide']}><GuideDashboard /></ProtectedRoute>} />
           <Route path="/guide/requests"  element={<ProtectedRoute allowedRoles={['guide']}><ComingSoon title="Booking Requests" /></ProtectedRoute>} />
           <Route path="/guide/profile"   element={<ProtectedRoute allowedRoles={['guide']}><GuideProfile /></ProtectedRoute>} />
 
-          {/* Admin */}
+          {/* ── Admin ── */}
           <Route path="/admin/dashboard"    element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
           <Route path="/admin/hotels"       element={<ProtectedRoute allowedRoles={['admin']}><ManageHotels /></ProtectedRoute>} />
           <Route path="/admin/packages"     element={<ProtectedRoute allowedRoles={['admin']}><ManagePackages /></ProtectedRoute>} />
           <Route path="/admin/destinations" element={<ProtectedRoute allowedRoles={['admin']}><ManageDestinations /></ProtectedRoute>} />
           <Route path="/admin/regions"      element={<ProtectedRoute allowedRoles={['admin']}><ManageRegions /></ProtectedRoute>} />
-          <Route path="/admin/treks"        element={<ProtectedRoute allowedRoles={['admin']}><ManageTreks /></ProtectedRoute>} />  {/* ✅ NEW */}
+          <Route path="/admin/treks"        element={<ProtectedRoute allowedRoles={['admin']}><ManageTreks /></ProtectedRoute>} />
           <Route path="/admin/applications" element={<ProtectedRoute allowedRoles={['admin']}><GuideApplications /></ProtectedRoute>} />
           <Route path="/admin/users"        element={<ProtectedRoute allowedRoles={['admin']}><ManageUsers /></ProtectedRoute>} />
           <Route path="/admin/bookings"     element={<ProtectedRoute allowedRoles={['admin']}><ManageBookings /></ProtectedRoute>} />
 
+          {/* ── Fallback ── */}
           <Route path="*" element={<ComingSoon title="Page Not Found" />} />
+
         </Routes>
       </main>
-      {!isAdmin && !isDashboard && <Footer />}
+      {!hideFooter && <Footer />}
     </div>
   );
 }

@@ -6,11 +6,11 @@ const Footer = () => {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
 
         .ft-root {
           background: #0D1B2E;
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           position: relative;
           overflow: hidden;
         }

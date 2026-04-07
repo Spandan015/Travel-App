@@ -143,9 +143,9 @@ export default function BookingDashboard() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@300;400;500;600&display=swap');
+       @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'DM Sans', sans-serif; background: #f8fafc; }
+        body { font-family: 'Roboto', sans-serif; background: #f8fafc; }
         nav.site-navbar, footer.site-footer, .site-navbar, .site-footer, .navbar, footer { display: none !important; }
         @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
         @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
@@ -165,8 +165,8 @@ export default function BookingDashboard() {
 
         .db-sidebar-logo { padding: 1.25rem 1.25rem 1rem; display: flex; align-items: center; gap: 10px; text-decoration: none; border-bottom: 1px solid #f1f5f9; }
         .db-logo-mark { width: 34px; height: 34px; background: #0f172a; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
-        .db-logo-text { font-family: 'Fraunces', serif; font-size: 1rem; font-weight: 700; color: #0f172a; }
-        .db-logo-sub { font-size: 10px; color: #94a3b8; display: block; font-family: 'DM Sans', sans-serif; font-weight: 400; }
+        .db-logo-text { font-family: 'Roboto', serif; font-size: 1rem; font-weight: 700; color: #0f172a; }
+        .db-logo-sub { font-size: 10px; color: #94a3b8; display: block; font-family: 'Roboto', sans-serif; font-weight: 400; }
 
         .db-nav { flex: 1; padding: 1rem 0.75rem; overflow-y: auto; }
         .db-nav-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; padding: 0 0.5rem; margin-bottom: 4px; margin-top: 12px; }
@@ -175,7 +175,7 @@ export default function BookingDashboard() {
           padding: 9px 10px; border-radius: 8px; cursor: pointer;
           color: #64748b; font-size: 13.5px; font-weight: 500;
           text-decoration: none; transition: all 0.15s;
-          border: none; background: none; width: 100%; font-family: 'DM Sans', sans-serif;
+          border: none; background: none; width: 100%; font-family: 'Roboto', sans-serif;
           margin-bottom: 1px;
         }
         .db-nav-item:hover { background: #f8fafc; color: #0f172a; }
@@ -185,7 +185,7 @@ export default function BookingDashboard() {
 
         .db-user-area { padding: 1rem; border-top: 1px solid #f1f5f9; }
         .db-user-card { display: flex; align-items: center; gap: 10px; }
-        .db-avatar { width: 34px; height: 34px; border-radius: 50%; background: #0f172a; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; font-family: 'Fraunces', serif; flex-shrink: 0; }
+        .db-avatar { width: 34px; height: 34px; border-radius: 50%; background: #0f172a; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; font-family: 'Roboto', serif; flex-shrink: 0; }
         .db-user-name { font-size: 13px; font-weight: 600; color: #0f172a; }
         .db-user-email { font-size: 11px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
         .db-logout-btn { margin-left: auto; background: none; border: none; cursor: pointer; color: #94a3b8; display: flex; padding: 4px; border-radius: 6px; }
@@ -211,7 +211,7 @@ export default function BookingDashboard() {
           border-radius: 10px; padding: 0 12px; height: 38px;
           color: #94a3b8;
         }
-        .db-search-input { border: none; outline: none; background: transparent; font-size: 13px; color: #374151; flex: 1; font-family: 'DM Sans', sans-serif; }
+        .db-search-input { border: none; outline: none; background: transparent; font-size: 13px; color: #374151; flex: 1; font-family: 'Roboto', sans-serif; }
         .db-search-input::placeholder { color: #94a3b8; }
         .db-search-kbd { background: #e2e8f0; border-radius: 4px; padding: 1px 5px; font-size: 10px; color: #64748b; font-family: monospace; }
         .db-topbar-actions { display: flex; align-items: center; gap: 10px; margin-left: auto; }
@@ -225,14 +225,14 @@ export default function BookingDashboard() {
 
         /* GREETING */
         .db-greeting { margin-bottom: 2rem; }
-        .db-greeting h1 { font-family: 'Fraunces', serif; font-size: 1.6rem; font-weight: 700; color: #0f172a; }
+        .db-greeting h1 { font-family: 'Roboto', serif; font-size: 1.6rem; font-weight: 700; color: #0f172a; }
         .db-greeting p { font-size: 13px; color: #64748b; margin-top: 3px; }
 
         /* STAT CARDS */
         .db-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
         .db-stat-card { background: #fff; border-radius: 14px; padding: 1.25rem; border: 1px solid #f1f5f9; }
         .db-stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 0.75rem; }
-        .db-stat-value { font-family: 'Fraunces', serif; font-size: 1.5rem; font-weight: 700; color: #0f172a; }
+        .db-stat-value { font-family: 'Roboto', serif; font-size: 1.5rem; font-weight: 700; color: #0f172a; }
         .db-stat-label { font-size: 12px; color: #64748b; margin-top: 2px; }
         .db-stat-change { font-size: 11px; color: #94a3b8; margin-top: 4px; }
 
@@ -250,15 +250,15 @@ export default function BookingDashboard() {
 
         /* SEARCH WIDGET */
         .db-search-widget { background: linear-gradient(135deg, #0f172a 0%, #1a3a20 100%); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; color: #fff; }
-        .db-sw-title { font-family: 'Fraunces', serif; font-size: 1.2rem; font-weight: 700; color: #fff; margin-bottom: 4px; }
+        .db-sw-title { font-family: 'Roboto', serif; font-size: 1.2rem; font-weight: 700; color: #fff; margin-bottom: 4px; }
         .db-sw-sub { font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 1rem; }
         .db-sw-tabs { display: flex; gap: 6px; margin-bottom: 1rem; }
-        .db-sw-tab { border: 1px solid rgba(255,255,255,0.2); background: transparent; color: rgba(255,255,255,0.7); border-radius: 100px; padding: 5px 14px; font-size: 12px; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+        .db-sw-tab { border: 1px solid rgba(255,255,255,0.2); background: transparent; color: rgba(255,255,255,0.7); border-radius: 100px; padding: 5px 14px; font-size: 12px; cursor: pointer; transition: all 0.2s; font-family: 'Roboto', sans-serif; }
         .db-sw-tab.active { background: rgba(255,255,255,0.12); color: #fff; border-color: rgba(255,255,255,0.35); }
         .db-sw-form { display: flex; gap: 8px; }
-        .db-sw-input { flex: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 10px 14px; color: #fff; font-size: 13px; outline: none; font-family: 'DM Sans', sans-serif; }
+        .db-sw-input { flex: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 10px 14px; color: #fff; font-size: 13px; outline: none; font-family: 'Roboto', sans-serif; }
         .db-sw-input::placeholder { color: rgba(255,255,255,0.4); }
-        .db-sw-btn { background: #16a34a; color: #fff; border: none; border-radius: 10px; padding: 10px 18px; cursor: pointer; font-size: 13px; font-weight: 600; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
+        .db-sw-btn { background: #16a34a; color: #fff; border: none; border-radius: 10px; padding: 10px 18px; cursor: pointer; font-size: 13px; font-weight: 600; font-family: 'Roboto', sans-serif; white-space: nowrap; }
         .db-sw-btn:hover { background: #15803d; }
 
         /* EXPLORE GRID */
@@ -423,7 +423,7 @@ export default function BookingDashboard() {
                       <form className="db-sw-form" onSubmit={handleSearch}>
                         <div className="db-sw-input" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ color: 'rgba(255,255,255,0.5)', display: 'flex' }}><IPin /></span>
-                          <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder={`Search ${searchType}...`} style={{ background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: 13, fontFamily: 'DM Sans, sans-serif', flex: 1 }} />
+                          <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder={`Search ${searchType}...`} style={{ background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: 13, fontFamily: 'Roboto, sans-serif', flex: 1 }} />
                         </div>
                         <button className="db-sw-btn" type="submit">Search</button>
                       </form>
@@ -567,7 +567,7 @@ export default function BookingDashboard() {
                 {/* Filter row */}
                 <div style={{ display: 'flex', gap: 8, marginBottom: '1.5rem', flexWrap: 'wrap' }}>
                   {['All', 'Hotels', 'Packages', 'Confirmed', 'Pending', 'Completed'].map(f => (
-                    <button key={f} style={{ border: '1px solid #e2e8f0', background: '#fff', borderRadius: 100, padding: '6px 14px', fontSize: 12, fontWeight: 500, cursor: 'pointer', color: '#64748b', fontFamily: 'DM Sans, sans-serif' }}>{f}</button>
+                    <button key={f} style={{ border: '1px solid #e2e8f0', background: '#fff', borderRadius: 100, padding: '6px 14px', fontSize: 12, fontWeight: 500, cursor: 'pointer', color: '#64748b', fontFamily: 'Roboto, sans-serif' }}>{f}</button>
                   ))}
                 </div>
 

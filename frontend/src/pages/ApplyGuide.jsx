@@ -6,9 +6,9 @@ const SPECIALIZATIONS = ['Trekking','Cultural Tours','Photography','Wildlife','M
 const LANGUAGES = ['Nepali','English','Hindi','Chinese','Japanese','French','German','Spanish','Italian','Korean'];
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,800;1,700&family=DM+Sans:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
-  .ag-page{min-height:100vh;display:flex;font-family:'DM Sans',sans-serif;background:#f8faf8;}
+  .ag-page{min-height:100vh;display:flex;font-family:'Roboto',sans-serif;background:#f8faf8;}
   .ag-left{
     display:none;position:relative;flex:0 0 44%;overflow:hidden;flex-direction:column;
   }
@@ -21,7 +21,7 @@ const STYLES = `
   .ag-brand-logo{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#16a34a,#4ade80);display:flex;align-items:center;justify-content:center;font-size:18px;}
   .ag-brand-name{font-weight:700;}
   .ag-guide-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.12);border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;width:fit-content;margin-bottom:20px;border:1px solid rgba(255,255,255,0.15);}
-  .ag-headline{font-family:'Fraunces',serif;font-size:2.2rem;font-weight:800;line-height:1.2;margin-bottom:14px;letter-spacing:-0.6px;}
+  .ag-headline{font-family:'Roboto',serif;font-size:2.2rem;font-weight:800;line-height:1.2;margin-bottom:14px;letter-spacing:-0.6px;}
   .ag-headline em{font-style:italic;color:#4ade80;}
   .ag-sub{font-size:15px;line-height:1.7;color:rgba(255,255,255,0.72);margin-bottom:32px;max-width:340px;}
   .ag-perks{display:flex;flex-direction:column;gap:12px;}
@@ -43,7 +43,7 @@ const STYLES = `
   .ag-step-pending{background:#f1f5f9;color:#94a3b8;border:1.5px solid #e2e8f0;}
   .ag-step-line{flex:1;height:2px;border-radius:1px;margin:0 6px;}
 
-  .ag-title{font-family:'Fraunces',serif;font-size:1.4rem;font-weight:800;color:#0a2818;margin:0 0 4px;}
+  .ag-title{font-family:'Roboto',serif;font-size:1.4rem;font-weight:800;color:#0a2818;margin:0 0 4px;}
   .ag-title-sub{font-size:13px;color:#6b7280;margin:0 0 20px;}
 
   .ag-error{display:flex;align-items:center;gap:8px;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:16px;}
@@ -74,10 +74,10 @@ const STYLES = `
   .ag-footer{text-align:center;margin-top:16px;font-size:14px;color:#6b7280;}
   .ag-footer-link{color:#16a34a;font-weight:600;text-decoration:none;}
 
-  .ag-success-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f8faf8;font-family:'DM Sans',sans-serif;padding:24px;}
+  .ag-success-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f8faf8;font-family:'Roboto',sans-serif;padding:24px;}
   .ag-success-card{text-align:center;max-width:460px;background:#fff;border-radius:20px;padding:48px 36px;border:1px solid #e5f0e8;box-shadow:0 4px 32px rgba(22,163,74,0.08);}
   .ag-success-icon{font-size:56px;margin-bottom:16px;}
-  .ag-success-title{font-family:'Fraunces',serif;font-size:1.6rem;color:#0a2818;margin-bottom:12px;}
+  .ag-success-title{font-family:'Roboto',serif;font-size:1.6rem;color:#0a2818;margin-bottom:12px;}
   .ag-success-text{font-size:15px;color:#6b7280;line-height:1.7;margin-bottom:28px;}
   .ag-next-steps{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px 20px;margin-bottom:28px;text-align:left;}
   .ag-next-label{font-weight:700;color:#166534;margin-bottom:8px;font-size:14px;}

@@ -12,9 +12,9 @@ const DIFF_COLORS = {
 };
 
 const S = `
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;0,800;1,600;1,700&family=DM+Sans:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
-  .td-root{font-family:'DM Sans',sans-serif;background:#f8faf8;min-height:100vh;padding-top:68px;}
+  .td-root{font-family:'Roboto', sans-serif;background:#f8faf8;min-height:100vh;padding-top:68px;}
 
   /* HERO */
   .td-hero{position:relative;min-height:60vh;display:flex;align-items:flex-end;overflow:hidden;}
@@ -24,12 +24,12 @@ const S = `
   .td-breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:16px;flex-wrap:wrap;}
   .td-breadcrumb a{color:rgba(255,255,255,0.7);text-decoration:none;}
   .td-breadcrumb a:hover{color:#4ade80;}
-  .td-hero h1{font-family:'Fraunces',serif;font-size:clamp(2rem,5vw,3.2rem);font-weight:700;color:#fff;margin:0 0 12px;line-height:1.15;letter-spacing:-0.02em;}
+  .td-hero h1{font-family:'Roboto',serif;font-size:clamp(2rem,5vw,3.2rem);font-weight:700;color:#fff;margin:0 0 12px;line-height:1.15;letter-spacing:-0.02em;}
   .td-hero-meta{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;}
   .td-meta-pill{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.15);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.2);border-radius:100px;padding:5px 14px;font-size:12px;color:#fff;font-weight:500;}
   .td-diff-pill{border-radius:100px;padding:5px 14px;font-size:12px;font-weight:700;}
   .td-share{display:flex;align-items:center;gap:8px;margin-top:4px;}
-  .td-share-btn{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+  .td-share-btn{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Roboto', sans-serif;}
 
   /* LAYOUT */
   .td-body{max-width:1100px;margin:0 auto;padding:40px 24px;display:grid;grid-template-columns:1fr 320px;gap:32px;}
@@ -44,7 +44,7 @@ const S = `
 
   /* SECTIONS */
   .td-section{background:#fff;border-radius:16px;border:1px solid #e5f0e8;padding:24px;margin-bottom:20px;}
-  .td-section-title{font-family:'Fraunces',serif;font-size:1.2rem;font-weight:700;color:#0f172a;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+  .td-section-title{font-family:'Roboto',serif;font-size:1.2rem;font-weight:700;color:#0f172a;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
   .td-section-title::after{content:'';flex:1;height:1px;background:#f0fdf4;margin-left:8px;}
   .td-overview{font-size:14px;color:#374151;line-height:1.85;white-space:pre-line;}
 
@@ -87,14 +87,14 @@ const S = `
   .td-sidebar{display:flex;flex-direction:column;gap:16px;}
   .td-price-card{background:linear-gradient(135deg,#0a2818 0%,#1a4a2a 100%);border-radius:16px;padding:24px;}
   .td-price-from{font-size:12px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.05em;}
-  .td-price-val{font-family:'Fraunces',serif;font-size:2.2rem;font-weight:700;color:#fff;line-height:1;margin:6px 0 4px;}
+  .td-price-val{font-family:'Roboto',serif;font-size:2.2rem;font-weight:700;color:#fff;line-height:1;margin:6px 0 4px;}
   .td-price-per{font-size:12px;color:rgba(255,255,255,0.5);}
   .td-price-usd{font-size:13px;color:#4ade80;margin-top:6px;font-weight:500;}
   .td-book-btn{display:block;background:#16a34a;color:#fff;text-align:center;padding:13px;border-radius:10px;font-size:14px;font-weight:700;text-decoration:none;margin-top:18px;transition:background 0.2s;}
   .td-book-btn:hover{background:#15803d;}
   .td-enquire-btn{display:block;background:rgba(255,255,255,0.1);color:#fff;text-align:center;padding:11px;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;margin-top:8px;border:1px solid rgba(255,255,255,0.2);}
   .td-info-card{background:#fff;border-radius:16px;border:1px solid #e5f0e8;padding:20px;}
-  .td-info-title{font-family:'Fraunces',serif;font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:14px;}
+  .td-info-title{font-family:'Roboto',serif;font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:14px;}
   .td-info-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0fdf4;font-size:13px;}
   .td-info-row:last-child{border-bottom:none;}
   .td-info-key{color:#64748b;}
@@ -110,7 +110,7 @@ const S = `
   .td-sim-card:hover .td-sim-img img{transform:scale(1.05);}
   .td-sim-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem;}
   .td-sim-body{padding:12px 14px;}
-  .td-sim-name{font-family:'Fraunces',serif;font-size:0.95rem;font-weight:700;color:#0f172a;margin-bottom:4px;}
+  .td-sim-name{font-family:'Roboto',serif;font-size:0.95rem;font-weight:700;color:#0f172a;margin-bottom:4px;}
   .td-sim-meta{font-size:11px;color:#94a3b8;display:flex;gap:8px;}
   .td-sim-price{font-weight:700;color:#16a34a;font-size:12px;margin-top:6px;}
 
@@ -191,7 +191,7 @@ export default function TrekDetail() {
     <div className="td-root">
       <div className="td-not-found">
         <div style={{fontSize:'3rem',marginBottom:16}}>🏔</div>
-        <h2 style={{fontFamily:"'Fraunces',serif",fontSize:'1.5rem',color:'#0f172a',marginBottom:8}}>Trek not found</h2>
+        <h2 style={{fontFamily:"'Roboto',serif",fontSize:'1.5rem',color:'#0f172a',marginBottom:8}}>Trek not found</h2>
         <p style={{color:'#64748b',marginBottom:20}}>This trek doesn't exist or has been removed.</p>
         <Link to="/browse-destinations" style={{background:'#16a34a',color:'#fff',padding:'10px 24px',borderRadius:10,textDecoration:'none',fontWeight:600}}>← Browse Destinations</Link>
       </div>
@@ -429,7 +429,7 @@ export default function TrekDetail() {
       {/* SIMILAR TREKS */}
       {similar.length > 0 && (
         <div style={{maxWidth:1100,margin:'0 auto',padding:'0 24px 48px'}}>
-          <h2 style={{fontFamily:"'Fraunces',serif",fontSize:'1.4rem',fontWeight:700,color:'#0f172a',marginBottom:4}}>Similar Trips</h2>
+          <h2 style={{fontFamily:"'Roboto',serif",fontSize:'1.4rem',fontWeight:700,color:'#0f172a',marginBottom:4}}>Similar Trips</h2>
           <div className="td-similar-grid">
             {similar.map(t => {
               const img = getImg(t.coverImage || t.images?.[0]);

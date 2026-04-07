@@ -6,8 +6,8 @@ const API   = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const token = () => localStorage.getItem('nt_token');
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-  .mu-root{font-family:'Plus Jakarta Sans',sans-serif;}
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
+  .mu-root{font-family:'Roboto',sans-serif;}
   .mu-msg{padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:16px;}
   .mu-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
   @media(max-width:700px){.mu-stats{grid-template-columns:repeat(2,1fr);}}
@@ -18,9 +18,9 @@ const STYLES = `
   .mu-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap;}
   .mu-search-wrap{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e5f0e8;border-radius:10px;padding:8px 13px;flex:1;max-width:320px;transition:border 0.15s;}
   .mu-search-wrap:focus-within{border-color:#16a34a;}
-  .mu-search{border:none;outline:none;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:#0f172a;background:transparent;flex:1;}
+  .mu-search{border:none;outline:none;font-size:13px;font-family:'Roboto',sans-serif;color:#0f172a;background:transparent;flex:1;}
   .mu-search::placeholder{color:#9ca3af;}
-  .mu-filter-sel{padding:8px 13px;border:1.5px solid #e5f0e8;border-radius:10px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:#374151;outline:none;background:#fff;cursor:pointer;}
+  .mu-filter-sel{padding:8px 13px;border:1.5px solid #e5f0e8;border-radius:10px;font-size:13px;font-family:'Roboto',sans-serif;color:#374151;outline:none;background:#fff;cursor:pointer;}
   .mu-count{font-size:12px;color:#9ca3af;font-weight:500;}
   .mu-card{background:#fff;border-radius:16px;border:1px solid #e5f0e8;overflow:hidden;box-shadow:0 2px 8px rgba(22,163,74,0.04);}
   .mu-table{width:100%;border-collapse:collapse;font-size:13px;}
@@ -32,7 +32,7 @@ const STYLES = `
   .mu-name{font-weight:600;color:#0a2818;font-size:13px;}
   .mu-email{font-size:11px;color:#9ca3af;margin-top:1px;}
   .mu-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;display:inline-block;}
-  .mu-action-btn{padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;border:none;transition:all 0.15s;}
+  .mu-action-btn{padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Roboto',sans-serif;border:none;transition:all 0.15s;}
   .mu-deactivate{background:#fef2f2;color:#dc2626;border:1px solid #fecaca;}
   .mu-deactivate:hover{background:#fee2e2;}
   .mu-activate{background:#f0fdf4;color:#16a34a;border:1px solid #d1fae5;}

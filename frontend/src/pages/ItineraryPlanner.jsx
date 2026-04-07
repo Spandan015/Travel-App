@@ -22,31 +22,31 @@ const TRANSPORT_TYPES = [
 ];
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,800;1,700&family=DM+Sans:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
-  .ip-root{font-family:'DM Sans',sans-serif;background:#f8faf8;min-height:100vh;padding-top:68px;}
+  .ip-root{font-family:'Roboto',sans-serif;background:#f8faf8;min-height:100vh;padding-top:68px;}
   .ip-hero{background:linear-gradient(135deg,#0a2818 0%,#0d3320 40%,#1a4a2a 100%);padding:64px 24px 48px;text-align:center;position:relative;overflow:hidden;}
   .ip-hero-mountains{position:absolute;bottom:0;left:0;right:0;height:35%;clip-path:polygon(0% 100%,8% 65%,15% 72%,22% 50%,30% 65%,38% 35%,45% 52%,52% 22%,60% 48%,67% 38%,74% 58%,82% 28%,90% 50%,100% 38%,100% 100%);background:rgba(255,255,255,0.03);}
   .ip-hero-content{position:relative;z-index:2;max-width:640px;margin:0 auto;}
   .ip-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.15);border-radius:100px;padding:6px 16px;font-size:12px;font-weight:500;color:rgba(255,255,255,0.85);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:20px;}
   .ip-badge span{width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block;}
-  .ip-hero h1{font-family:'Fraunces',serif;font-size:clamp(2rem,5vw,3.2rem);font-weight:700;color:#fff;margin:0 0 12px;line-height:1.1;letter-spacing:-0.02em;}
+  .ip-hero h1{font-family:'Roboto',serif;font-size:clamp(2rem,5vw,3.2rem);font-weight:700;color:#fff;margin:0 0 12px;line-height:1.1;letter-spacing:-0.02em;}
   .ip-hero h1 em{font-style:italic;color:#4ade80;}
   .ip-hero p{color:rgba(255,255,255,0.65);font-size:0.95rem;font-weight:300;}
   .ip-body{max-width:960px;margin:0 auto;padding:36px 24px;}
   .ip-card{background:#fff;border-radius:20px;border:1px solid #e5f0e8;padding:32px;box-shadow:0 4px 24px rgba(22,163,74,0.08);margin-bottom:24px;}
-  .ip-card-title{font-family:'Fraunces',serif;font-size:1.2rem;font-weight:700;color:#0a2818;margin-bottom:24px;}
+  .ip-card-title{font-family:'Roboto',serif;font-size:1.2rem;font-weight:700;color:#0a2818;margin-bottom:24px;}
   .ip-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;}
   .ip-field{display:flex;flex-direction:column;gap:6px;}
   .ip-label{font-size:0.78rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#6b7280;}
-  .ip-select,.ip-input{padding:11px 14px;border:1.5px solid #d1fae5;border-radius:10px;font-size:0.9rem;font-family:'DM Sans',sans-serif;color:#0f172a;outline:none;background:#fff;width:100%;transition:border 0.15s;}
+  .ip-select,.ip-input{padding:11px 14px;border:1.5px solid #d1fae5;border-radius:10px;font-size:0.9rem;font-family:'Roboto',sans-serif;color:#0f172a;outline:none;background:#fff;width:100%;transition:border 0.15s;}
   .ip-select:focus,.ip-input:focus{border-color:#16a34a;}
-  .ip-generate-btn{width:100%;padding:15px;background:#16a34a;color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;margin-top:24px;}
+  .ip-generate-btn{width:100%;padding:15px;background:#16a34a;color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;font-family:' Roboto',sans-serif;transition:all 0.2s;margin-top:24px;}
   .ip-generate-btn:hover{background:#15803d;transform:translateY(-1px);}
   .ip-itinerary{display:flex;flex-direction:column;gap:16px;}
   .ip-day{background:#fff;border-radius:16px;border:1px solid #e5f0e8;overflow:hidden;box-shadow:0 2px 8px rgba(22,163,74,0.05);}
   .ip-day-head{background:linear-gradient(135deg,#0a2818,#1a4a2a);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;}
-  .ip-day-title{font-family:'Fraunces',serif;font-size:1rem;font-weight:700;color:#fff;}
+  .ip-day-title{font-family:'Roboto',serif;font-size:1rem;font-weight:700;color:#fff;}
   .ip-day-date{font-size:0.78rem;color:rgba(255,255,255,0.6);}
   .ip-day-body{padding:16px 20px;}
   .ip-activities{list-style:none;display:flex;flex-direction:column;gap:8px;}
@@ -57,10 +57,10 @@ const STYLES = `
   .ip-cost-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;}
   .ip-cost-card{background:#f0fdf4;border:1px solid #d1fae5;border-radius:12px;padding:16px;text-align:center;}
   .ip-cost-label{font-size:0.75rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;}
-  .ip-cost-val{font-family:'Fraunces',serif;font-size:1.3rem;font-weight:700;color:#0a2818;}
+  .ip-cost-val{font-family:'Roboto',serif;font-size:1.3rem;font-weight:700;color:#0a2818;}
   .ip-cost-total{background:linear-gradient(135deg,#0a2818,#1a4a2a);border-radius:14px;padding:20px;text-align:center;margin-top:16px;}
   .ip-cost-total-label{font-size:0.85rem;color:rgba(255,255,255,0.65);margin-bottom:4px;}
-  .ip-cost-total-val{font-family:'Fraunces',serif;font-size:2rem;font-weight:700;color:#4ade80;}
+  .ip-cost-total-val{font-family:'Roboto',serif;font-size:2rem;font-weight:700;color:#4ade80;}
 `;
 
 const ItineraryPlanner = () => {

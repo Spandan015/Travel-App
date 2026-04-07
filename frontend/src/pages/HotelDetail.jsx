@@ -15,12 +15,12 @@ const AMENITY_ICONS = {
 };
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
   :root {
     --blue:#1B4F8A; --blue-dark:#0F3362; --blue-light:#EEF4FB;
     --text:#1E2D3D; --muted:#6b7c93; --border:#E4ECF3; --bg:#F5F9FF;
   }
-  .hd-root { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); padding-top:68px; min-height:100vh; }
+  .hd-root { font-family:'Roboto',sans-serif; background:var(--bg); padding-top:68px; min-height:100vh; }
 
   /* ── GALLERY — Booking.com style 5-panel ── */
   .hd-gallery-wrap { position:relative; max-height:400px; overflow:hidden; cursor:pointer; }
@@ -74,7 +74,7 @@ const STYLES = `
     padding:14px 18px; font-size:13px; font-weight:600; color:var(--muted);
     border-bottom:3px solid transparent; cursor:pointer;
     transition:all 0.15s; white-space:nowrap; background:none; border-top:none; border-left:none; border-right:none;
-    font-family:'Plus Jakarta Sans',sans-serif;
+    font-family:'Roboto',sans-serif;
   }
   .hd-nav-tab:hover { color:var(--text); }
   .hd-nav-tab.active { color:var(--blue); border-bottom-color:var(--blue); }
@@ -104,7 +104,7 @@ const STYLES = `
   .hd-section:last-child { margin-bottom:0; }
   .hd-section-title { font-size:16px; font-weight:800; color:var(--text); margin:0 0 14px; padding-bottom:12px; border-bottom:1px solid var(--border); }
   .hd-desc { font-size:14px; color:var(--muted); line-height:1.8; font-weight:400; }
-  .hd-read-more { color:var(--blue); font-size:13px; font-weight:600; cursor:pointer; border:none; background:none; padding:0; margin-top:8px; display:block; font-family:'Plus Jakarta Sans',sans-serif; }
+  .hd-read-more { color:var(--blue); font-size:13px; font-weight:600; cursor:pointer; border:none; background:none; padding:0; margin-top:8px; display:block; font-family:'Roboto',sans-serif; }
 
   /* Highlights */
   .hd-highlights { display:flex; flex-direction:column; gap:10px; }
@@ -138,7 +138,7 @@ const STYLES = `
   .hd-date-field { padding:11px 14px; position:relative; }
   .hd-date-field:first-child { border-right:1px solid var(--border); }
   .hd-date-label { font-size:10px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text); margin-bottom:4px; }
-  .hd-date-input { border:none; outline:none; font-size:13px; font-family:'Plus Jakarta Sans',sans-serif; color:var(--text); width:100%; background:transparent; cursor:pointer; }
+  .hd-date-input { border:none; outline:none; font-size:13px; font-family:'Roboto',sans-serif; color:var(--text); width:100%; background:transparent; cursor:pointer; }
   .hd-dates-box:focus-within { border-color:var(--blue); }
   .hd-nights-badge { text-align:center; font-size:12px; color:var(--muted); margin-bottom:10px; font-weight:500; }
 
@@ -159,7 +159,7 @@ const STYLES = `
   .hd-counter-val { font-size:14px; font-weight:700; color:var(--text); min-width:20px; text-align:center; }
 
   /* Requests */
-  .hd-textarea { width:100%; padding:11px 13px; border:2px solid var(--border); border-radius:10px; font-size:13px; font-family:'Plus Jakarta Sans',sans-serif; color:var(--text); outline:none; resize:vertical; min-height:80px; margin-bottom:14px; transition:border 0.15s; }
+  .hd-textarea { width:100%; padding:11px 13px; border:2px solid var(--border); border-radius:10px; font-size:13px; font-family:'Roboto',sans-serif; color:var(--text); outline:none; resize:vertical; min-height:80px; margin-bottom:14px; transition:border 0.15s; }
   .hd-textarea:focus { border-color:var(--blue); }
   .hd-textarea-label { font-size:11px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; display:block; }
 
@@ -170,7 +170,7 @@ const STYLES = `
   .hd-pb-total span:last-child { color:var(--blue); }
 
   /* Reserve btn */
-  .hd-reserve-btn { width:100%; padding:15px; background:var(--blue); color:#fff; border:none; border-radius:10px; font-size:15px; font-weight:800; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; transition:all 0.2s; margin-bottom:10px; }
+  .hd-reserve-btn { width:100%; padding:15px; background:var(--blue); color:#fff; border:none; border-radius:10px; font-size:15px; font-weight:800; cursor:pointer; font-family:'Roboto',sans-serif; transition:all 0.2s; margin-bottom:10px; }
   .hd-reserve-btn:hover:not(:disabled) { background:var(--blue-dark); transform:translateY(-1px); box-shadow:0 6px 20px rgba(27,79,138,0.3); }
   .hd-reserve-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
   .hd-book-note { font-size:11.5px; color:var(--muted); text-align:center; margin-bottom:12px; }
@@ -181,10 +181,10 @@ const STYLES = `
   .hd-error { background:#FEF3F2; border:1px solid #FDA29B; color:#B42318; padding:10px 14px; border-radius:10px; font-size:13px; margin-bottom:14px; font-weight:500; }
   .hd-success { text-align:center; padding:20px 0; }
   .hd-success-icon { font-size:48px; margin-bottom:12px; display:block; }
-  .hd-success h3 { font-family:'Plus Jakarta Sans',sans-serif; font-size:18px; font-weight:800; color:var(--text); margin:0 0 8px; }
+  .hd-success h3 { font-family:'Roboto',sans-serif; font-size:18px; font-weight:800; color:var(--text); margin:0 0 8px; }
   .hd-success p { font-size:13px; color:var(--muted); margin:0 0 16px; line-height:1.6; }
   .hd-success-id { background:var(--blue-light); border-radius:8px; padding:8px 14px; font-size:12px; color:var(--blue); font-weight:700; margin-bottom:16px; display:inline-block; }
-  .hd-success-btn { display:inline-block; background:var(--blue); color:#fff; padding:11px 24px; border-radius:10px; font-size:13px; font-weight:700; text-decoration:none; font-family:'Plus Jakarta Sans',sans-serif; }
+  .hd-success-btn { display:inline-block; background:var(--blue); color:#fff; padding:11px 24px; border-radius:10px; font-size:13px; font-weight:700; text-decoration:none; font-family:'Roboto',sans-serif; }
 
   /* Loading */
   .hd-loading { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; gap:16px; }
@@ -275,7 +275,7 @@ export default function HotelDetail() {
     <>
       <style>{STYLES}</style>
       <div className="hd-root">
-        <div className="hd-loading"><div className="hd-spinner" /><p style={{color:'var(--muted)',fontFamily:'Plus Jakarta Sans,sans-serif',fontSize:14}}>Loading hotel…</p></div>
+        <div className="hd-loading"><div className="hd-spinner" /><p style={{color:'var(--muted)',fontFamily:'Roboto,sans-serif',fontSize:14}}>Loading hotel…</p></div>
       </div>
     </>
   );
@@ -283,7 +283,7 @@ export default function HotelDetail() {
   if (!hotel) return (
     <>
       <style>{STYLES}</style>
-      <div className="hd-root" style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'80vh',flexDirection:'column',gap:16,fontFamily:'Plus Jakarta Sans,sans-serif'}}>
+      <div className="hd-root" style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'80vh',flexDirection:'column',gap:16,fontFamily:'Roboto,sans-serif'}}>
         <div style={{fontSize:'3rem'}}>🏨</div>
         <h2 style={{color:'var(--text)',fontWeight:800}}>Hotel Not Found</h2>
         <Link to="/browse-hotels" style={{background:'var(--blue)',color:'#fff',padding:'11px 24px',borderRadius:10,fontWeight:700,textDecoration:'none'}}>← Back to Hotels</Link>

@@ -7,6 +7,7 @@ const PORT     = process.env.PORT || 3000;
 require('./models/destination');
 require('./models/TravelPackage');
 
+const esewaRoutes = require('./routes/esewaRoutes');
 const authRoutes             = require('./routes/authRoutes');
 const hotelRoutes            = require('./routes/hotelRoutes');
 const packageRoutes          = require('./routes/packageRoutes');
@@ -39,6 +40,8 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/uploads', express.static('uploads'));
 app.use((req, res, next) => { console.log(`🌐 ${req.method} ${req.path}`); next(); });
+
+app.use('/api/esewa', esewaRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status:'OK', message:'My Travel Buddy API', time: new Date().toISOString() }));
 app.use('/api/auth',               authRoutes);

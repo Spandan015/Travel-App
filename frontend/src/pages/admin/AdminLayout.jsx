@@ -65,9 +65,9 @@ export default function AdminLayout({ children, title, subtitle }) {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-        .al-root{display:flex;min-height:100vh;font-family:'Plus Jakarta Sans',sans-serif;background:#F5F9F5;}
+        .al-root{display:flex;min-height:100vh;font-family:'Roboto',sans-serif;background:#F5F9F5;}
         .al-sidebar{width:${c?'64px':'236px'};min-height:100vh;background:linear-gradient(180deg,#0a2818 0%,#0d3320 100%);display:flex;flex-direction:column;transition:width 0.22s ease;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow:hidden;border-right:1px solid rgba(255,255,255,0.06);}
         @media(max-width:900px){.al-sidebar{transform:translateX(${mobileOpen?'0':'-100%'});width:236px !important;transition:transform 0.22s ease;}.al-overlay{display:${mobileOpen?'block':'none'} !important;}}
         .al-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99;}
@@ -91,7 +91,7 @@ export default function AdminLayout({ children, title, subtitle }) {
         .al-user-info{overflow:hidden;opacity:${c?0:1};transition:opacity 0.13s;}
         .al-user-name{font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
         .al-user-role{font-size:10px;color:rgba(255,255,255,0.35);}
-        .al-foot-btn{display:flex;align-items:center;gap:10px;padding:8px 11px;border-radius:8px;border:none;background:none;cursor:pointer;width:100%;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.13s;overflow:hidden;white-space:nowrap;color:rgba(255,255,255,0.38);text-align:left;}
+        .al-foot-btn{display:flex;align-items:center;gap:10px;padding:8px 11px;border-radius:8px;border:none;background:none;cursor:pointer;width:100%;font-size:13px;font-family:'Roboto',sans-serif;transition:all 0.13s;overflow:hidden;white-space:nowrap;color:rgba(255,255,255,0.38);text-align:left;}
         .al-foot-btn:hover{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);}
         .al-foot-btn.danger:hover{background:rgba(239,68,68,0.1);color:#F87171;}
         .al-foot-txt{opacity:${c?0:1};transition:opacity 0.13s;}
@@ -104,7 +104,7 @@ export default function AdminLayout({ children, title, subtitle }) {
         .al-search-wrap{display:flex;align-items:center;gap:8px;background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:9px;padding:7px 13px;flex:1;max-width:380px;transition:border 0.15s;}
         .al-search-wrap:focus-within{border-color:#16a34a;background:#fff;}
         .al-search-icon{color:#94A3B8;display:flex;flex-shrink:0;}
-        .al-search-inp{border:none;outline:none;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:#0F172A;background:transparent;flex:1;min-width:0;}
+        .al-search-inp{border:none;outline:none;font-size:13px;font-family:'Roboto',sans-serif;color:#0F172A;background:transparent;flex:1;min-width:0;}
         .al-search-inp::placeholder{color:#94A3B8;}
         .al-topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
         .al-bell-btn{width:36px;height:36px;border-radius:9px;border:1.5px solid #E2E8F0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#64748B;transition:all 0.13s;}

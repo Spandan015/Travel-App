@@ -219,7 +219,7 @@ export default function RegisterAdmin() {
 }
 
 const S = {
-  page: { minHeight: '100vh', display: 'flex', fontFamily: "'DM Sans', 'Segoe UI', sans-serif", background: '#f8fafc' },
+  page: { minHeight: '100vh', display: 'flex', fontFamily: "'Roboto', 'Segoe UI', sans-serif", background: '#f8fafc' },
   left: { display: 'none', position: 'relative', flex: '0 0 44%', overflow: 'hidden', flexDirection: 'column' },
   leftBg: { position: 'absolute', inset: 0, background: 'linear-gradient(160deg, #1e1b4b 0%, #3730a3 50%, #6d28d9 100%)' },
   leftContent: { position: 'relative', zIndex: 10, padding: '56px 48px', flex: 1, color: '#fff', display: 'flex', flexDirection: 'column', justifyContent: 'center' },

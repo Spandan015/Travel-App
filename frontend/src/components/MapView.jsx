@@ -44,15 +44,6 @@ function FitBounds({ positions }) {
   return null;
 }
 
-/**
- * MapView — reusable Leaflet map component
- *
- * Props:
- *   markers: [{ lat, lng, title, description, primary? }]
- *   height:  string  (default '360px')
- *   zoom:    number  (default 13, overridden by FitBounds if multiple markers)
- *   title:   string  (optional section header)
- */
 export default function MapView({ markers = [], height = '360px', zoom = 13, title }) {
   // Filter valid markers only
   const valid = markers.filter(m => m.lat && m.lng && !isNaN(m.lat) && !isNaN(m.lng));
@@ -64,7 +55,7 @@ export default function MapView({ markers = [], height = '360px', zoom = 13, tit
   const positions = valid.map(m => [m.lat, m.lng]);
 
   return (
-    <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+    <div style={{ fontFamily: 'Roboto, sans-serif' }}>
       {title && (
         <h2 style={{ fontSize: 16, fontWeight: 800, color: '#1E2D3D', margin: '0 0 14px' }}>
           {title}
@@ -77,13 +68,13 @@ export default function MapView({ markers = [], height = '360px', zoom = 13, tit
         .leaflet-container {
           border-radius: 14px;
           border: 1px solid #E4ECF3;
-          font-family: 'Plus Jakarta Sans', sans-serif !important;
+          font-family: 'Roboto', sans-serif !important;
           z-index: 0;
         }
         .leaflet-popup-content-wrapper {
           border-radius: 10px !important;
           box-shadow: 0 4px 20px rgba(0,0,0,0.12) !important;
-          font-family: 'Plus Jakarta Sans', sans-serif !important;
+          font-family: 'Roboto', sans-serif !important;
           padding: 0 !important;
         }
         .leaflet-popup-content {

@@ -4,40 +4,44 @@ const hotelSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     location: { type: String, required: true },
-    address: { type: String, required: true },
-    description: { type: String, required: true },
+    address: { type: String, default: '' },
+    description: { type: String, default: '' },
     pricePerNight: { type: Number, required: true },
-    
+
+    // Coordinates for map
+    lat: { type: Number, default: null },
+    lng: { type: Number, default: null },
+
     // Hotel details
     starRating: { type: Number, min: 1, max: 5 },
-    amenities: [{ type: String }], // e.g., ['WiFi', 'Pool', 'Gym', 'Restaurant']
+    amenities: [{ type: String }],
     roomTypes: [{
-      type: { type: String }, // e.g., 'Single', 'Double', 'Suite'
+      type: { type: String },
       description: { type: String },
       price: { type: Number },
       capacity: { type: Number }
     }],
-    
+
     // Images
-    images: [{ type: String }], // URLs to images
+    images: [{ type: String }],
     mainImage: { type: String },
-    
+
     // Contact
     phone: { type: String },
     email: { type: String },
     website: { type: String },
-    
+
     // Ratings and reviews
     rating: { type: Number, default: 0 },
     totalReviews: { type: Number, default: 0 },
-    
+
     // Availability
     isActive: { type: Boolean, default: true },
-    
+
     // Added by admin
-    addedBy: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: 'User' 
+    addedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
     }
   },
   { timestamps: true }

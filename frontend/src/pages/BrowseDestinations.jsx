@@ -12,7 +12,7 @@ const DIFF_COLOR = {
 };
 
 const S = `
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+ @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
   .bd-root{font-family:'Plus Jakarta Sans',sans-serif;background:#fafff8;min-height:100vh;}
   .bd-hero{text-align:center;padding:80px 24px 60px;background:linear-gradient(180deg,#f0fdf4 0%,#fafff8 100%);}

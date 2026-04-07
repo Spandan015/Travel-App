@@ -61,9 +61,9 @@ export default function Login() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;0,800;1,700&family=DM+Sans:wght@300;400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { height: 100%; font-family: 'DM Sans', sans-serif; }
+        html, body { height: 100%; font-family: 'Roboto', sans-serif; }
         nav, footer { display: none !important; }
 
         .lp-root {
@@ -109,14 +109,14 @@ export default function Login() {
           display: flex; align-items: center; justify-content: center;
           font-size: 1.2rem;
         }
-        .lp-logo-name { font-family: 'Fraunces', serif; font-size: 1.05rem; font-weight: 700; color: #fff; }
+        .lp-logo-name { font-family: 'Roboto', serif; font-size: 1.05rem; font-weight: 700; color: #fff; }
         .lp-logo-sub { font-size: 11px; color: rgba(255,255,255,0.6); display: block; }
 
         .lp-center { flex: 1; display: flex; align-items: center; }
         .lp-quote-area { max-width: 420px; transition: opacity 0.6s; }
 
         .lp-place {
-          font-family: 'Fraunces', serif;
+          font-family: 'Roboto', serif;
           font-size: clamp(1.8rem, 3vw, 2.6rem);
           font-weight: 700; color: #fff;
           line-height: 1.2; margin-bottom: 1rem;
@@ -134,7 +134,7 @@ export default function Login() {
 
         .lp-bottom { display: flex; align-items: center; justify-content: space-between; }
         .lp-stats { display: flex; gap: 2rem; }
-        .lp-stat-num { font-family: 'Fraunces', serif; font-size: 1.5rem; font-weight: 700; color: #fff; display: block; }
+        .lp-stat-num { font-family: 'Roboto', serif; font-size: 1.5rem; font-weight: 700; color: #fff; display: block; }
         .lp-stat-lbl { font-size: 11px; color: rgba(255,255,255,0.5); }
         .lp-dots { display: flex; gap: 6px; }
         .lp-dot { width: 6px; height: 6px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.4); background: transparent; cursor: pointer; padding: 0; transition: all 0.2s; }
@@ -162,7 +162,7 @@ export default function Login() {
           border: none; background: transparent; cursor: pointer;
           font-size: 14px; font-weight: 500; color: #64748b;
           border-radius: 7px; transition: all 0.2s;
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
         }
         .lp-tab.active { background: #fff; color: #0f172a; box-shadow: 0 1px 6px rgba(0,0,0,0.1); font-weight: 600; }
 
@@ -176,7 +176,7 @@ export default function Login() {
           background: #fff; cursor: pointer;
           display: flex; align-items: center; justify-content: center; gap: 10px;
           font-size: 14px; font-weight: 500; color: #374151;
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           transition: border-color 0.2s, box-shadow 0.2s;
           margin-bottom: 1.25rem;
         }
@@ -210,7 +210,7 @@ export default function Login() {
         .lp-input {
           width: 100%; padding: 11px 12px 11px 38px;
           border: 1.5px solid #e2e8f0; border-radius: 10px;
-          font-size: 14px; font-family: 'DM Sans', sans-serif; color: #0f172a;
+          font-size: 14px; font-family: 'Roboto', sans-serif; color: #0f172a;
           outline: none; transition: border-color 0.2s, box-shadow 0.2s;
           background: #fff;
         }
@@ -231,7 +231,7 @@ export default function Login() {
           width: 100%; padding: 13px;
           background: #16a34a; color: #fff; border: none; cursor: pointer;
           border-radius: 10px; font-size: 15px; font-weight: 600;
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           display: flex; align-items: center; justify-content: center; gap: 8px;
           transition: background 0.2s;
           margin-bottom: 1.5rem;
@@ -252,7 +252,7 @@ export default function Login() {
         }
         @media (min-width: 900px) { .lp-mobile-logo { display: none; } }
         .lp-mobile-mark { width: 36px; height: 36px; background: #0f172a; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-        .lp-mobile-name { font-family: 'Fraunces', serif; font-size: 1rem; font-weight: 700; color: #0f172a; }
+        .lp-mobile-name { font-family: 'Roboto', serif; font-size: 1rem; font-weight: 700; color: #0f172a; }
       `}</style>
 
       <div className="lp-root">

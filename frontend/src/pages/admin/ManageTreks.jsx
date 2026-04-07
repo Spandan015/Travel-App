@@ -24,8 +24,8 @@ const EMPTY = {
 };
 
 const S = `
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-  .mt-root{font-family:'Plus Jakarta Sans',sans-serif;}
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
+  .mt-root{font-family:'Roboto',sans-serif;}
   .mt-msg{padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:16px;}
   .mt-topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:12px;}
   .mt-search{padding:10px 14px;border:1.5px solid #d1fae5;border-radius:10px;font-size:13px;width:280px;outline:none;font-family:inherit;}

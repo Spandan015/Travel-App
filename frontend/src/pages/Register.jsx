@@ -105,9 +105,9 @@ export default function Register() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;0,700;0,800;1,700&family=DM+Sans:wght@300;400;500;600&display=swap');
+       @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { height: 100%; font-family: 'DM Sans', sans-serif; }
+        html, body { height: 100%; font-family: 'Roboto', sans-serif; }
         nav, footer { display: none !important; }
 
         .rp-root { min-height: 100vh; display: flex; background: #fff; }
@@ -120,16 +120,16 @@ export default function Register() {
         .rp-left-content { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 2.5rem; }
         .rp-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
         .rp-logo-mark { width: 38px; height: 38px; background: rgba(255,255,255,0.15); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-        .rp-logo-name { font-family: 'Fraunces', serif; font-size: 1rem; font-weight: 700; color: #fff; }
+        .rp-logo-name { font-family: 'Roboto', serif; font-size: 1rem; font-weight: 700; color: #fff; }
         .rp-logo-sub { font-size: 10px; color: rgba(255,255,255,0.55); display: block; }
         .rp-center { flex: 1; display: flex; align-items: center; }
         .rp-quote-area { transition: opacity 0.6s; }
-        .rp-place { font-family: 'Fraunces', serif; font-size: clamp(1.6rem, 2.5vw, 2.2rem); font-weight: 700; color: #fff; line-height: 1.2; margin-bottom: 1rem; }
+        .rp-place { font-family: 'Roboto', serif; font-size: clamp(1.6rem, 2.5vw, 2.2rem); font-weight: 700; color: #fff; line-height: 1.2; margin-bottom: 1rem; }
         .rp-quote { font-size: 0.95rem; color: rgba(255,255,255,0.7); font-style: italic; line-height: 1.7; margin-bottom: 1rem; font-weight: 300; }
         .rp-region { font-size: 11px; color: rgba(255,255,255,0.5); display: flex; align-items: center; gap: 5px; }
         .rp-bottom { display: flex; align-items: center; justify-content: space-between; }
         .rp-stats { display: flex; gap: 1.5rem; }
-        .rp-stat-num { font-family: 'Fraunces', serif; font-size: 1.3rem; font-weight: 700; color: #fff; display: block; }
+        .rp-stat-num { font-family: 'Roboto', serif; font-size: 1.3rem; font-weight: 700; color: #fff; display: block; }
         .rp-stat-lbl { font-size: 10px; color: rgba(255,255,255,0.5); }
         .rp-dots { display: flex; gap: 5px; }
         .rp-dot { width: 5px; height: 5px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.4); background: transparent; cursor: pointer; padding: 0; transition: all 0.2s; }
@@ -143,11 +143,11 @@ export default function Register() {
         .rp-mobile-logo { display: flex; align-items: center; gap: 8px; margin-bottom: 2rem; text-decoration: none; }
         @media (min-width: 900px) { .rp-mobile-logo { display: none; } }
         .rp-mobile-mark { width: 34px; height: 34px; background: #0f172a; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
-        .rp-mobile-name { font-family: 'Fraunces', serif; font-size: 1rem; font-weight: 700; color: #0f172a; }
+        .rp-mobile-name { font-family: 'Roboto', serif; font-size: 1rem; font-weight: 700; color: #0f172a; }
 
         /* Tabs */
         .rp-tabs { display: flex; background: #f1f5f9; border-radius: 10px; padding: 4px; margin-bottom: 2rem; }
-        .rp-tab { flex: 1; padding: 10px; border: none; background: transparent; cursor: pointer; font-size: 14px; font-weight: 500; color: #64748b; border-radius: 7px; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+        .rp-tab { flex: 1; padding: 10px; border: none; background: transparent; cursor: pointer; font-size: 14px; font-weight: 500; color: #64748b; border-radius: 7px; transition: all 0.2s; font-family: 'Roboto', sans-serif; }
         .rp-tab.active { background: #fff; color: #0f172a; box-shadow: 0 1px 6px rgba(0,0,0,0.1); font-weight: 600; }
 
         /* Stepper */
@@ -165,7 +165,7 @@ export default function Register() {
         .rp-sub { font-size: 13px; color: #64748b; margin-bottom: 1.5rem; }
 
         /* Google */
-        .rp-google { width: 100%; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 14px; font-weight: 500; color: #374151; font-family: 'DM Sans', sans-serif; transition: border-color 0.2s; margin-bottom: 1.25rem; }
+        .rp-google { width: 100%; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 14px; font-weight: 500; color: #374151; font-family: 'Roboto', sans-serif; transition: border-color 0.2s; margin-bottom: 1.25rem; }
         .rp-google:hover { border-color: #94a3b8; }
         .rp-divider { display: flex; align-items: center; gap: 10px; margin-bottom: 1.25rem; }
         .rp-div-line { flex: 1; height: 1px; background: #e2e8f0; }
@@ -184,7 +184,7 @@ export default function Register() {
 
         .rp-input-wrap { position: relative; }
         .rp-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: #94a3b8; display: flex; }
-        .rp-input { width: 100%; padding: 11px 11px 11px 36px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-family: 'DM Sans', sans-serif; color: #0f172a; outline: none; transition: border-color 0.2s, box-shadow 0.2s; background: #fff; }
+        .rp-input { width: 100%; padding: 11px 11px 11px 36px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 14px; font-family: 'Roboto', sans-serif; color: #0f172a; outline: none; transition: border-color 0.2s, box-shadow 0.2s; background: #fff; }
         .rp-input:focus { border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,0.1); }
         .rp-input::placeholder { color: #94a3b8; }
         .rp-input.no-icon { padding-left: 11px; }
@@ -192,11 +192,11 @@ export default function Register() {
         .rp-eye:hover { color: #64748b; }
 
         /* OTP input */
-        .rp-otp { width: 100%; padding: 14px; text-align: center; letter-spacing: 0.4em; font-size: 1.5rem; font-weight: 700; border: 2px solid #e2e8f0; border-radius: 12px; font-family: 'Fraunces', serif; color: #0f172a; outline: none; transition: border-color 0.2s; }
+        .rp-otp { width: 100%; padding: 14px; text-align: center; letter-spacing: 0.4em; font-size: 1.5rem; font-weight: 700; border: 2px solid #e2e8f0; border-radius: 12px; font-family: 'Roboto', serif; color: #0f172a; outline: none; transition: border-color 0.2s; }
         .rp-otp:focus { border-color: #16a34a; box-shadow: 0 0 0 3px rgba(22,163,74,0.1); }
 
         /* Submit */
-        .rp-submit { width: 100%; padding: 13px; background: #16a34a; color: #fff; border: none; cursor: pointer; border-radius: 10px; font-size: 15px; font-weight: 600; font-family: 'DM Sans', sans-serif; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; margin-top: 0.25rem; margin-bottom: 1.5rem; }
+        .rp-submit { width: 100%; padding: 13px; background: #16a34a; color: #fff; border: none; cursor: pointer; border-radius: 10px; font-size: 15px; font-weight: 600; font-family: 'Roboto', sans-serif; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; margin-top: 0.25rem; margin-bottom: 1.5rem; }
         .rp-submit:hover:not(:disabled) { background: #15803d; }
         .rp-submit:disabled { opacity: 0.7; cursor: not-allowed; }
         .rp-spin { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
@@ -204,11 +204,11 @@ export default function Register() {
 
         /* Resend */
         .rp-resend { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 1.5rem; font-size: 13px; color: #64748b; }
-        .rp-resend-btn { border: none; background: none; cursor: pointer; font-size: 13px; font-weight: 600; color: #16a34a; font-family: 'DM Sans', sans-serif; padding: 0; }
+        .rp-resend-btn { border: none; background: none; cursor: pointer; font-size: 13px; font-weight: 600; color: #16a34a; font-family: 'Roboro', sans-serif; padding: 0; }
         .rp-resend-btn:disabled { color: #94a3b8; cursor: not-allowed; }
 
         /* Back */
-        .rp-back { display: flex; align-items: center; gap: 6px; background: none; border: none; cursor: pointer; font-size: 13px; color: #64748b; font-family: 'DM Sans', sans-serif; padding: 0; margin-bottom: 1.5rem; }
+        .rp-back { display: flex; align-items: center; gap: 6px; background: none; border: none; cursor: pointer; font-size: 13px; color: #64748b; font-family: 'Roboto', sans-serif; padding: 0; margin-bottom: 1.5rem; }
         .rp-back:hover { color: #0f172a; }
 
         .rp-footer-text { text-align: center; font-size: 13px; color: #64748b; }

@@ -44,12 +44,38 @@ const hotelBookingSchema = new mongoose.Schema({
     enum: ['pending', 'confirmed', 'cancelled', 'completed'],
     default: 'pending'
   },
+
+  // ── eSewa Payment Fields ──────────────────────────────────
+  paymentStatus: {
+    type: String,
+    enum: ['unpaid', 'pending', 'paid', 'failed'],
+    default: 'unpaid'
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['esewa', 'cash', 'bank_transfer'],
+    default: null
+  },
+  transactionUuid: {
+    type: String,
+    default: null
+  },
+  esewaRefId: {
+    type: String,   // eSewa's transaction_code
+    default: null
+  },
+  paidAt: {
+    type: Date,
+    default: null
+  },
+  // ─────────────────────────────────────────────────────────
+
   specialRequests: {
     type: String,
     trim: true
   },
   contactInfo: {
-    name: String,
+    name:  String,
     email: String,
     phone: String
   },
@@ -61,18 +87,9 @@ const hotelBookingSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for efficient queries
 hotelBookingSchema.index({ user: 1, status: 1 });
 hotelBookingSchema.index({ hotel: 1, status: 1 });
 hotelBookingSchema.index({ checkInDate: 1, checkOutDate: 1 });
+hotelBookingSchema.index({ transactionUuid: 1 });
 
 module.exports = mongoose.model('HotelBooking', hotelBookingSchema);
-
-
-
-
-
-
-
-
-

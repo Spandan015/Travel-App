@@ -47,7 +47,7 @@ function Navbar() {
     { label: 'Hotels',       to: '/browse-hotels' },
     { label: 'Packages',     to: '/browse-packages' },
     { label: 'Guides',       to: '/browse-guides' },
-    { label: 'Destinations', to: '/browse-destinations' },  // ← added
+    { label: 'Destinations', to: '/browse-destinations' },
   ];
 
   const toolLinks = [
@@ -56,31 +56,38 @@ function Navbar() {
     { label: 'Currency Exchanger', to: '/currency-exchanger', icon: '💱' },
   ];
 
+  // ── Fixed: regular users go to '/' (the unified home/dashboard)
   const getDashboardLink = () => {
     if (isAdmin) return '/admin/dashboard';
     if (isGuide) return '/guide/dashboard';
-    return '/dashboard';
+    return '/';
+  };
+
+  const getDashboardLabel = () => {
+    if (isAdmin) return '📊 Admin Dashboard';
+    if (isGuide) return '📊 Guide Dashboard';
+    return '🏠 My Home';
   };
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
         .navbar {
           position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
           transition: background 0.3s, box-shadow 0.3s;
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
         }
         .navbar.transparent { background: transparent; box-shadow: none; }
         .navbar.solid { background: rgba(255,255,255,0.97); box-shadow: 0 1px 0 #e2e8f0; backdrop-filter: blur(12px); }
         .nav-inner {
-  max-width: 1280px; margin: 0 auto; padding: 0 24px 0 16px;
-  height: 68px; display: flex; align-items: center; justify-content: space-between;
-}
+          max-width: 1280px; margin: 0 auto; padding: 0 24px 0 16px;
+          height: 68px; display: flex; align-items: center; justify-content: space-between;
+        }
         .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
         .nav-logo-icon {
           width: 36px; height: 36px; border-radius: 10px;
-          background: linear-gradient(135deg, #0369a1, #0284c7);
+          background: linear-gradient(135deg, #16a34a, #15803d);
           display: flex; align-items: center; justify-content: center; font-size: 18px;
         }
         .nav-logo-text { display: flex; flex-direction: column; line-height: 1.1; }
@@ -94,13 +101,13 @@ function Navbar() {
         .navbar.transparent .nav-link { color: rgba(255,255,255,0.9); }
         .nav-link:hover { background: rgba(0,0,0,0.06); }
         .navbar.transparent .nav-link:hover { background: rgba(255,255,255,0.12); }
-        .nav-link.active { color: #0369a1; font-weight: 600; }
+        .nav-link.active { color: #16a34a; font-weight: 600; }
         .navbar.transparent .nav-link.active { color: #fff; background: rgba(255,255,255,0.15); }
         .nav-tools-wrap { position: relative; }
         .nav-tools-btn {
           display: flex; align-items: center; gap: 5px; padding: 8px 14px; border-radius: 8px;
           font-size: 14px; font-weight: 500; border: none; background: none; cursor: pointer;
-          color: #374151; font-family: 'DM Sans', sans-serif; transition: background 0.2s;
+          color: #374151; font-family: 'Roboto', sans-serif; transition: background 0.2s;
         }
         .navbar.transparent .nav-tools-btn { color: rgba(255,255,255,0.9); }
         .nav-tools-btn:hover { background: rgba(0,0,0,0.06); }
@@ -121,48 +128,46 @@ function Navbar() {
         @media(max-width:900px){ .nav-sign-in, .nav-get-started { display: none !important; } }
         .nav-sign-in { padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; color: #374151; }
         .navbar.transparent .nav-sign-in { color: #fff; }
-        .nav-get-started { padding: 9px 18px; border-radius: 8px; font-size: 14px; font-weight: 700; text-decoration: none; background: #0369a1; color: #fff; transition: background 0.2s; }
+        .nav-get-started { padding: 9px 18px; border-radius: 8px; font-size: 14px; font-weight: 700; text-decoration: none; background: #16a34a; color: #fff; transition: background 0.2s; }
         .navbar.transparent .nav-get-started { background: rgba(255,255,255,0.18); border: 1.5px solid rgba(255,255,255,0.4); }
-        .nav-get-started:hover { background: #0284c7; }
+        .nav-get-started:hover { background: #15803d; }
         .nav-profile-wrap { position: relative; }
         .nav-profile-btn {
           display: flex; align-items: center; gap: 8px; padding: 5px 5px 5px 10px;
           border-radius: 24px; border: 1.5px solid #e2e8f0; background: #fff;
-          cursor: pointer; font-family: 'DM Sans', sans-serif; transition: border-color 0.2s;
+          cursor: pointer; font-family: 'Roboto', sans-serif; transition: border-color 0.2s;
         }
         .nav-profile-btn:hover { border-color: #94a3b8; }
         .nav-profile-name { font-size: 13px; font-weight: 600; color: #374151; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .nav-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #0369a1, #0ea5e9); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; }
+        .nav-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #16a34a, #15803d); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; }
         .nav-profile-dropdown { position: absolute; top: calc(100% + 8px); right: 0; background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); padding: 8px; min-width: 220px; }
         .nav-profile-header { padding: 10px 12px 12px; border-bottom: 1px solid #f1f5f9; margin-bottom: 6px; }
         .nav-profile-full-name { font-size: 14px; font-weight: 700; color: #0f172a; }
         .nav-profile-email { font-size: 12px; color: #64748b; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .nav-profile-role { display: inline-block; margin-top: 6px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; background: #e0f2fe; color: #0369a1; }
+        .nav-profile-role { display: inline-block; margin-top: 6px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; background: #dcfce7; color: #16a34a; }
         .nav-profile-role.admin { background: #ede9fe; color: #6d28d9; }
         .nav-profile-role.guide { background: #d1fae5; color: #065f46; }
         .nav-profile-link { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500; color: #374151; transition: background 0.15s; }
         .nav-profile-link:hover { background: #f1f5f9; }
         .nav-profile-divider { height: 1px; background: #f1f5f9; margin: 6px 0; }
-        .nav-logout-btn { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; font-size: 14px; font-weight: 500; color: #ef4444; background: none; border: none; cursor: pointer; width: 100%; text-align: left; font-family: 'DM Sans', sans-serif; transition: background 0.15s; }
+        .nav-logout-btn { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; font-size: 14px; font-weight: 500; color: #ef4444; background: none; border: none; cursor: pointer; width: 100%; text-align: left; font-family: 'Roboto', sans-serif; transition: background 0.15s; }
         .nav-logout-btn:hover { background: #fef2f2; }
         .nav-hamburger { display: none; flex-direction: column; justify-content: center; gap: 5px; width: 36px; height: 36px; background: none; border: none; cursor: pointer; padding: 6px; border-radius: 8px; }
         @media(max-width:900px){ .nav-hamburger { display: flex; } }
         .hamburger-line { width: 20px; height: 2px; border-radius: 1px; background: #374151; transition: transform 0.25s, opacity 0.2s; }
         .navbar.transparent .hamburger-line { background: #fff; }
-        .hamburger-line.l1 { transform: none; }
         .hamburger-line.l1.open { transform: translateY(7px) rotate(45deg); }
         .hamburger-line.l2.open { opacity: 0; }
-        .hamburger-line.l3 { transform: none; }
         .hamburger-line.l3.open { transform: translateY(-7px) rotate(-45deg); }
         .nav-mobile { display: none; position: fixed; top: 68px; left: 0; right: 0; bottom: 0; background: #fff; z-index: 999; overflow-y: auto; padding: 16px; flex-direction: column; gap: 4px; }
         .nav-mobile.open { display: flex; }
         .mobile-link { display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-radius: 10px; text-decoration: none; font-size: 15px; font-weight: 500; color: #374151; transition: background 0.15s; }
-        .mobile-link:hover, .mobile-link.active { background: #f1f5f9; color: #0369a1; }
+        .mobile-link:hover, .mobile-link.active { background: #f1f5f9; color: #16a34a; }
         .mobile-divider { height: 1px; background: #f1f5f9; margin: 8px 0; }
         .mobile-section-label { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.8px; padding: 4px 16px 2px; }
         .mobile-auth-btns { display: flex; flex-direction: column; gap: 10px; padding: 12px 0; }
         .mobile-btn-signin { display: block; text-align: center; padding: 13px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-size: 15px; font-weight: 600; color: #374151; text-decoration: none; }
-        .mobile-btn-start { display: block; text-align: center; padding: 13px; background: #0369a1; border-radius: 10px; font-size: 15px; font-weight: 700; color: #fff; text-decoration: none; }
+        .mobile-btn-start { display: block; text-align: center; padding: 13px; background: #16a34a; border-radius: 10px; font-size: 15px; font-weight: 700; color: #fff; text-decoration: none; }
       `}</style>
 
       <nav className={`navbar ${transparent ? 'transparent' : 'solid'}`}>
@@ -216,8 +221,20 @@ function Navbar() {
                         {user.role === 'hotel_owner' ? 'Hotel Owner' : user.role}
                       </span>
                     </div>
-                    <Link to={getDashboardLink()} className="nav-profile-link" onClick={() => setProfileOpen(false)}>📊 My Dashboard</Link>
-                    <Link to="/bookings" className="nav-profile-link" onClick={() => setProfileOpen(false)}>🎒 My Bookings</Link>
+
+                    {/* ── Fixed dashboard link ── */}
+                    <Link to={getDashboardLink()} className="nav-profile-link" onClick={() => setProfileOpen(false)}>
+                      {getDashboardLabel()}
+                    </Link>
+                    <Link to="/my-bookings" className="nav-profile-link" onClick={() => setProfileOpen(false)}>
+                      🎒 My Bookings
+                    </Link>
+                    {!isAdmin && !isGuide && (
+                      <Link to="/apply-guide" className="nav-profile-link" onClick={() => setProfileOpen(false)}>
+                        🧭 Apply as Guide
+                      </Link>
+                    )}
+
                     <div className="nav-profile-divider" />
                     <button className="nav-logout-btn" onClick={handleLogout}>🚪 Sign out</button>
                   </div>
@@ -238,9 +255,12 @@ function Navbar() {
         </div>
       </nav>
 
+      {/* Mobile menu */}
       <div className={`nav-mobile${menuOpen ? ' open' : ''}`}>
         {navLinks.map(link => (
-          <Link key={link.to} to={link.to} className={`mobile-link${location.pathname === link.to ? ' active' : ''}`}>{link.label}</Link>
+          <Link key={link.to} to={link.to} className={`mobile-link${location.pathname === link.to ? ' active' : ''}`}>
+            {link.label}
+          </Link>
         ))}
         <div className="mobile-divider" />
         <div className="mobile-section-label">Planning Tools</div>
@@ -251,8 +271,11 @@ function Navbar() {
         <div className="mobile-divider" />
         {isAuthenticated && user ? (
           <>
-            <Link to={getDashboardLink()} className="mobile-link">📊 My Dashboard</Link>
-            <Link to="/bookings" className="mobile-link">🎒 My Bookings</Link>
+            <Link to={getDashboardLink()} className="mobile-link">{getDashboardLabel()}</Link>
+            <Link to="/my-bookings" className="mobile-link">🎒 My Bookings</Link>
+            {!isAdmin && !isGuide && (
+              <Link to="/apply-guide" className="mobile-link">🧭 Apply as Guide</Link>
+            )}
             <div className="mobile-divider" />
             <button className="nav-logout-btn" onClick={handleLogout}>🚪 Sign out</button>
           </>

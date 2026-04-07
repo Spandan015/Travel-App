@@ -2,35 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Nepal Tourism Theme Colors */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
+
+/* ───────── ROOT THEME (GREEN BRAND) ───────── */
 :root {
-  --nepal-primary: #1e3a8a; /* Deep navy blue */
-  --nepal-secondary: #059669; /* Emerald green */
-  --nepal-accent: #f59e0b; /* Golden yellow */
-  --nepal-light: #ecfdf5; /* Light green */
-  --nepal-dark: #064e3b; /* Dark green */
-  --nepal-sunset: #ea580c; /* Orange */
+  --nepal-primary: #16a34a;   /* Main green */
+  --nepal-secondary: #15803d; /* Dark green */
+  --nepal-accent: #f59e0b;    /* Golden */
+  --nepal-light: #f0fdf4;     /* Light green */
+  --nepal-dark: #052e16;      /* Deep green */
+  --nepal-sunset: #ea580c;    /* Orange */
 }
 
-/* Custom scrollbar */
+@layer base {
+  html, body {
+    @apply font-sans;
+  }
+}
+
+body {
+  font-family: 'Roboto', sans-serif !important;
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #f1f5f9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
+  background: #16a34a;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #15803d;
 }
 
-/* Custom animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -46,10 +58,10 @@
   animation: fadeIn 0.5s ease-in-out;
 }
 
-/* Loading spinner */
+/* ───────── LOADER ───────── */
 .spinner {
   border: 3px solid #f3f3f3;
-  border-top: 3px solid #3b82f6;
+  border-top: 3px solid #16a34a; /* FIXED: green */
   border-radius: 50%;
   width: 40px;
   height: 40px;
@@ -61,44 +73,54 @@
   100% { transform: rotate(360deg); }
 }
 
-/* Nepal-themed button styles */
+/* ───────── BUTTONS ───────── */
 .btn-primary {
-  @apply bg-gradient-to-r from-emerald-600 to-blue-700 text-white px-6 py-2 rounded-lg hover:from-emerald-700 hover:to-blue-800 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105;
+  @apply bg-gradient-to-r from-green-500 to-green-700 text-white px-6 py-2 rounded-lg 
+  hover:from-green-600 hover:to-green-800 transition-all duration-300 
+  font-medium shadow-lg hover:shadow-xl transform hover:scale-105;
 }
 
 .btn-secondary {
-  @apply bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 px-6 py-2 rounded-lg hover:from-gray-200 hover:to-gray-300 transition-all duration-300 font-medium shadow-md hover:shadow-lg;
+  @apply bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 px-6 py-2 rounded-lg 
+  hover:from-gray-200 hover:to-gray-300 transition-all duration-300 
+  font-medium shadow-md hover:shadow-lg;
 }
 
 .btn-danger {
-  @apply bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-2 rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl;
+  @apply bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-2 rounded-lg 
+  hover:from-red-600 hover:to-red-700 transition-all duration-300 
+  font-medium shadow-lg hover:shadow-xl;
 }
 
 .btn-success {
-  @apply bg-gradient-to-r from-emerald-500 to-green-600 text-white px-6 py-2 rounded-lg hover:from-emerald-600 hover:to-green-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl;
+  @apply bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2 rounded-lg 
+  hover:from-green-600 hover:to-green-700 transition-all duration-300 
+  font-medium shadow-lg hover:shadow-xl;
 }
 
-/* Card styles */
+/* ───────── CARDS ───────── */
 .card {
   @apply bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300;
 }
 
-/* Nepal-themed input styles */
+/* ───────── INPUTS ───────── */
 .input-field {
-  @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300;
+  @apply w-full px-4 py-3 border border-gray-300 rounded-lg 
+  focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent 
+  transition-all duration-300;
 }
 
 .input-field:focus {
-  @apply shadow-lg ring-4 ring-emerald-100;
+  @apply shadow-lg ring-4 ring-green-100;
 }
 
-/* Nepal-themed badge styles */
+/* ───────── BADGES ───────── */
 .badge {
   @apply inline-block px-3 py-1 text-sm font-semibold rounded-full shadow-sm;
 }
 
 .badge-success {
-  @apply bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border border-emerald-200;
+  @apply bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-200;
 }
 
 .badge-warning {
@@ -110,18 +132,9 @@
 }
 
 .badge-info {
-  @apply bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200;
+  @apply bg-gradient-to-r from-sky-100 to-indigo-100 text-sky-800 border border-sky-200;
 }
 
 .badge-primary {
-  @apply bg-gradient-to-r from-emerald-500 to-blue-600 text-white;
-}
-\@layer base {
-  html, body {
-    @apply font-sans;
-  }
-}
-
-body {
-  font-family: 'Roboto', sans-serif !important;
+  @apply bg-gradient-to-r from-green-500 to-green-700 text-white;
 }

@@ -16,11 +16,11 @@ const IcoCheck   = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="n
 const IcoClock   = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
   @keyframes shimmer{0%,100%{opacity:1;}50%{opacity:0.35;}}
   @keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
   @keyframes barGrow{from{height:0;}to{height:var(--h);}}
-  .ad-root{font-family:'Plus Jakarta Sans',sans-serif;animation:fadeUp 0.4s ease;}
+  .ad-root{font-family:'Roboto',sans-serif;animation:fadeUp 0.4s ease;}
   .ad-grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px;}
   @media(max-width:1100px){.ad-grid4{grid-template-columns:repeat(2,1fr);}}
   @media(max-width:540px){.ad-grid4{grid-template-columns:1fr;}}

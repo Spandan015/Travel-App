@@ -11,14 +11,14 @@ const DIFF_COLOR = { Easy:'#027A48', Moderate:'#B54708', Challenging:'#B42318', 
 const DIFF_BG    = { Easy:'#ECFDF3', Moderate:'#FFFAEB', Challenging:'#FEF3F2', Expert:'#F5F3FF' };
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
   :root {
     --blue:#1B4F8A; --blue-dark:#0F3362; --blue-light:#EEF4FB;
     --text:#1E2D3D; --muted:#6b7c93; --border:#E4ECF3; --bg:#F5F9FF;
   }
-  .pd-root { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); padding-top:68px; min-height:100vh; }
+  .pd-root { font-family:'Roboto',sans-serif; background:var(--bg); padding-top:68px; min-height:100vh; }
 
-  /* ── GALLERY — same 5-panel Booking.com style ── */
+  /* ── GALLERY ── */
   .pd-gallery-wrap { position:relative; max-height:440px; overflow:hidden; cursor:pointer; }
   .pd-gallery { display:grid; grid-template-columns:2fr 1fr 1fr; grid-template-rows:220px 220px; gap:3px; height:440px; }
   .pd-gp { overflow:hidden; position:relative; background:linear-gradient(135deg,#1B4F8A,#0F3362); display:flex; align-items:center; justify-content:center; font-size:3rem; }
@@ -50,7 +50,7 @@ const STYLES = `
   /* Nav tabs */
   .pd-nav-tabs { background:#fff; border-bottom:1px solid var(--border); position:sticky; top:68px; z-index:40; }
   .pd-nav-inner { max-width:1180px; margin:0 auto; padding:0 24px; display:flex; }
-  .pd-nav-tab { padding:14px 18px; font-size:13px; font-weight:600; color:var(--muted); border-bottom:3px solid transparent; cursor:pointer; transition:all 0.15s; white-space:nowrap; background:none; border-top:none; border-left:none; border-right:none; font-family:'Plus Jakarta Sans',sans-serif; }
+  .pd-nav-tab { padding:14px 18px; font-size:13px; font-weight:600; color:var(--muted); border-bottom:3px solid transparent; cursor:pointer; transition:all 0.15s; white-space:nowrap; background:none; border-top:none; border-left:none; border-right:none; font-family:'Roboto',sans-serif; }
   .pd-nav-tab:hover { color:var(--text); }
   .pd-nav-tab.active { color:var(--blue); border-bottom-color:var(--blue); }
 
@@ -59,7 +59,7 @@ const STYLES = `
   .pd-breadcrumb { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); margin-bottom:12px; flex-wrap:wrap; }
   .pd-breadcrumb a { color:var(--blue); text-decoration:none; }
   .pd-header-row { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:8px; flex-wrap:wrap; }
-  .pd-name { font-family:'Playfair Display',serif; font-size:clamp(1.4rem,3vw,2rem); font-weight:800; color:var(--text); margin:0; line-height:1.2; }
+  .pd-name { font-family:'Roboto',serif; font-size:clamp(1.4rem,3vw,2rem); font-weight:800; color:var(--text); margin:0; line-height:1.2; }
   .pd-meta-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
   .pd-meta-pill { display:flex; align-items:center; gap:5px; font-size:13px; color:var(--muted); }
   .pd-diff-badge { font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; }
@@ -73,7 +73,7 @@ const STYLES = `
   .pd-section:last-child { margin-bottom:0; }
   .pd-section-title { font-size:16px; font-weight:800; color:var(--text); margin:0 0 14px; padding-bottom:12px; border-bottom:1px solid var(--border); }
   .pd-desc { font-size:14px; color:var(--muted); line-height:1.8; }
-  .pd-read-more { color:var(--blue); font-size:13px; font-weight:600; cursor:pointer; border:none; background:none; padding:0; margin-top:8px; display:block; font-family:'Plus Jakarta Sans',sans-serif; }
+  .pd-read-more { color:var(--blue); font-size:13px; font-weight:600; cursor:pointer; border:none; background:none; padding:0; margin-top:8px; display:block; font-family:'Roboto',sans-serif; }
 
   /* Highlights */
   .pd-highlights { display:flex; flex-direction:column; gap:10px; }
@@ -107,7 +107,7 @@ const STYLES = `
   .pd-book-price span { font-size:14px; font-weight:400; color:var(--muted); }
   .pd-book-note-top { font-size:12px; color:var(--muted); margin:4px 0 18px; }
   .pd-field-label { font-size:10px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text); margin-bottom:5px; display:block; }
-  .pd-input { width:100%; padding:11px 14px; border:2px solid var(--border); border-radius:10px; font-size:13px; font-family:'Plus Jakarta Sans',sans-serif; color:var(--text); outline:none; margin-bottom:12px; transition:border 0.15s; background:#fff; }
+  .pd-input { width:100%; padding:11px 14px; border:2px solid var(--border); border-radius:10px; font-size:13px; font-family:'Roboto',sans-serif; color:var(--text); outline:none; margin-bottom:12px; transition:border 0.15s; background:#fff; }
   .pd-input:focus { border-color:var(--blue); }
   .pd-counter-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); }
   .pd-counter-row:last-child { border-bottom:none; }
@@ -122,7 +122,7 @@ const STYLES = `
   .pd-pb-row { display:flex; justify-content:space-between; font-size:13px; color:var(--muted); margin-bottom:8px; }
   .pd-pb-total { display:flex; justify-content:space-between; font-size:15px; font-weight:800; color:var(--text); padding-top:10px; border-top:1px solid var(--border); }
   .pd-pb-total span:last-child { color:var(--blue); }
-  .pd-reserve-btn { width:100%; padding:15px; background:var(--blue); color:#fff; border:none; border-radius:10px; font-size:15px; font-weight:800; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; transition:all 0.2s; margin-bottom:10px; }
+  .pd-reserve-btn { width:100%; padding:15px; background:var(--blue); color:#fff; border:none; border-radius:10px; font-size:15px; font-weight:800; cursor:pointer; font-family:'Roboto',sans-serif; transition:all 0.2s; margin-bottom:10px; }
   .pd-reserve-btn:hover:not(:disabled) { background:var(--blue-dark); transform:translateY(-1px); box-shadow:0 6px 20px rgba(27,79,138,0.3); }
   .pd-reserve-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
   .pd-book-foot { font-size:11.5px; color:var(--muted); text-align:center; margin-bottom:12px; }
@@ -131,9 +131,9 @@ const STYLES = `
   .pd-error { background:#FEF3F2; border:1px solid #FDA29B; color:#B42318; padding:10px 14px; border-radius:10px; font-size:13px; margin-bottom:14px; font-weight:500; }
   .pd-success { text-align:center; padding:20px 0; }
   .pd-success-icon { font-size:48px; margin-bottom:12px; display:block; }
-  .pd-success h3 { font-family:'Plus Jakarta Sans',sans-serif; font-size:18px; font-weight:800; color:var(--text); margin:0 0 8px; }
+  .pd-success h3 { font-family:'Roboto',sans-serif; font-size:18px; font-weight:800; color:var(--text); margin:0 0 8px; }
   .pd-success p { font-size:13px; color:var(--muted); margin:0 0 16px; line-height:1.6; }
-  .pd-success-btn { display:inline-block; background:var(--blue); color:#fff; padding:11px 24px; border-radius:10px; font-size:13px; font-weight:700; text-decoration:none; font-family:'Plus Jakarta Sans',sans-serif; }
+  .pd-success-btn { display:inline-block; background:var(--blue); color:#fff; padding:11px 24px; border-radius:10px; font-size:13px; font-weight:700; text-decoration:none; font-family:'Roboto',sans-serif; }
 
   /* Loading */
   .pd-loading { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; gap:16px; }
@@ -182,26 +182,32 @@ export default function PackageDetails() {
   const price = pkg ? (typeof pkg.price === 'object' ? pkg.price?.amount : pkg.price) : 0;
   const totalPrice = Number(price || 0) * guests;
 
+  // ── FIXED: no longer checks destinations array ──
   const handleBooking = async (e) => {
     e.preventDefault();
     if (!user) { navigate('/login'); return; }
     if (!startDate) { setBookingError('Please select a start date.'); return; }
-    if (!pkg.destinations?.length || !pkg.destinations[0]?._id) {
-      setBookingError('This package has no destinations assigned. Please contact the admin.');
-      return;
-    }
+
     setBookingLoading(true);
     setBookingError('');
     try {
       const { data } = await axios.post(
         `${API}/bookings`,
-        { destination: pkg.destinations[0]._id, startDate, endDate: calcEndDate(), guests: Number(guests), totalPrice },
+        {
+          package:    pkg._id,
+          startDate,
+          endDate:    calcEndDate(),
+          guests:     Number(guests),
+          totalPrice,
+        },
         { headers: { Authorization: `Bearer ${authToken()}` } }
       );
       setSuccess(data.booking || data);
     } catch (err) {
       setBookingError(err.response?.data?.message || 'Failed to create booking.');
-    } finally { setBookingLoading(false); }
+    } finally {
+      setBookingLoading(false);
+    }
   };
 
   const name      = pkg ? (pkg.name || pkg.title || 'Package') : '';
@@ -213,14 +219,14 @@ export default function PackageDetails() {
   if (loading) return (
     <>
       <style>{STYLES}</style>
-      <div className="pd-root"><div className="pd-loading"><div className="pd-spinner" /><p style={{color:'var(--muted)',fontFamily:'Plus Jakarta Sans,sans-serif',fontSize:14}}>Loading package…</p></div></div>
+      <div className="pd-root"><div className="pd-loading"><div className="pd-spinner" /><p style={{color:'var(--muted)',fontFamily:'Roboto,sans-serif',fontSize:14}}>Loading package…</p></div></div>
     </>
   );
 
   if (!pkg) return (
     <>
       <style>{STYLES}</style>
-      <div className="pd-root" style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'80vh',flexDirection:'column',gap:16,fontFamily:'Plus Jakarta Sans,sans-serif'}}>
+      <div className="pd-root" style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'80vh',flexDirection:'column',gap:16,fontFamily:'Roboto,sans-serif'}}>
         <div style={{fontSize:'3rem'}}>📦</div>
         <h2 style={{color:'var(--text)',fontWeight:800}}>Package Not Found</h2>
         <Link to="/browse-packages" style={{background:'var(--blue)',color:'#fff',padding:'11px 24px',borderRadius:10,fontWeight:700,textDecoration:'none'}}>← Back to Packages</Link>
@@ -332,7 +338,7 @@ export default function PackageDetails() {
                     <h2 className="pd-section-title">Best time to visit</h2>
                     <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
                       {pkg.bestSeason.map(s => (
-                        <span key={s} style={{background:' var(--blue-light)',color:'var(--blue)',padding:'6px 14px',borderRadius:20,fontSize:13,fontWeight:600}}>🗓 {s}</span>
+                        <span key={s} style={{background:'var(--blue-light)',color:'var(--blue)',padding:'6px 14px',borderRadius:20,fontSize:13,fontWeight:600}}>🗓 {s}</span>
                       ))}
                     </div>
                   </div>
@@ -428,7 +434,17 @@ export default function PackageDetails() {
                     })()}
                   </>
                 ) : (
-                  <p style={{fontSize:13,color:'var(--muted)'}}>No destinations assigned to this package yet.</p>
+                  /* Show region/location info from the package itself as fallback */
+                  <div>
+                    {(pkg.region || pkg.destination || pkg.location) ? (
+                      <div className="pd-dest-chip" style={{display:'inline-block'}}>
+                        <div className="pd-dest-chip-name">📍 {pkg.destination || pkg.location || pkg.region}</div>
+                        {pkg.region && pkg.destination && <div className="pd-dest-chip-loc">{pkg.region}</div>}
+                      </div>
+                    ) : (
+                      <p style={{fontSize:13,color:'var(--muted)'}}>No destinations assigned to this package yet.</p>
+                    )}
+                  </div>
                 )}
               </div>
             )}
@@ -454,7 +470,6 @@ export default function PackageDetails() {
 
                   {bookingError && <div className="pd-error">⚠️ {bookingError}</div>}
 
-                  {/* Start date */}
                   <label className="pd-field-label">Start Date</label>
                   <input className="pd-input" type="date" required min={today} value={startDate} onChange={e=>setStartDate(e.target.value)} />
                   {startDate && pkg.duration && (
@@ -463,7 +478,6 @@ export default function PackageDetails() {
                     </div>
                   )}
 
-                  {/* Group size */}
                   <label className="pd-field-label">Group Size</label>
                   <div className="pd-counter-wrap">
                     <div className="pd-counter-row">
@@ -476,7 +490,6 @@ export default function PackageDetails() {
                     </div>
                   </div>
 
-                  {/* Price breakdown */}
                   <div className="pd-breakdown">
                     <div className="pd-pb-row">
                       <span>NPR {Number(price||0).toLocaleString()} × {guests} person{guests>1?'s':''}</span>

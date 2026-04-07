@@ -10,12 +10,9 @@ const {
 } = require('../controllers/bookingController');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 
-// ─── Admin routes ─────────────────────────────────────────────────────────────
-// ✅ Both GET / and GET /admin/all return all bookings for admin panel
 router.get('/admin/all', protect, adminOnly, getAll);
-router.get('/',          protect, adminOnly, getAll);   // ✅ ADDED — fixes 404 on /api/bookings
+router.get('/',          protect, adminOnly, getAll);   
 
-// ─── User routes ──────────────────────────────────────────────────────────────
 router.get('/my',   protect, getUserBookings);
 router.get('/:id',  protect, getById);
 router.post('/',    protect, create);

@@ -12,9 +12,9 @@ const DIFF_COLORS = {
 };
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;0,800;1,600;1,700&family=DM+Sans:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  .rd-root { font-family: 'DM Sans', sans-serif; background: #f8faf8; min-height: 100vh; padding-top: 68px; }
+  .rd-root { font-family: 'Roboto', sans-serif; background: #f8faf8; min-height: 100vh; padding-top: 68px; }
 
   /* HERO */
   .rd-hero {
@@ -30,7 +30,7 @@ const STYLES = `
   .rd-breadcrumb { display:flex; align-items:center; gap:8px; justify-content:center; margin-bottom:20px; font-size:13px; color:rgba(255,255,255,0.6); }
   .rd-breadcrumb a { color:rgba(255,255,255,0.7); text-decoration:none; }
   .rd-breadcrumb a:hover { color:#4ade80; }
-  .rd-hero h1 { font-family:'Fraunces',serif; font-size:clamp(2.4rem,6vw,4rem); font-weight:700; color:#fff; margin:0 0 16px; line-height:1.1; letter-spacing:-0.02em; }
+  .rd-hero h1 { font-family:'Roboto',serif; font-size:clamp(2.4rem,6vw,4rem); font-weight:700; color:#fff; margin:0 0 16px; line-height:1.1; letter-spacing:-0.02em; }
   .rd-hero h1 em { font-style:italic; color:#4ade80; }
   .rd-hero-tagline { font-size:1.05rem; color:rgba(255,255,255,0.75); font-weight:300; line-height:1.7; margin-bottom:32px; }
   .rd-hero-pills { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; }
@@ -42,18 +42,18 @@ const STYLES = `
 
   /* DESCRIPTION */
   .rd-desc-card { background:#fff; border-radius:20px; border:1px solid #e5f0e8; padding:36px; box-shadow:0 2px 12px rgba(22,163,74,0.05); margin-bottom:28px; }
-  .rd-desc-card h2 { font-family:'Fraunces',serif; font-size:1.5rem; font-weight:700; color:#0f172a; margin-bottom:16px; }
+  .rd-desc-card h2 { font-family:'Roboto',serif; font-size:1.5rem; font-weight:700; color:#0f172a; margin-bottom:16px; }
   .rd-desc-card p { color:#64748b; line-height:1.85; font-size:0.95rem; font-weight:300; white-space:pre-line; }
 
   /* HIGHLIGHTS */
   .rd-highlights-card { background:#fff; border-radius:20px; border:1px solid #e5f0e8; padding:28px; box-shadow:0 2px 12px rgba(22,163,74,0.05); margin-bottom:28px; }
-  .rd-highlights-card h3 { font-family:'Fraunces',serif; font-size:1.1rem; font-weight:700; color:#0f172a; margin-bottom:16px; }
+  .rd-highlights-card h3 { font-family:'Roboto',serif; font-size:1.1rem; font-weight:700; color:#0f172a; margin-bottom:16px; }
   .rd-hl-list { list-style:none; display:flex; flex-direction:column; gap:10px; }
   .rd-hl-item { display:flex; align-items:flex-start; gap:10px; font-size:14px; color:#374151; }
   .rd-hl-dot { width:20px; height:20px; border-radius:50%; background:#f0fdf4; border:1.5px solid #16a34a; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; font-size:10px; color:#16a34a; }
 
   /* PACKAGES */
-  .rd-packages-title { font-family:'Fraunces',serif; font-size:1.5rem; font-weight:700; color:#0f172a; margin-bottom:8px; }
+  .rd-packages-title { font-family:'Roboto',serif; font-size:1.5rem; font-weight:700; color:#0f172a; margin-bottom:8px; }
   .rd-packages-sub { font-size:14px; color:#64748b; margin-bottom:24px; }
   .rd-pkg-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:18px; }
 
@@ -65,24 +65,24 @@ const STYLES = `
   .rd-pkg-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:2rem; }
   .rd-pkg-diff { position:absolute; top:10px; left:10px; font-size:10px; font-weight:700; padding:3px 10px; border-radius:100px; }
   .rd-pkg-body { padding:14px 16px 16px; }
-  .rd-pkg-name { font-family:'Fraunces',serif; font-size:1rem; font-weight:700; color:#0f172a; margin-bottom:6px; line-height:1.3; }
+  .rd-pkg-name { font-family:'Roboto',serif; font-size:1rem; font-weight:700; color:#0f172a; margin-bottom:6px; line-height:1.3; }
   .rd-pkg-meta { display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
   .rd-pkg-meta span { font-size:11px; color:#94a3b8; display:flex; align-items:center; gap:3px; }
   .rd-pkg-footer { display:flex; align-items:center; justify-content:space-between; }
-  .rd-pkg-price { font-family:'Fraunces',serif; font-size:1.1rem; font-weight:700; color:#0f172a; }
-  .rd-pkg-price small { font-size:11px; color:#94a3b8; font-family:'DM Sans',sans-serif; font-weight:400; }
+  .rd-pkg-price { font-family:'Roboto',serif; font-size:1.1rem; font-weight:700; color:#0f172a; }
+  .rd-pkg-price small { font-size:11px; color:#94a3b8; font-family:'Roboto',sans-serif; font-weight:400; }
   .rd-pkg-btn { background:#0f172a; color:#fff; border-radius:8px; padding:7px 14px; font-size:11px; font-weight:600; transition:background 0.2s; }
   .rd-pkg-card:hover .rd-pkg-btn { background:#16a34a; }
 
   .rd-no-pkgs { text-align:center; padding:48px 24px; background:#fff; border-radius:16px; border:1px solid #e5f0e8; }
-  .rd-no-pkgs h3 { font-family:'Fraunces',serif; font-size:1.2rem; color:#0f172a; margin-bottom:8px; }
+  .rd-no-pkgs h3 { font-family:'Roboto',serif; font-size:1.2rem; color:#0f172a; margin-bottom:8px; }
   .rd-no-pkgs p { font-size:14px; color:#64748b; margin-bottom:20px; }
   .rd-no-pkgs a { display:inline-block; background:#16a34a; color:#fff; padding:10px 22px; border-radius:10px; font-size:13px; font-weight:600; text-decoration:none; }
 
   /* SIDEBAR */
   .rd-sidebar { display:flex; flex-direction:column; gap:20px; }
   .rd-side-card { background:#fff; border-radius:16px; border:1px solid #e5f0e8; padding:22px; box-shadow:0 2px 8px rgba(22,163,74,0.04); }
-  .rd-side-title { font-family:'Fraunces',serif; font-size:1rem; font-weight:700; color:#0f172a; margin-bottom:16px; }
+  .rd-side-title { font-family:'Roboto',serif; font-size:1rem; font-weight:700; color:#0f172a; margin-bottom:16px; }
   .rd-info-row { display:flex; align-items:flex-start; gap:10px; padding:9px 0; border-bottom:1px solid #f0fdf4; }
   .rd-info-row:last-child { border-bottom:none; }
   .rd-info-icon { width:32px; height:32px; border-radius:8px; background:#f0fdf4; display:flex; align-items:center; justify-content:center; font-size:0.9rem; flex-shrink:0; }
@@ -90,7 +90,7 @@ const STYLES = `
   .rd-info-value { font-size:13px; color:#0f172a; font-weight:600; margin-top:2px; }
 
   .rd-cta-card { background:linear-gradient(135deg, #0a2818 0%, #1a4a2a 100%); border-radius:16px; padding:24px; text-align:center; }
-  .rd-cta-card h3 { font-family:'Fraunces',serif; font-size:1.1rem; font-weight:700; color:#fff; margin-bottom:8px; }
+  .rd-cta-card h3 { font-family:'Roboto',serif; font-size:1.1rem; font-weight:700; color:#fff; margin-bottom:8px; }
   .rd-cta-card p { font-size:13px; color:rgba(255,255,255,0.65); line-height:1.6; margin-bottom:18px; }
   .rd-cta-btn { display:block; background:#16a34a; color:#fff; padding:11px; border-radius:10px; font-size:13px; font-weight:700; text-decoration:none; margin-bottom:8px; transition:background 0.2s; }
   .rd-cta-btn:hover { background:#15803d; }
@@ -165,7 +165,7 @@ export default function RegionDetail() {
         <style>{STYLES}</style>
         <div className="rd-root" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', flexDirection: 'column', gap: 16 }}>
           <div style={{ fontSize: '3rem' }}>🏔</div>
-          <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: '1.5rem', color: '#0f172a' }}>Region not found</h2>
+          <h2 style={{ fontFamily: "'Roboto', serif", fontSize: '1.5rem', color: '#0f172a' }}>Region not found</h2>
           <p style={{ color: '#64748b', marginBottom: 20 }}>This region doesn't exist or hasn't been created yet.</p>
           <Link to="/browse-destinations" style={{ background: '#16a34a', color: '#fff', padding: '10px 24px', borderRadius: 10, textDecoration: 'none', fontWeight: 600 }}>← Back to Regions</Link>
         </div>

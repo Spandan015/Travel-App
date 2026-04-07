@@ -13,10 +13,10 @@ const DIFF_COLORS = {
 };
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;0,800;1,600;1,700&family=DM+Sans:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
 
-  .bp-root { font-family:'DM Sans',sans-serif; background:#f8faf8; min-height:100vh; padding-top:68px; }
+  .bp-root { font-family:'Roboto', sans-serif; background:#f8faf8; min-height:100vh; padding-top:68px; }
 
   /* Hero */
   .bp-hero {
@@ -44,7 +44,7 @@ const STYLES = `
   }
   .bp-badge span { width:6px;height:6px;border-radius:50%;background:#4ade80;display:inline-block; }
   .bp-hero h1 {
-    font-family:'Fraunces',serif; font-size:clamp(2.2rem,5vw,3.8rem);
+    font-family:'Roboto',serif; font-size:clamp(2.2rem,5vw,3.8rem);
     font-weight:700; color:#fff; margin:0 0 16px; line-height:1.1; letter-spacing:-0.02em;
   }
   .bp-hero h1 em { font-style:italic; color:#4ade80; }
@@ -56,13 +56,13 @@ const STYLES = `
   }
   .bp-hero-input {
     flex:1; border:none; outline:none; padding:12px 16px;
-    font-size:0.9rem; font-family:'DM Sans',sans-serif; color:#111; background:transparent;
+    font-size:0.9rem; font-family:'Roboto', sans-serif; color:#111; background:transparent;
   }
   .bp-hero-input::placeholder { color:#9ca3af; }
   .bp-hero-btn {
     background:#16a34a; color:white; border:none; border-radius:10px;
     padding:12px 24px; font-size:0.875rem; font-weight:600;
-    cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.2s; white-space:nowrap;
+    cursor:pointer; font-family:'Roboto', sans-serif; transition:background 0.2s; white-space:nowrap;
   }
   .bp-hero-btn:hover { background:#15803d; }
 
@@ -73,7 +73,7 @@ const STYLES = `
     position:relative; z-index:2;
   }
   .bp-stat { text-align:center; color:white; }
-  .bp-stat-num { font-family:'Fraunces',serif; font-size:1.5rem; font-weight:700; display:block; }
+  .bp-stat-num { font-family:'Roboto',serif; font-size:1.5rem; font-weight:700; display:block; }
   .bp-stat-label { font-size:0.72rem; opacity:0.55; text-transform:uppercase; letter-spacing:0.06em; }
 
   /* Body */
@@ -86,18 +86,18 @@ const STYLES = `
     padding:24px; height:fit-content; position:sticky; top:88px;
     box-shadow:0 2px 12px rgba(22,163,74,0.06);
   }
-  .bp-sidebar-title { font-family:'Fraunces',serif; font-size:1rem; font-weight:700; color:#0a2818; margin:0 0 20px; }
+  .bp-sidebar-title { font-family:'Roboto',serif; font-size:1rem; font-weight:700; color:#0a2818; margin:0 0 20px; }
   .bp-filter-section { margin-bottom:20px; }
   .bp-filter-label { font-size:0.7rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#6b7280; margin-bottom:8px; display:block; }
   .bp-filter-input {
     width:100%; padding:9px 12px; border:1.5px solid #d1fae5;
-    border-radius:9px; font-size:0.875rem; font-family:'DM Sans',sans-serif;
+    border-radius:9px; font-size:0.875rem; font-family:'Roboto', sans-serif;
     color:#111827; outline:none; transition:border 0.15s;
   }
   .bp-filter-input:focus { border-color:#16a34a; }
   .bp-filter-select {
     width:100%; padding:9px 12px; border:1.5px solid #d1fae5;
-    border-radius:9px; font-size:0.875rem; font-family:'DM Sans',sans-serif;
+    border-radius:9px; font-size:0.875rem; font-family:'Roboto', sans-serif;
     color:#111827; outline:none; background:white; cursor:pointer;
   }
   .bp-price-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
@@ -105,7 +105,7 @@ const STYLES = `
   .bp-diff-tag {
     padding:5px 12px; border-radius:20px; border:1.5px solid #d1fae5;
     font-size:0.78rem; font-weight:500; cursor:pointer; background:white;
-    color:#6b7280; font-family:'DM Sans',sans-serif; transition:all 0.15s;
+    color:#6b7280; font-family:'Roboto', sans-serif; transition:all 0.15s;
   }
   .bp-diff-tag.active { background:#f0fdf4; border-color:#16a34a; color:#15803d; font-weight:600; }
   .bp-check-row { display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:8px; }
@@ -114,17 +114,17 @@ const STYLES = `
   .bp-reset {
     width:100%; padding:9px; border:1.5px solid #d1fae5; border-radius:9px;
     background:transparent; color:#6b7280; font-size:0.83rem; font-weight:500;
-    cursor:pointer; font-family:'DM Sans',sans-serif; margin-top:4px; transition:all 0.15s;
+    cursor:pointer; font-family:'Roboto', sans-serif; margin-top:4px; transition:all 0.15s;
   }
   .bp-reset:hover { border-color:#16a34a; color:#16a34a; }
 
   /* Results */
   .bp-results { min-width:0; }
   .bp-results-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
-  .bp-results-count { font-family:'Fraunces',serif; font-size:1.1rem; font-weight:700; color:#0a2818; }
+  .bp-results-count { font-family:'Roboto',serif; font-size:1.1rem; font-weight:700; color:#0a2818; }
   .bp-sort {
     padding:8px 14px; border:1.5px solid #d1fae5; border-radius:9px;
-    font-size:0.83rem; font-family:'DM Sans',sans-serif; color:#374151;
+    font-size:0.83rem; font-family:'Roboto', sans-serif; color:#374151;
     outline:none; background:white; cursor:pointer;
   }
 
@@ -147,7 +147,7 @@ const STYLES = `
     font-size:0.72rem; font-weight:700; padding:4px 10px; border-radius:20px;
   }
   .bp-card-body { padding:18px; display:flex; flex-direction:column; flex:1; }
-  .bp-card-name { font-family:'Fraunces',serif; font-size:1.05rem; font-weight:700; color:#0a2818; margin:0 0 8px; }
+  .bp-card-name { font-family:'Roboto',serif; font-size:1.05rem; font-weight:700; color:#0a2818; margin:0 0 8px; }
   .bp-card-meta { display:flex; gap:12px; margin-bottom:10px; flex-wrap:wrap; }
   .bp-card-meta span { font-size:0.78rem; color:#6b7280; font-weight:500; }
   .bp-card-desc { font-size:0.83rem; color:#6b7280; margin:0 0 12px; line-height:1.6; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
@@ -160,12 +160,12 @@ const STYLES = `
   .bp-card-footer { display:flex; align-items:center; justify-content:space-between; margin-top:auto; padding-top:14px; border-top:1px solid #f0fdf4; }
   .bp-price { display:flex; flex-direction:column; }
   .bp-price-label { font-size:0.7rem; color:#9ca3af; text-transform:uppercase; letter-spacing:0.05em; }
-  .bp-price-val { font-family:'Fraunces',serif; font-size:1.2rem; font-weight:700; color:#0a2818; }
+  .bp-price-val { font-family:'Roboto',serif; font-size:1.2rem; font-weight:700; color:#0a2818; }
   .bp-price-per { font-size:0.7rem; color:#9ca3af; }
   .bp-view-btn {
     background:#16a34a; color:white; border:none; border-radius:10px;
     padding:9px 18px; font-size:0.83rem; font-weight:600;
-    cursor:pointer; font-family:'DM Sans',sans-serif; text-decoration:none;
+    cursor:pointer; font-family:'Roboto', sans-serif; text-decoration:none;
     transition:all 0.2s; display:inline-block;
   }
   .bp-view-btn:hover { background:#15803d; transform:translateY(-1px); }
@@ -181,7 +181,7 @@ const STYLES = `
     background:linear-gradient(135deg,#0a2818 0%,#1a4a2a 100%);
     text-align:center; padding:80px 24px; margin-top:40px; position:relative; overflow:hidden;
   }
-  .bp-cta h2 { font-family:'Fraunces',serif; font-size:2rem; font-weight:700; color:white; margin-bottom:12px; position:relative; }
+  .bp-cta h2 { font-family:'Roboto',serif; font-size:2rem; font-weight:700; color:white; margin-bottom:12px; position:relative; }
   .bp-cta p { color:rgba(255,255,255,0.65); margin:0 0 28px; font-weight:300; position:relative; }
   .bp-cta-btns { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; position:relative; }
   .bp-cta-a {
@@ -337,9 +337,9 @@ export default function BrowsePackages() {
             ) : filtered.length === 0 ? (
               <div className="bp-empty">
                 <div style={{fontSize:'3rem',marginBottom:12}}>🗺️</div>
-                <h3 style={{fontFamily:'Fraunces,serif',fontSize:'1.2rem',color:'#0a2818',margin:'0 0 8px'}}>No packages found</h3>
+                <h3 style={{fontFamily:'Roboto,serif',fontSize:'1.2rem',color:'#0a2818',margin:'0 0 8px'}}>No packages found</h3>
                 <p style={{color:'#6b7280',fontSize:'0.875rem',marginBottom:16}}>Try adjusting your filters</p>
-                <button onClick={resetFilters} style={{background:'#16a34a',color:'white',border:'none',borderRadius:'9px',padding:'10px 22px',fontSize:'0.875rem',fontWeight:600,cursor:'pointer',fontFamily:'DM Sans,sans-serif'}}>Clear Filters</button>
+                <button onClick={resetFilters} style={{background:'#16a34a',color:'white',border:'none',borderRadius:'9px',padding:'10px 22px',fontSize:'0.875rem',fontWeight:600,cursor:'pointer',fontFamily:'Roboto,sans-serif'}}>Clear Filters</button>
               </div>
             ) : (
               <div className="bp-grid">
