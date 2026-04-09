@@ -1,18 +1,9 @@
-// src/components/BookingModal.jsx
-// Generic booking modal with eSewa payment integration.
-// Props:
-//   type        — 'hotel' | 'package' | 'trek'
-//   item        — the hotel / package / trek object
-//   onClose     — close handler
-//
-// Usage (hotel):
-//   <BookingModal type="hotel" item={hotel} onClose={() => setModal(false)} />
-
 import { useState, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { redirectToEsewa } from '../../utils/esewaPayment';
+// import { redirectToEsewa } from '../utils/esewaPayment';
 
 
 const API      = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
