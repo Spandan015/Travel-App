@@ -2,7 +2,7 @@
 // Submits a hidden form to eSewa sandbox gateway
 
 export const redirectToEsewa = ({ url, formData }) => {
-  // Remove any existing form
+  // Remove any existing form to avoid duplicates
   const existing = document.getElementById('esewa-payment-form');
   if (existing) existing.remove();
 

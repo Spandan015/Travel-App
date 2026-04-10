@@ -20,7 +20,9 @@ const bookingRoutes          = require('./routes/bookingRoutes');
 const guideRoutes            = require('./routes/guideRoutes');
 const destinationRoutes      = require('./routes/destinationRoutes');
 const regionRoutes           = require('./routes/regionRoutes');
-const trekRoutes             = require('./routes/trekRoutes');   // ✅ NEW
+const trekRoutes             = require('./routes/trekRoutes');
+const packageBookingRoutes = require('./routes/packageBookingRoutes');
+const trekBookingRoutes    = require('./routes/trekBookingRoutes');
 
 const connectDB = async () => {
   try {
@@ -53,10 +55,12 @@ app.use('/api/bookings',           bookingRoutes);
 app.use('/api/guides',             guideRoutes);
 app.use('/api/destinations',       destinationRoutes);
 app.use('/api/regions',            regionRoutes);
-app.use('/api/treks',              trekRoutes);                 // ✅ NEW
+app.use('/api/treks',              trekRoutes);
 app.use('/api/admin',              adminRoutes);
 app.use('/api/guide-applications', guideApplicationRoutes);
 app.use('/api/businesses',         businessRoutes);
+app.use('/api/package-bookings', packageBookingRoutes);
+app.use('/api/trek-bookings',    trekBookingRoutes);
 app.use((req, res) => res.status(404).json({ message: 'Route not found' }));
 
 let server = null;
