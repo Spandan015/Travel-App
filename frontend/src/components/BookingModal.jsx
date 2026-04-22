@@ -1,14 +1,15 @@
 // src/components/BookingModal.jsx
 // Generic booking modal with eSewa payment integration.
 // Props:
-//   type — 'hotel' | 'package' | 'trek'
-//   item — the hotel / package / trek object
-//   onClose — close handler
+//   type             — 'hotel' | 'package' | 'trek'
+//   item             — the hotel / package / trek object
+//   onClose          — close handler
+//   selectedRoomType — (hotel only) room type name selected on HotelDetail page
 import { useState, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { redirectToEsewa } from '../utils/esewaPayment'; // ✅ fixed path
+import { redirectToEsewa } from '../utils/esewaPayment';
 
 const API      = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const getToken = () => localStorage.getItem('nt_token');
@@ -26,8 +27,21 @@ const nightsBetween = (a, b) => {
   return Math.max(0, Math.ceil((new Date(b) - new Date(a)) / 86_400_000));
 };
 
-const getItemPrice = (type, item) => {
-  if (type === 'hotel')   return item?.pricePerNight || 0;
+// ── NEW: get price for a specific room type (falls back to hotel base price) ─
+const getRoomTypePrice = (item, roomTypeName) => {
+  if (!roomTypeName || !item?.roomTypes?.length) return null;
+  const rt = item.roomTypes.find(
+    r => r.type && r.type.toLowerCase() === roomTypeName.toLowerCase()
+  );
+  return rt?.price || null;
+};
+
+const getItemPrice = (type, item, selectedRoomType) => {
+  if (type === 'hotel') {
+    // Use selected room type price if available, else base price
+    const rtPrice = getRoomTypePrice(item, selectedRoomType);
+    return rtPrice || item?.pricePerNight || 0;
+  }
   if (type === 'package') return (typeof item?.price === 'object' ? item.price?.amount : item?.price) || 0;
   if (type === 'trek')    return item?.price || 0;
   return 0;
@@ -52,13 +66,18 @@ const BOOKING_ENDPOINT = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-export default function BookingModal({ type = 'hotel', item, onClose }) {
+// NEW: accept selectedRoomType prop
+export default function BookingModal({ type = 'hotel', item, onClose, selectedRoomType }) {
   const { user }   = useContext(AuthContext);
   const navigate   = useNavigate();
   const today      = new Date().toISOString().split('T')[0];
 
   const [form, setForm] = useState(INITIAL);
-  const [step, setStep] = useState('details'); // 'details' | 'summary' | 'paying'
+
+  // ── NEW: allow room type to be changed from inside the modal too ──────────
+  const [roomType, setRoomType] = useState(selectedRoomType || null);
+
+  const [step, setStep]     = useState('details'); // 'details' | 'summary' | 'paying'
   const [error, setError]   = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -66,7 +85,9 @@ export default function BookingModal({ type = 'hotel', item, onClose }) {
   if (!item)  return null;
 
   const nights   = nightsBetween(form.checkInDate, form.checkOutDate);
-  const baseRate = getItemPrice(type, item);
+
+  // ── NEW: use room-type price if one is selected ───────────────────────────
+  const baseRate = getItemPrice(type, item, roomType);
 
   // Price calculation
   const baseAmount  = type === 'hotel' ? baseRate * nights * form.rooms : baseRate;
@@ -74,12 +95,28 @@ export default function BookingModal({ type = 'hotel', item, onClose }) {
   const tax         = Math.round(baseAmount * 0.13);
   const total       = baseAmount + serviceFee + tax;
 
+  // ── NEW: availability check for selected room type ────────────────────────
+  const selectedRt = roomType && item?.roomTypes?.length
+    ? item.roomTypes.find(r => r.type?.toLowerCase() === roomType.toLowerCase())
+    : null;
+  const selectedRtAvailable = selectedRt
+    ? (selectedRt.availableRooms != null ? selectedRt.availableRooms : selectedRt.totalRooms || 0)
+    : Infinity; // no room types = no limit
+  // ─────────────────────────────────────────────────────────────────────────
+
   // ── Step 1: validate & proceed ───────────────────────────────────────────
   const handleProceed = () => {
     setError('');
     if (type === 'hotel') {
       if (!form.checkInDate || !form.checkOutDate) return setError('Please select check-in and check-out dates.');
       if (nights <= 0) return setError('Check-out must be after check-in.');
+      // NEW: check room availability before proceeding
+      if (item?.roomTypes?.length > 0 && !roomType)
+        return setError('Please select a room type.');
+      if (selectedRtAvailable <= 0)
+        return setError(`The selected room type (${roomType}) is sold out. Please go back and choose another.`);
+      if (form.rooms > selectedRtAvailable)
+        return setError(`Only ${selectedRtAvailable} room(s) of type "${roomType}" are available.`);
     }
     if ((type === 'package' || type === 'trek') && !form.startDate)
       return setError('Please select a start date.');
@@ -101,6 +138,9 @@ export default function BookingModal({ type = 'hotel', item, onClose }) {
           numberOfGuests: form.adults + form.children,
           numberOfRooms:  form.rooms,
           specialRequests: form.specialRequests,
+          // ── NEW: send selected room type to the API ──────────────────────
+          roomType:       roomType || undefined,
+          // ─────────────────────────────────────────────────────────────────
         };
       } else if (type === 'package') {
         bookingPayload = {
@@ -189,6 +229,12 @@ export default function BookingModal({ type = 'hotel', item, onClose }) {
             <div style={S.itemPrice}>
               NPR {baseRate.toLocaleString()}
               {type === 'hotel' ? ' / night' : ' / person'}
+              {/* NEW: show which room type price is being used */}
+              {type === 'hotel' && roomType && (
+                <span style={{ fontSize: 11, fontWeight: 500, color: '#15803d', marginLeft: 6 }}>
+                  ({roomType})
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -235,6 +281,38 @@ export default function BookingModal({ type = 'hotel', item, onClose }) {
               </section>
             )}
 
+            {/* ── NEW: Room type selector inside modal (for hotel) ─────────── */}
+            {type === 'hotel' && item?.roomTypes?.length > 0 && (
+              <section style={S.section}>
+                <div style={S.sectionTitle}>ROOM TYPE *</div>
+                <select
+                  style={{ ...S.input, cursor: 'pointer' }}
+                  value={roomType || ''}
+                  onChange={e => setRoomType(e.target.value || null)}
+                >
+                  {!roomType && <option value="">— Select a room type —</option>}
+                  {item.roomTypes.map((rt, i) => {
+                    const avail = rt.availableRooms != null ? rt.availableRooms : (rt.totalRooms || 0);
+                    const soldOut = avail <= 0;
+                    return (
+                      <option key={i} value={rt.type} disabled={soldOut}>
+                        {rt.type}
+                        {rt.price ? ` — NPR ${Number(rt.price).toLocaleString()}` : ''}
+                        {soldOut ? ' (Sold out)' : ` (${avail} left)`}
+                      </option>
+                    );
+                  })}
+                </select>
+                {/* Availability hint for selected room type */}
+                {selectedRt && selectedRtAvailable > 0 && selectedRtAvailable <= 3 && (
+                  <div style={{ fontSize: 12, color: '#92400e', fontWeight: 600, marginTop: 6 }}>
+                    ⚠️ Only {selectedRtAvailable} room(s) left for this type!
+                  </div>
+                )}
+              </section>
+            )}
+            {/* ─────────────────────────────────────────────────────────────── */}
+
             {/* Guests & Rooms */}
             <section style={S.section}>
               <div style={S.sectionTitle}>GUESTS {type === 'hotel' ? '& ROOMS' : ''}</div>
@@ -248,8 +326,14 @@ export default function BookingModal({ type = 'hotel', item, onClose }) {
               </div>
               {type === 'hotel' && (
                 <div style={S.counterItem}>
-                  <div><div style={S.counterLabel}>Rooms</div></div>
-                  {counter('rooms', 1, 5)}
+                  <div>
+                    <div style={S.counterLabel}>Rooms</div>
+                    {/* NEW: show max available for this room type */}
+                    {selectedRt && (
+                      <div style={S.counterSub}>Max {selectedRtAvailable} available</div>
+                    )}
+                  </div>
+                  {counter('rooms', 1, Math.min(5, selectedRtAvailable || 5))}
                 </div>
               )}
             </section>
@@ -282,6 +366,10 @@ export default function BookingModal({ type = 'hotel', item, onClose }) {
                   <div style={S.summaryRow}><span>Check-out</span><strong>{form.checkOutDate}</strong></div>
                   <div style={S.summaryRow}><span>Nights</span><strong>{nights}</strong></div>
                   <div style={S.summaryRow}><span>Rooms</span><strong>{form.rooms}</strong></div>
+                  {/* NEW: show selected room type in summary */}
+                  {roomType && (
+                    <div style={S.summaryRow}><span>Room Type</span><strong>{roomType}</strong></div>
+                  )}
                 </>
               )}
               {(type === 'package' || type === 'trek') && (

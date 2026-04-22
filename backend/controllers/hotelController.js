@@ -30,15 +30,6 @@ exports.getAllHotels = async (req, res) => {
       .sort({ createdAt: -1 });
 
     console.log(`Found ${hotels.length} hotels`);
-    if (hotels.length > 0) {
-      const firstHotel = hotels[0];
-      console.log('First hotel images info:', {
-        name: firstHotel.name,
-        imagesCount: firstHotel.images?.length || 0,
-        mainImageLength: firstHotel.mainImage?.length || 0,
-        hasImages: !!(firstHotel.mainImage || (firstHotel.images && firstHotel.images.length > 0))
-      });
-    }
 
     res.json({
       success: true,
@@ -72,27 +63,30 @@ exports.getHotelById = async (req, res) => {
 // Create hotel (Admin only)
 exports.createHotel = async (req, res) => {
   try {
-    console.log('Creating hotel with data keys:', Object.keys(req.body));
-    console.log('Images array length:', req.body.images ? req.body.images.length : 0);
-    console.log('Main image exists:', !!req.body.mainImage);
-    console.log('User from auth:', req.user);
-
     if (!req.user || !req.user.id) {
       return res.status(401).json({ message: 'Authentication required' });
     }
 
-    const hotelData = req.body;
+    const hotelData = { ...req.body };
     hotelData.addedBy = req.user.id;
 
-    console.log('Hotel data summary:');
-    console.log('- Name:', hotelData.name);
-    console.log('- Images count:', hotelData.images?.length || 0);
-    console.log('- Main image length:', hotelData.mainImage?.length || 0);
-    console.log('- Main image preview:', hotelData.mainImage ? hotelData.mainImage.substring(0, 50) + '...' : 'none');
+    // ── FIX: ensure every new room type has availableRooms = totalRooms ──────
+    if (Array.isArray(hotelData.roomTypes)) {
+      hotelData.roomTypes = hotelData.roomTypes.map(rt => ({
+        ...rt,
+        totalRooms:     Number(rt.totalRooms)     || 0,
+        // If availableRooms wasn't sent (new room type), initialise it to totalRooms
+        availableRooms: rt.availableRooms != null
+          ? Number(rt.availableRooms)
+          : Number(rt.totalRooms) || 0,
+      }));
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     const hotel = await Hotel.create(hotelData);
 
     console.log('Hotel created successfully:', hotel._id);
+    console.log('Room types:', JSON.stringify(hotel.roomTypes, null, 2));
 
     res.status(201).json({
       success: true,
@@ -111,16 +105,59 @@ exports.createHotel = async (req, res) => {
 // Update hotel (Admin only)
 exports.updateHotel = async (req, res) => {
   try {
-    const hotel = await Hotel.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-    
-    if (!hotel) {
+    const existingHotel = await Hotel.findById(req.params.id);
+    if (!existingHotel) {
       return res.status(404).json({ message: "Hotel not found" });
     }
-    
+
+    const updateData = { ...req.body };
+
+    // ── FIX: safely merge roomTypes so availableRooms is never lost ──────────
+    if (Array.isArray(updateData.roomTypes)) {
+      updateData.roomTypes = updateData.roomTypes.map(incomingRt => {
+        // Try to find the matching existing room type by name (type field)
+        const existingRt = existingHotel.roomTypes.find(
+          rt => rt.type && incomingRt.type &&
+                rt.type.toLowerCase() === incomingRt.type.toLowerCase()
+        );
+
+        const totalRooms = Number(incomingRt.totalRooms) || 0;
+
+        if (existingRt) {
+          // Existing room type: preserve availableRooms (don't reset it)
+          // But cap it at the new totalRooms in case admin reduced total
+          const currentAvailable = existingRt.availableRooms != null
+            ? existingRt.availableRooms
+            : existingRt.totalRooms || 0;
+
+          return {
+            ...incomingRt,
+            totalRooms,
+            availableRooms: Math.min(currentAvailable, totalRooms),
+          };
+        } else {
+          // Brand-new room type being added during edit: init availableRooms = totalRooms
+          return {
+            ...incomingRt,
+            totalRooms,
+            availableRooms: incomingRt.availableRooms != null
+              ? Number(incomingRt.availableRooms)
+              : totalRooms,
+          };
+        }
+      });
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
+    const hotel = await Hotel.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    console.log('Hotel updated:', hotel._id);
+    console.log('Room types after update:', JSON.stringify(hotel.roomTypes, null, 2));
+
     res.json({
       success: true,
       message: "Hotel updated successfully",

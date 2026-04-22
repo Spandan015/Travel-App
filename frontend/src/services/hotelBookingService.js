@@ -2,14 +2,15 @@ import axios from 'axios';
 
 const API_BASE_URL = '/api';
 
+// ✅ matches AuthContext.jsx which saves as 'nt_token'
+const getToken = () => localStorage.getItem('nt_token');
+
 class HotelBookingService {
-  // Create a new hotel booking
   async createHotelBooking(bookingData) {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.post(`${API_BASE_URL}/hotel-bookings`, bookingData, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${getToken()}`,
           'Content-Type': 'application/json'
         }
       });
@@ -20,14 +21,10 @@ class HotelBookingService {
     }
   }
 
-  // Get user's hotel bookings
   async getUserHotelBookings() {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${API_BASE_URL}/hotel-bookings/my`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${getToken()}` }
       });
       return response.data;
     } catch (error) {
@@ -36,14 +33,10 @@ class HotelBookingService {
     }
   }
 
-  // Get hotel booking by ID
   async getHotelBookingById(bookingId) {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${API_BASE_URL}/hotel-bookings/${bookingId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${getToken()}` }
       });
       return response.data;
     } catch (error) {
@@ -52,16 +45,12 @@ class HotelBookingService {
     }
   }
 
-  // Cancel hotel booking
   async cancelHotelBooking(bookingId, cancellationReason = '') {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.put(`${API_BASE_URL}/hotel-bookings/${bookingId}/cancel`, {
         cancellationReason
       }, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${getToken()}` }
       });
       return response.data;
     } catch (error) {
@@ -73,8 +62,3 @@ class HotelBookingService {
 
 const hotelBookingService = new HotelBookingService();
 export default hotelBookingService;
-
-
-
-
-

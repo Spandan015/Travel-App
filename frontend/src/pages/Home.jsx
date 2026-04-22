@@ -2,6 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
+import {
+  Clock, MapPin, Star, Search, ArrowRight,
+  Calendar, Users, Heart
+} from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const tok = () => localStorage.getItem('nt_token');
@@ -82,43 +86,6 @@ const DIFF_COLORS = {
 };
 
 const TREK_TABS = ['All', 'Classic Treks', 'Off-Beat', 'High Altitude', 'Easy Hikes'];
-
-/* ── tiny helpers ── */
-const IClock = () => (
-  <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-  </svg>
-);
-const IPin = () => (
-  <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-    <circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 018 8c0 5.25-8 14-8 14S4 15.25 4 10a8 8 0 018-8z"/>
-  </svg>
-);
-const IStar = () => (
-  <svg width="11" height="11" viewBox="0 0 24 24" fill="#f59e0b">
-    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-  </svg>
-);
-const ISearch = () => (
-  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-  </svg>
-);
-const IArrow = () => (
-  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-    <path d="M5 12h14M12 5l7 7-7 7"/>
-  </svg>
-);
-const ICalendar = () => (
-  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-  </svg>
-);
-const IUsers = () => (
-  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
-  </svg>
-);
 
 /* skeleton */
 const Skel = ({ w = '100%', h = 16, r = 8 }) => (
@@ -239,7 +206,7 @@ export default function Home() {
         </span>
         <div style={{ display: 'flex', gap: 1 }}>
           {[1,2,3,4,5].map(i => (
-            <IStar key={i} />
+            <Star key={i} size={11} fill="#f59e0b" color="#f59e0b" />
           ))}
         </div>
         {reviewCount > 0 && <span style={{ fontSize: 11, color: '#94a3b8' }}>({reviewCount})</span>}
@@ -264,15 +231,15 @@ export default function Home() {
             <span className="pkg-diff" style={{ background: dc.bg, color: dc.color }}>{diff}</span>
           </div>
           <button className="pkg-fav" onClick={e => e.preventDefault()}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            <Heart size={14} color="#64748b" />
           </button>
         </div>
         <div className="pkg-body">
-          {pkg.region && <div className="pkg-region"><IPin />&nbsp;{pkg.region}</div>}
+          {pkg.region && <div className="pkg-region"><MapPin size={10} />&nbsp;{pkg.region}</div>}
           <div className="pkg-name">{pkg.name}</div>
           {renderRating(pkg.rating, pkg.reviewCount)}
           <div className="pkg-meta">
-            {pkg.duration && <span><IClock />&nbsp;{pkg.duration} days</span>}
+            {pkg.duration && <span><Clock size={11} />&nbsp;{pkg.duration} days</span>}
             {pkg.maxAltitude && <span>⛰ {(pkg.maxAltitude/1000).toFixed(1)}k m</span>}
           </div>
           <div className="pkg-footer">
@@ -283,7 +250,7 @@ export default function Home() {
                 <span className="pkg-price-per">/person</span>
               </div>
             </div>
-            <span className="pkg-btn">Details &nbsp;<IArrow /></span>
+            <span className="pkg-btn">Details &nbsp;<ArrowRight size={14} /></span>
           </div>
         </div>
       </Link>
@@ -304,11 +271,11 @@ export default function Home() {
             {hotel.starRating && <span className="pkg-badge">{'★'.repeat(hotel.starRating)}</span>}
           </div>
           <button className="pkg-fav" onClick={e => e.preventDefault()}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            <Heart size={14} color="#64748b" />
           </button>
         </div>
         <div className="pkg-body">
-          {(hotel.location || hotel.city) && <div className="pkg-region"><IPin />&nbsp;{hotel.location || hotel.city}</div>}
+          {(hotel.location || hotel.city) && <div className="pkg-region"><MapPin size={10} />&nbsp;{hotel.location || hotel.city}</div>}
           <div className="pkg-name">{hotel.name}</div>
           {renderRating(hotel.rating, hotel.reviewCount)}
           <div className="pkg-meta">
@@ -322,7 +289,7 @@ export default function Home() {
                 <span className="pkg-price-per">/night</span>
               </div>
             </div>
-            <span className="pkg-btn">Book &nbsp;<IArrow /></span>
+            <span className="pkg-btn">Book &nbsp;<ArrowRight size={14} /></span>
           </div>
         </div>
       </Link>
@@ -335,12 +302,12 @@ export default function Home() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         .mtb-home {
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           background: #fafaf9;
           color: #0f172a;
         }
@@ -369,14 +336,12 @@ export default function Home() {
           animation: scaleIn 1.5s ease forwards;
         }
 
-        /* Noise overlay for depth */
         .hero-noise {
           position: absolute; inset: 0;
           background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
           pointer-events: none;
         }
 
-        /* Subtle bottom mountain silhouette */
         .hero-silhouette {
           position: absolute; bottom: 0; left: 0; right: 0; height: 220px;
           background: linear-gradient(to top, rgba(7,26,15,0.9), transparent);
@@ -396,7 +361,6 @@ export default function Home() {
           animation: heroIn 1s cubic-bezier(0.22, 1, 0.36, 1) forwards 0.2s;
         }
 
-        /* Pill badge */
         .hero-pill {
           display: inline-flex; align-items: center; gap: 8px;
           background: rgba(255,255,255,0.08);
@@ -425,7 +389,7 @@ export default function Home() {
         }
 
         .hero-title {
-          font-family: 'Fraunces', Georgia, serif;
+          font-family: 'Roboto', sans-serif;
           font-size: clamp(3rem, 8vw, 6rem);
           font-weight: 300;
           color: #fff;
@@ -439,7 +403,7 @@ export default function Home() {
           font-weight: 300;
         }
         .hero-title strong {
-          font-weight: 600;
+          font-weight: 700;
           font-style: normal;
           color: #fff;
         }
@@ -481,10 +445,10 @@ export default function Home() {
           border: none;
           background: transparent;
           font-size: 11px;
-          font-weight: 600;
+          font-weight: 700;
           cursor: pointer;
           color: #94a3b8;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           letter-spacing: 0.04em;
           text-transform: uppercase;
           transition: all 0.2s;
@@ -513,7 +477,7 @@ export default function Home() {
           font-size: 14px; color: #0f172a;
           width: 100%; padding: 20px 0;
           background: transparent;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           cursor: pointer;
         }
         .search-field input::placeholder { color: #9ca3af; }
@@ -527,7 +491,7 @@ export default function Home() {
           padding: 0 28px;
           font-size: 14px;
           font-weight: 700;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           display: flex; align-items: center; gap: 8px;
           transition: background 0.2s;
           white-space: nowrap;
@@ -548,9 +512,9 @@ export default function Home() {
         .hero-stat:last-child { border-right: none; }
         .hero-stat-num {
           display: block;
-          font-family: 'Fraunces', serif;
+          font-family: 'Roboto', sans-serif;
           font-size: 2rem;
-          font-weight: 600;
+          font-weight: 700;
           color: #fff;
           line-height: 1;
           margin-bottom: 4px;
@@ -576,9 +540,9 @@ export default function Home() {
           border-radius: 2px;
         }
         .section-title {
-          font-family: 'Fraunces', serif;
+          font-family: 'Roboto', sans-serif;
           font-size: clamp(1.9rem, 4vw, 2.8rem);
-          font-weight: 400;
+          font-weight: 700;
           color: #0f172a;
           line-height: 1.15;
           margin-bottom: 0.75rem;
@@ -608,7 +572,7 @@ export default function Home() {
           font-weight: 600;
           cursor: pointer;
           color: #64748b;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           transition: all 0.2s;
         }
         .tab-btn:hover { border-color: #16a34a; color: #16a34a; }
@@ -707,7 +671,7 @@ export default function Home() {
           font-size: 1.05rem; font-weight: 700;
           color: #0f172a; margin-bottom: 6px;
           line-height: 1.3;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
         }
         .pkg-meta {
           display: flex; gap: 12px; margin-bottom: 1rem;
@@ -725,7 +689,7 @@ export default function Home() {
         }
         .pkg-price-from { font-size: 10px; color: #94a3b8; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
         .pkg-price-row { display: flex; align-items: baseline; gap: 3px; }
-        .pkg-price-val { font-size: 1.15rem; font-weight: 800; color: #0f172a; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .pkg-price-val { font-size: 1.15rem; font-weight: 800; color: #0f172a; font-family: 'Roboto', sans-serif; }
         .pkg-price-per { font-size: 11px; color: #94a3b8; font-weight: 500; }
         .pkg-btn {
           background: #16a34a;
@@ -736,7 +700,7 @@ export default function Home() {
           padding: 9px 16px;
           font-size: 12px;
           font-weight: 700;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           transition: all 0.2s;
           text-decoration: none;
           display: inline-flex;
@@ -807,9 +771,9 @@ export default function Home() {
           margin-bottom: 5px;
         }
         .dest-name {
-          font-family: 'Fraunces', serif;
+          font-family: 'Roboto', sans-serif;
           font-size: 1.3rem;
-          font-weight: 400;
+          font-weight: 700;
           color: #fff;
           display: block;
           margin-bottom: 3px;
@@ -932,7 +896,7 @@ export default function Home() {
         }
         .cta-inner { position: relative; z-index: 1; max-width: 580px; margin: 0 auto; }
         .cta-title {
-          font-family: 'Fraunces', serif;
+          font-family: 'Roboto', sans-serif;
           font-size: clamp(2.2rem, 5vw, 3.5rem);
           font-weight: 300;
           color: #fff;
@@ -947,7 +911,7 @@ export default function Home() {
           padding: 15px 36px; border-radius: 14px;
           font-weight: 700; font-size: 0.95rem;
           text-decoration: none; transition: all 0.2s;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           letter-spacing: 0.01em;
         }
         .cta-btn-primary:hover { background: #15803d; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(22,163,74,0.35); }
@@ -959,13 +923,11 @@ export default function Home() {
           text-decoration: none;
           border: 1px solid rgba(255,255,255,0.15);
           transition: all 0.2s;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
         }
         .cta-btn-secondary:hover { background: rgba(255,255,255,0.12); }
 
         /* ═══ LOGGED-IN SECTIONS ═══ */
-
-        /* Row layout for bookings + sidebar */
         .logged-grid {
           display: grid;
           grid-template-columns: 1fr 380px;
@@ -1017,9 +979,8 @@ export default function Home() {
         .booking-thumb img { width: 100%; height: 100%; object-fit: cover; }
         .booking-name { font-weight: 700; font-size: 13px; color: #0f172a; margin-bottom: 3px; }
         .booking-date { font-size: 11px; color: #94a3b8; display: flex; align-items: center; gap: 4px; font-weight: 500; }
-        .booking-price { font-size: 13px; font-weight: 800; color: #0f172a; margin-bottom: 4px; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .booking-price { font-size: 13px; font-weight: 800; color: #0f172a; margin-bottom: 4px; font-family: 'Roboto', sans-serif; }
 
-        /* Tool rows in sidebar */
         .tool-row {
           display: flex; align-items: center; gap: 12px;
           padding: 12px 1.5rem;
@@ -1038,7 +999,6 @@ export default function Home() {
         .tool-row-label { font-size: 13px; font-weight: 600; color: #374151; flex: 1; }
         .tool-row-arrow { color: #94a3b8; font-size: 16px; }
 
-        /* Hotel 2x2 grid */
         .hotel-explore-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -1069,7 +1029,6 @@ export default function Home() {
         .hotel-tile-loc { font-size: 10px; color: rgba(255,255,255,0.65); display: flex; align-items: center; gap: 3px; font-weight: 500; }
         .hotel-tile-price { font-size: 11px; color: #4ade80; font-weight: 700; margin-top: 2px; }
 
-        /* Empty state */
         .no-bookings { text-align: center; padding: 3rem 1rem; }
         .no-bookings-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
         .no-bookings-text { font-size: 14px; color: #64748b; margin-bottom: 1.25rem; font-weight: 500; }
@@ -1116,7 +1075,6 @@ export default function Home() {
 
           <div className={`hero-content${heroVisible ? ' visible' : ''}`}>
 
-            {/* Title */}
             <h1 className="hero-title">
               {isAuthenticated ? (
                 <>Where to next,<br /><em>{firstName}?</em></>
@@ -1134,11 +1092,9 @@ export default function Home() {
             {/* ── SEARCH BAR ── */}
             <div className="hero-search-wrap">
               <form className="hero-search" onSubmit={handleSearch}>
-                {/* Type tabs — logged in only */}
                 <div className="search-fields">
-                  {/* Destination / keyword */}
                   <div className="search-field">
-                    <ISearch />
+                    <Search size={16} color="#94a3b8" />
                     <input
                       type="text"
                       placeholder={isAuthenticated ? `Search ${searchType}...` : 'Where are you going?'}
@@ -1149,18 +1105,16 @@ export default function Home() {
 
                   <div className="search-divider-v" />
 
-                  {/* Check-in */}
                   <div className="search-field">
-                    <ICalendar />
+                    <Calendar size={14} color="#94a3b8" />
                     <input type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)}
                       placeholder="Check-in" style={{ color: checkIn ? '#0f172a' : '#9ca3af' }} />
                   </div>
 
                   <div className="search-divider-v" />
 
-                  {/* Guests */}
                   <div className="search-field">
-                    <IUsers />
+                    <Users size={14} color="#94a3b8" />
                     <select value={guests} onChange={e => setGuests(e.target.value)}>
                       <option>1 adult</option>
                       <option>2 adults</option>
@@ -1173,13 +1127,13 @@ export default function Home() {
                 </div>
 
                 <button className="search-submit" type="submit">
-                  <ISearch />
+                  <Search size={16} />
                   {isAuthenticated ? 'Search' : 'Find Trips'}
                 </button>
               </form>
             </div>
 
-            {/* ── STATS ROW — switches between global and personal ── */}
+            {/* ── STATS ROW ── */}
             <div className="hero-stats">
               {isAuthenticated && !loadingBook ? (
                 <>
@@ -1217,13 +1171,12 @@ export default function Home() {
         {/* ══════════════════ LOGGED-IN BODY ══════════════════ */}
         {isAuthenticated && (
           <>
-            {/* Recent bookings + sidebar */}
             <div className="logged-grid">
               {/* LEFT: Recent Bookings */}
               <div className="db-card">
                 <div className="db-card-header">
                   <div className="db-card-title">Recent Bookings</div>
-                  <Link to="/dashboard" className="db-card-link">View all <IArrow /></Link>
+                  <Link to="/dashboard" className="db-card-link">View all <ArrowRight size={14} /></Link>
                 </div>
                 {loadingBook
                   ? Array(4).fill(0).map((_, i) => (
@@ -1256,7 +1209,7 @@ export default function Home() {
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div className="booking-name">{name}</div>
                             <div className="booking-date">
-                              <IClock />
+                              <Clock size={11} />
                               {date ? new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
                               {out ? ` → ${new Date(out).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}
                             </div>
@@ -1283,13 +1236,13 @@ export default function Home() {
                     <Link key={t.title} to={t.link} className="tool-row">
                       <div className="tool-row-icon">{t.icon}</div>
                       <span className="tool-row-label">{t.title}</span>
-                      <span className="tool-row-arrow">›</span>
+                      <ArrowRight size={16} color="#94a3b8" />
                     </Link>
                   ))}
                   <Link to="/browse-guides" className="tool-row">
                     <div className="tool-row-icon">🧭</div>
                     <span className="tool-row-label">Find a Guide</span>
-                    <span className="tool-row-arrow">›</span>
+                    <ArrowRight size={16} color="#94a3b8" />
                   </Link>
                 </div>
 
@@ -1297,7 +1250,7 @@ export default function Home() {
                 <div className="db-card">
                   <div className="db-card-header">
                     <div className="db-card-title">Quick Explore</div>
-                    <Link to="/browse-hotels" className="db-card-link">View all <IArrow /></Link>
+                    <Link to="/browse-hotels" className="db-card-link">View all <ArrowRight size={14} /></Link>
                   </div>
                   <div className="hotel-explore-grid">
                     {loadingHotels
@@ -1316,7 +1269,7 @@ export default function Home() {
                             <div className="hotel-tile-overlay" />
                             <div className="hotel-tile-body">
                               <div className="hotel-tile-name">{h.name}</div>
-                              <div className="hotel-tile-loc"><IPin />&nbsp;{h.location || h.city || 'Nepal'}</div>
+                              <div className="hotel-tile-loc"><MapPin size={10} />&nbsp;{h.location || h.city || 'Nepal'}</div>
                               {(h.pricePerNight || h.price) > 0 && (
                                 <div className="hotel-tile-price">NPR {(h.pricePerNight || h.price).toLocaleString()}/night</div>
                               )}
@@ -1337,7 +1290,7 @@ export default function Home() {
                   <div className="section-eyebrow">Just for you</div>
                   <h2 className="section-title">Recommended Packages</h2>
                 </div>
-                <Link to="/browse-packages" className="view-all">View all packages <IArrow /></Link>
+                <Link to="/browse-packages" className="view-all">View all packages <ArrowRight size={14} /></Link>
               </div>
               <div className="pkg-grid">
                 {loadingPkgs
@@ -1370,7 +1323,7 @@ export default function Home() {
                     <h2 className="section-title">Most-loved trips in Nepal</h2>
                     <p className="section-sub">Curated routes with verified permits, elevation profiles, and real traveler reviews.</p>
                   </div>
-                  <Link to="/browse-packages" className="view-all">View all packages <IArrow /></Link>
+                  <Link to="/browse-packages" className="view-all">View all packages <ArrowRight size={14} /></Link>
                 </div>
                 <div className="tabs-list">
                   {TREK_TABS.map(t => (
@@ -1411,7 +1364,7 @@ export default function Home() {
                     <h2 className="section-title">Top-rated hotels</h2>
                     <p className="section-sub">Hand-verified stays from boutique guesthouses to luxury mountain resorts.</p>
                   </div>
-                  <Link to="/browse-hotels" className="view-all">View all hotels <IArrow /></Link>
+                  <Link to="/browse-hotels" className="view-all">View all hotels <ArrowRight size={14} /></Link>
                 </div>
                 <div className="pkg-grid">
                   {loadingHotels
@@ -1446,7 +1399,7 @@ export default function Home() {
                     <h2 className="section-title">14 distinct trekking regions</h2>
                     <p className="section-sub">Each region offers unique landscapes, culture, and challenges — find your perfect match.</p>
                   </div>
-                  <Link to="/browse-destinations" className="view-all">Explore all <IArrow /></Link>
+                  <Link to="/browse-destinations" className="view-all">Explore all <ArrowRight size={14} /></Link>
                 </div>
                 <div className="dest-grid">
                   {STATIC_DESTINATIONS.slice(0, 5).map((dest, i) => (
@@ -1488,7 +1441,7 @@ export default function Home() {
                   <span className="tool-icon">{tool.icon}</span>
                   <div className="tool-title">{tool.title}</div>
                   <div className="tool-desc">{tool.desc}</div>
-                  <div className="tool-cta">Try it free <IArrow /></div>
+                  <div className="tool-cta">Try it free <ArrowRight size={14} /></div>
                 </Link>
               ))}
             </div>
@@ -1529,7 +1482,7 @@ export default function Home() {
                       <div className="section-eyebrow">Local experts</div>
                       <h2 className="section-title">Meet your guide</h2>
                     </div>
-                    <Link to="/browse-guides" className="view-all">View all guides <IArrow /></Link>
+                    <Link to="/browse-guides" className="view-all">View all guides <ArrowRight size={14} /></Link>
                   </div>
                   <div className="guides-grid">
                     {guides.map(guide => {

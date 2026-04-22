@@ -9,12 +9,16 @@ const AMENITIES  = ['WiFi','Parking','Pool','Gym','Restaurant','Bar','Spa','Room
 const CATEGORIES = ['Budget','Mid-Range','Luxury','Boutique','Resort','Hostel','Guesthouse'];
 const CITIES     = ['All Cities','Kathmandu','Pokhara','Chitwan','Lalitpur','Bhaktapur','Lumbini','Nagarkot','Bandipur'];
 
+// ── NEW: default empty room type row ─────────────────────────────────────────
+const EMPTY_ROOM_TYPE = { type: '', description: '', price: '', totalRooms: '', capacity: '' };
+
 const EMPTY = {
   name:'', category:'Mid-Range', description:'',
   location:{ city:'', district:'', address:'', coordinates:{ lat:'', lng:'' } },
   lat: '', lng: '',
   pricePerNight:'', stars:3, totalRooms:'',
   amenities:[], images:[''],
+  roomTypes: [],                   // NEW – starts empty; admin adds rows
   contact:{ phone:'', email:'', website:'' },
   checkIn:'14:00', checkOut:'12:00',
   policies:{ petsAllowed:false, smokingAllowed:false, childrenAllowed:true },
@@ -66,7 +70,7 @@ const STYLES = `
   .mh-full  { grid-column:1/-1; }
   .mh-field { display:flex; flex-direction:column; gap:5px; }
   .mh-label { font-size:11px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.06em; }
-  .mh-inp   { padding:10px 13px; border:1.5px solid #d1fae5; border-radius:9px; font-size:13px; color:#0f172a; outline:none; font-family:'Roboto',sans-serif; width:100%; transition:border 0.15s; }
+  .mh-inp   { padding:10px 13px; border:1.5px solid #d1fae5; border-radius:9px; font-size:13px; color:#0f172a; outline:none; font-family:'Roboto',sans-serif; width:100%; transition:border 0.15s; box-sizing:border-box; }
   .mh-inp:focus { border-color:#16a34a; box-shadow:0 0 0 3px rgba(22,163,74,0.08); }
   .mh-inp.error { border-color:#ef4444 !important; background:#fef2f2; }
   .mh-textarea { padding:10px 13px; border:1.5px solid #d1fae5; border-radius:9px; font-size:13px; color:#0f172a; outline:none; font-family:'Roboto',sans-serif; width:100%; resize:vertical; min-height:90px; transition:border 0.15s; }
@@ -112,9 +116,25 @@ const STYLES = `
   .mh-map-clear-btn { position: absolute; bottom: 10px; right: 10px; z-index: 1000; background: #fff; border: 1.5px solid #fecaca; color: #dc2626; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Roboto', sans-serif; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.15s; }
   .mh-map-clear-btn:hover { background: #fef2f2; }
   .mh-required-banner { background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:12px 16px; font-size:12px; color:#dc2626; font-weight:600; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+
+  /* ── Room types table styles ───────────────────────────────────────── */
+  .mh-rt-table { width:100%; border-collapse:collapse; margin-bottom:12px; }
+  .mh-rt-table th { font-size:11px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.05em; padding:8px 10px; background:#f8faf8; border-bottom:1px solid #e5f0e8; text-align:left; }
+  .mh-rt-table td { padding:8px 6px; border-bottom:1px solid #f0fdf4; vertical-align:middle; }
+  .mh-rt-table tr:last-child td { border-bottom:none; }
+  .mh-rt-inp { padding:8px 10px; border:1.5px solid #d1fae5; border-radius:8px; font-size:12px; color:#0f172a; outline:none; font-family:'Roboto',sans-serif; width:100%; transition:border 0.15s; box-sizing:border-box; }
+  .mh-rt-inp:focus { border-color:#16a34a; }
+  .mh-rt-avail { font-size:11px; color:#16a34a; font-weight:700; padding:4px 8px; background:#f0fdf4; border-radius:6px; text-align:center; white-space:nowrap; }
+  .mh-rt-avail.sold { color:#dc2626; background:#fef2f2; }
+  .mh-rt-del { padding:6px 10px; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; border-radius:7px; font-size:12px; cursor:pointer; font-family:'Roboto',sans-serif; }
+  .mh-rt-del:hover { background:#fee2e2; }
+  .mh-rt-add-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; background:#f0fdf4; color:#15803d; border:1.5px solid #d1fae5; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'Roboto',sans-serif; transition:all .13s; }
+  .mh-rt-add-btn:hover { background:#dcfce7; border-color:#16a34a; }
+  .mh-rt-info { background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:10px 14px; font-size:12px; color:#92400e; margin-bottom:14px; }
+  /* ─────────────────────────────────────────────────────────────────── */
 `;
 
-// ── Leaflet Map Picker ────────────────────────────────────────────────────────
+// ── Leaflet Map Picker (unchanged from original) ──────────────────────────────
 function MapPicker({ lat, lng, onChange }) {
   const leafletRef   = useRef(null);
   const markerRef    = useRef(null);
@@ -196,6 +216,7 @@ function MapPicker({ lat, lng, onChange }) {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function ManageHotels() {
+
   const fileRef = useRef(null);
   const [tab,          setTab]          = useState('list');
   const [hotels,       setHotels]       = useState([]);
@@ -211,7 +232,7 @@ export default function ManageHotels() {
   const [msg,          setMsg]          = useState('');
   const [delConfirm,   setDelConfirm]   = useState(null);
   const [uploading,    setUploading]    = useState(false);
-  const [fieldErrors,  setFieldErrors]  = useState({});  // ✅ NEW: track field-level errors
+  const [fieldErrors,  setFieldErrors]  = useState({});
 
   const notify = (m) => { setMsg(m); setTimeout(() => setMsg(''), 4000); };
 
@@ -238,6 +259,20 @@ export default function ManageHotels() {
     } else if (h.location && typeof h.location === 'object') {
       locationObj = { ...EMPTY.location, ...h.location };
     }
+
+    // ── NEW: normalise existing roomTypes for the form ────────────────────────
+    const roomTypes = Array.isArray(h.roomTypes)
+      ? h.roomTypes.map(rt => ({
+          type:           rt.type        || '',
+          description:    rt.description || '',
+          price:          rt.price       != null ? String(rt.price)       : '',
+          totalRooms:     rt.totalRooms  != null ? String(rt.totalRooms)  : '',
+          availableRooms: rt.availableRooms != null ? rt.availableRooms : undefined, // kept for display
+          capacity:       rt.capacity    != null ? String(rt.capacity)    : '',
+        }))
+      : [];
+    // ─────────────────────────────────────────────────────────────────────────
+
     setForm({
       ...EMPTY, ...h,
       location: locationObj,
@@ -248,81 +283,97 @@ export default function ManageHotels() {
       policies:{ ...EMPTY.policies, ...(h.policies||{}) },
       amenities:Array.isArray(h.amenities)?h.amenities:[],
       images:Array.isArray(h.images)&&h.images.length?h.images:[''],
+      roomTypes,   // NEW
     });
     setEditId(h._id); setFormTab('basic'); setFieldErrors({}); setTab('form');
   };
 
-  // ✅ FIXED handleSave — proper validation + correct payload
+  // ── NEW: room-type helpers ──────────────────────────────────────────────────
+  const addRoomType = () =>
+    setForm(f => ({ ...f, roomTypes: [...f.roomTypes, { ...EMPTY_ROOM_TYPE }] }));
+
+  const removeRoomType = (i) =>
+    setForm(f => ({ ...f, roomTypes: f.roomTypes.filter((_, idx) => idx !== i) }));
+
+  const updateRoomType = (i, field, value) =>
+    setForm(f => {
+      const roomTypes = f.roomTypes.map((rt, idx) => idx === i ? { ...rt, [field]: value } : rt);
+      return { ...f, roomTypes };
+    });
+  // ─────────────────────────────────────────────────────────────────────────
+
   const handleSave = async () => {
-    // ── Validate all required fields and collect errors ──
     const errors = {};
-
-    if (!form.name.trim())
-      errors.name = 'Hotel name is required';
-
-    if (!form.pricePerNight)
-      errors.pricePerNight = 'Price per night is required';
-
-    if (!form.location.city.trim())
-      errors.city = 'City is required';
-
-    // address and description are optional — model no longer requires them
-    // but we still show warnings if missing
+    if (!form.name.trim())     errors.name = 'Hotel name is required';
+    if (!form.pricePerNight)   errors.pricePerNight = 'Price per night is required';
+    if (!form.location.city.trim()) errors.city = 'City is required';
 
     setFieldErrors(errors);
-
-    // If there are errors, jump to the tab that has the first error and stop
-    if (errors.name || errors.pricePerNight) {
-      setFormTab('basic');
-      notify('⚠️ Please fill in all required fields (marked below)');
-      return;
-    }
-    if (errors.city) {
-      setFormTab('location');
-      notify('⚠️ Please fill in the City field in the Location tab');
-      return;
-    }
+    if (errors.name || errors.pricePerNight) { setFormTab('basic'); notify('⚠ Please fill in all required fields (marked below)'); return; }
+    if (errors.city) { setFormTab('location'); notify('⚠ Please fill in the City field in the Location tab'); return; }
 
     setSaving(true);
     try {
-      // ✅ FIXED payload — address and description sent correctly
+      // ── NEW: build roomTypes payload ──────────────────────────────────────
+      // FIX: always send availableRooms explicitly so the backend never gets undefined/null.
+      // - New room type  → availableRooms = totalRooms  (starts fully open)
+      // - Existing type  → availableRooms preserved from form state (reflects real bookings)
+      const roomTypesPayload = form.roomTypes
+        .filter(rt => rt.type.trim())   // skip blank rows
+        .map(rt => {
+          const total     = rt.totalRooms ? Number(rt.totalRooms) : 0;
+          // availableRooms is stored as a number in form state for existing types;
+          // for brand-new types it will be undefined → default to total
+          const available = (rt.availableRooms != null && rt.availableRooms !== '')
+            ? Number(rt.availableRooms)
+            : total;   // NEW room: open = total
+          return {
+            type:           rt.type.trim(),
+            description:    rt.description?.trim() || '',
+            price:          rt.price     ? Number(rt.price)    : undefined,
+            totalRooms:     total,
+            availableRooms: available,   // always a number, never undefined
+            capacity:       rt.capacity  ? Number(rt.capacity) : undefined,
+          };
+        });
+      // ─────────────────────────────────────────────────────────────────────
+
       const payload = {
-        name:         form.name.trim(),
-        description:  form.description.trim(),                          // ✅ always send, even if empty
-        location:     [form.location.city, form.location.district]      // ✅ build location string
-                        .filter(Boolean).join(', '),
-        address:      form.location.address.trim(),                     // ✅ from location.address
+        name:          form.name.trim(),
+        description:   form.description.trim(),
+        location:      [form.location.city, form.location.district].filter(Boolean).join(', '),
+        address:       form.location.address.trim(),
         pricePerNight: Number(form.pricePerNight),
-        starRating:   Number(form.stars) || 3,
-        totalRooms:   form.totalRooms ? Number(form.totalRooms) : undefined,
-        amenities:    form.amenities,
-        images:       form.images.filter(i => i.trim()),
-        phone:        form.contact.phone,
-        email:        form.contact.email,
-        website:      form.contact.website,
-        checkIn:      form.checkIn,
-        checkOut:     form.checkOut,
-        isActive:     form.isActive,
-        category:     form.category,
-        lat:          form.lat ? parseFloat(form.lat) : null,           // ✅ map coordinates
-        lng:          form.lng ? parseFloat(form.lng) : null,
+        starRating:    Number(form.stars) || 3,
+        totalRooms:    form.totalRooms ? Number(form.totalRooms) : undefined,
+        amenities:     form.amenities,
+        images:        form.images.filter(i => i.trim()),
+        phone:         form.contact.phone,
+        email:         form.contact.email,
+        website:       form.contact.website,
+        checkIn:       form.checkIn,
+        checkOut:      form.checkOut,
+        isActive:      form.isActive,
+        category:      form.category,
+        lat:           form.lat ? parseFloat(form.lat) : null,
+        lng:           form.lng ? parseFloat(form.lng) : null,
+        roomTypes:     roomTypesPayload,   // NEW
       };
 
       if (editId) {
         await axios.put(`${API}/hotels/${editId}`, payload, { headers:{ Authorization:`Bearer ${token()}` } });
-        notify('✓ Hotel updated successfully');
+        notify('✅ Hotel updated successfully');
       } else {
         await axios.post(`${API}/hotels`, payload, { headers:{ Authorization:`Bearer ${token()}` } });
-        notify('✓ Hotel created successfully');
+        notify('✅ Hotel created successfully');
       }
 
       setFieldErrors({});
       fetchHotels();
       setTab('list');
     } catch (err) {
-      // ✅ Better error message — shows what field failed from the backend
       const serverMsg = err.response?.data?.message || '';
-      notify(`⚠️ ${serverMsg || 'Failed to save hotel. Please check all fields.'}`);
+      notify(`❌ ${serverMsg || 'Failed to save hotel. Please check all fields.'}`);
       console.error('Hotel save error:', err.response?.data || err.message);
     } finally {
       setSaving(false);
@@ -330,8 +381,8 @@ export default function ManageHotels() {
   };
 
   const handleDelete = async (id) => {
-    try { await axios.delete(`${API}/hotels/${id}`, { headers:{ Authorization:`Bearer ${token()}` } }); notify('✓ Hotel deleted'); fetchHotels(); }
-    catch { notify('⚠️ Failed to delete hotel'); }
+    try { await axios.delete(`${API}/hotels/${id}`, { headers:{ Authorization:`Bearer ${token()}` } }); notify('✅ Hotel deleted'); fetchHotels(); }
+    catch { notify('❌ Failed to delete hotel'); }
     setDelConfirm(null);
   };
 
@@ -344,8 +395,8 @@ export default function ManageHotels() {
       fd.append('folder', 'nepal-travel/hotels');
       const { data } = await axios.post(`${API}/images/upload/multiple`, fd, { headers:{ Authorization:`Bearer ${token()}`, 'Content-Type':'multipart/form-data' } });
       const urls = (data.images||[]).map(i => i.secure_url||i.url).filter(Boolean);
-      if (urls.length) { setForm(f => ({ ...f, images:[...f.images.filter(i=>i.trim()), ...urls] })); notify(`✓ ${urls.length} photo(s) uploaded`); }
-    } catch { notify('⚠️ Upload failed'); }
+      if (urls.length) { setForm(f => ({ ...f, images:[...f.images.filter(i=>i.trim()), ...urls] })); notify(`✅ ${urls.length} photo(s) uploaded`); }
+    } catch { notify('❌ Upload failed'); }
     setUploading(false);
   };
 
@@ -372,10 +423,10 @@ export default function ManageHotels() {
     return matchSearch && matchCat && matchStatus && matchCity;
   });
 
-  const FORM_TABS = ['basic','location','amenities','images','policies'];
-  const FORM_TAB_LABELS = { basic:'Basic Info', location:'Location & Map', amenities:'Amenities', images:'Images', policies:'Policies' };
+  // NEW: added 'rooms' tab between 'basic' and 'amenities'
+  const FORM_TABS       = ['basic', 'rooms', 'location', 'amenities', 'images', 'policies'];
+  const FORM_TAB_LABELS = { basic:'Basic Info', rooms:'Room Types', location:'Location & Map', amenities:'Amenities', images:'Images', policies:'Policies' };
 
-  // Which tabs have errors
   const tabHasError = {
     basic:    !!(fieldErrors.name || fieldErrors.pricePerNight),
     location: !!(fieldErrors.city),
@@ -387,9 +438,9 @@ export default function ManageHotels() {
       <div className="mh-root">
         {msg && (
           <div className="mh-msg" style={{
-            background: msg.startsWith('✓') ? '#f0fdf4' : '#fef2f2',
-            color:      msg.startsWith('✓') ? '#16a34a' : '#dc2626',
-            border:     `1px solid ${msg.startsWith('✓') ? '#d1fae5' : '#fecaca'}`
+            background: msg.startsWith('✅') ? '#f0fdf4' : '#fef2f2',
+            color:      msg.startsWith('✅') ? '#16a34a' : '#dc2626',
+            border:     `1px solid ${msg.startsWith('✅') ? '#d1fae5' : '#fecaca'}`
           }}>{msg}</div>
         )}
 
@@ -407,7 +458,7 @@ export default function ManageHotels() {
           </div>
         )}
 
-        {/* ── LIST VIEW ── */}
+        {/* ── LIST VIEW ─────────────────────────────────────────────────────── */}
         {tab === 'list' ? (
           <>
             <div className="mh-toprow">
@@ -452,7 +503,7 @@ export default function ManageHotels() {
                     <thead>
                       <tr>
                         <th>Hotel</th><th>Location</th><th>Category</th>
-                        <th>Price/Night</th><th>Stars</th><th>Map Pin</th>
+                        <th>Price/Night</th><th>Stars</th><th>Room Types</th><th>Map Pin</th>
                         <th>Status</th><th></th>
                       </tr>
                     </thead>
@@ -475,6 +526,15 @@ export default function ManageHotels() {
                           <td><span style={{ background:'#f0fdf4', padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:600, color:'#15803d' }}>{h.category||'—'}</span></td>
                           <td style={{ fontWeight:700, color:'#0a2818' }}>NPR {Number(h.pricePerNight||0).toLocaleString()}</td>
                           <td style={{ color:'#f59e0b', fontWeight:700 }}>{'★'.repeat(h.starRating||h.stars||0)||'—'}</td>
+                          {/* NEW: show room types count in list */}
+                          <td>
+                            {h.roomTypes?.length > 0
+                              ? <span style={{ background:'#eff6ff', color:'#1d4ed8', padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:700 }}>
+                                  {h.roomTypes.length} type{h.roomTypes.length !== 1 ? 's' : ''}
+                                </span>
+                              : <span style={{ color:'#9ca3af', fontSize:12 }}>—</span>
+                            }
+                          </td>
                           <td>
                             {h.lat && h.lng
                               ? <span style={{ background:'#f0fdf4', color:'#16a34a', padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:700 }}>📍 Pinned</span>
@@ -499,17 +559,16 @@ export default function ManageHotels() {
 
         ) : (
 
-          /* ── FORM VIEW ── */
+          /* ── FORM VIEW ──────────────────────────────────────────────────── */
           <>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
               <div>
                 <h2 style={{ fontSize:18, fontWeight:800, color:'#0a2818' }}>{editId ? 'Edit Hotel' : 'Add New Hotel'}</h2>
-                <p style={{ fontSize:13, color:'#6b7280', marginTop:2 }}>Fill in the details — only Name, City and Price are required</p>
+                <p style={{ fontSize:13, color:'#6b7280', marginTop:2 }}>Fill in the details – only Name, City and Price are required</p>
               </div>
               <button className="mh-back-btn" onClick={()=>setTab('list')}>← Back to list</button>
             </div>
 
-            {/* Tab bar — shows red dot on tabs with errors */}
             <div className="mh-ftabs">
               {FORM_TABS.map(t => (
                 <button
@@ -517,14 +576,14 @@ export default function ManageHotels() {
                   className={`mh-ftab${formTab===t?' on':''}${tabHasError[t]?' error':''}`}
                   onClick={() => setFormTab(t)}
                 >
-                  {tabHasError[t] ? '⚠️ ' : ''}{FORM_TAB_LABELS[t]}
+                  {tabHasError[t] ? '⚠ ' : ''}{FORM_TAB_LABELS[t]}
                 </button>
               ))}
             </div>
 
             <div className="mh-fcard">
 
-              {/* ── BASIC INFO ── */}
+              {/* ── BASIC INFO ──────────────────────────────────────────────── */}
               {formTab === 'basic' && (
                 <div className="mh-grid2">
                   <div className="mh-field mh-full">
@@ -535,7 +594,7 @@ export default function ManageHotels() {
                       value={form.name}
                       onChange={e => { setForm(f=>({...f,name:e.target.value})); setFieldErrors(fe=>({...fe,name:''})); }}
                     />
-                    {fieldErrors.name && <span className="mh-field-error">⚠️ {fieldErrors.name}</span>}
+                    {fieldErrors.name && <span className="mh-field-error">⚠ {fieldErrors.name}</span>}
                   </div>
 
                   <div className="mh-field">
@@ -546,18 +605,18 @@ export default function ManageHotels() {
                   </div>
 
                   <div className="mh-field">
-                    <label className="mh-label">Price Per Night (NPR) *</label>
+                    <label className="mh-label">Base Price Per Night (NPR) *</label>
                     <input
                       className={`mh-inp${fieldErrors.pricePerNight?' error':''}`}
                       type="number" placeholder="5000"
                       value={form.pricePerNight}
                       onChange={e => { setForm(f=>({...f,pricePerNight:e.target.value})); setFieldErrors(fe=>({...fe,pricePerNight:''})); }}
                     />
-                    {fieldErrors.pricePerNight && <span className="mh-field-error">⚠️ {fieldErrors.pricePerNight}</span>}
+                    {fieldErrors.pricePerNight && <span className="mh-field-error">⚠ {fieldErrors.pricePerNight}</span>}
                   </div>
 
                   <div className="mh-field">
-                    <label className="mh-label">Total Rooms</label>
+                    <label className="mh-label">Total Rooms (overall)</label>
                     <input className="mh-inp" type="number" placeholder="50" value={form.totalRooms} onChange={e=>setForm(f=>({...f,totalRooms:e.target.value}))} />
                   </div>
 
@@ -582,7 +641,7 @@ export default function ManageHotels() {
                     <label className="mh-label">Description</label>
                     <textarea
                       className="mh-textarea"
-                      placeholder="Describe the hotel — location highlights, unique features, nearby attractions…"
+                      placeholder="Describe the hotel – location highlights, unique features, nearby attractions…"
                       value={form.description}
                       onChange={e=>setForm(f=>({...f,description:e.target.value}))}
                     />
@@ -598,7 +657,109 @@ export default function ManageHotels() {
                 </div>
               )}
 
-              {/* ── LOCATION & MAP ── */}
+              {/* ── NEW: ROOM TYPES TAB ──────────────────────────────────────── */}
+              {formTab === 'rooms' && (
+                <div>
+                  <div className="mh-rt-info">
+                    💡 Add room types (e.g. Standard, Deluxe, Suite). Each type tracks its own availability.
+                    <strong> availableRooms starts equal to totalRooms</strong> and decrements automatically with each booking.
+                    Leave this section empty if you only use the base hotel price.
+                  </div>
+
+                  {form.roomTypes.length > 0 ? (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table className="mh-rt-table">
+                        <thead>
+                          <tr>
+                            <th style={{ minWidth: 130 }}>Room Type *</th>
+                            <th style={{ minWidth: 90 }}>Price (NPR)</th>
+                            <th style={{ minWidth: 90 }}>Total Rooms</th>
+                            <th style={{ minWidth: 90 }}>Available</th>
+                            <th style={{ minWidth: 80 }}>Capacity</th>
+                            <th style={{ minWidth: 180 }}>Description</th>
+                            <th></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {form.roomTypes.map((rt, i) => (
+                            <tr key={i}>
+                              <td>
+                                <input
+                                  className="mh-rt-inp"
+                                  placeholder="e.g. Deluxe"
+                                  value={rt.type}
+                                  onChange={e => updateRoomType(i, 'type', e.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  className="mh-rt-inp"
+                                  type="number" placeholder="8000"
+                                  value={rt.price}
+                                  onChange={e => updateRoomType(i, 'price', e.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  className="mh-rt-inp"
+                                  type="number" placeholder="10"
+                                  value={rt.totalRooms}
+                                  onChange={e => updateRoomType(i, 'totalRooms', e.target.value)}
+                                />
+                              </td>
+                              {/* availableRooms – read-only for existing; shows totalRooms for new */}
+                              <td>
+                                <span className={`mh-rt-avail${(rt.availableRooms != null ? rt.availableRooms : rt.totalRooms || 0) <= 0 ? ' sold' : ''}`}>
+                                  {rt.availableRooms != null
+                                    ? rt.availableRooms
+                                    : (rt.totalRooms || '—')}
+                                </span>
+                              </td>
+                              <td>
+                                <input
+                                  className="mh-rt-inp"
+                                  type="number" placeholder="2"
+                                  value={rt.capacity}
+                                  onChange={e => updateRoomType(i, 'capacity', e.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  className="mh-rt-inp"
+                                  placeholder="Optional note"
+                                  value={rt.description}
+                                  onChange={e => updateRoomType(i, 'description', e.target.value)}
+                                />
+                              </td>
+                              <td>
+                                <button className="mh-rt-del" onClick={() => removeRoomType(i)}>✕</button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div style={{ textAlign:'center', padding:'32px 0', color:'#9ca3af', fontSize:13 }}>
+                      <div style={{ fontSize:32, marginBottom:8 }}>🛏️</div>
+                      No room types added yet. Click the button below to add one.
+                    </div>
+                  )}
+
+                  <button className="mh-rt-add-btn" style={{ marginTop:12 }} onClick={addRoomType}>
+                    + Add Room Type
+                  </button>
+
+                  {form.roomTypes.length > 0 && (
+                    <p style={{ fontSize:12, color:'#6b7280', marginTop:12 }}>
+                      ℹ️ <strong>Available</strong> column is read-only. It is set to <em>Total Rooms</em> when you first create a room type and decrements automatically as guests book.
+                    </p>
+                  )}
+                </div>
+              )}
+              {/* ─────────────────────────────────────────────────────────────── */}
+
+              {/* ── LOCATION & MAP ──────────────────────────────────────────── */}
               {formTab === 'location' && (
                 <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
                   <div className="mh-grid2">
@@ -610,7 +771,7 @@ export default function ManageHotels() {
                         value={form.location.city}
                         onChange={e => { setNested('location.city', e.target.value); setFieldErrors(fe=>({...fe,city:''})); }}
                       />
-                      {fieldErrors.city && <span className="mh-field-error">⚠️ {fieldErrors.city}</span>}
+                      {fieldErrors.city && <span className="mh-field-error">⚠ {fieldErrors.city}</span>}
                     </div>
 
                     <div className="mh-field">
@@ -639,7 +800,6 @@ export default function ManageHotels() {
                     </div>
                   </div>
 
-                  {/* Map Picker */}
                   <div>
                     <label className="mh-label" style={{ marginBottom:8, display:'block' }}>📍 Pin Hotel Location on Map</label>
                     <p style={{ fontSize:12, color:'#6b7280', marginBottom:12 }}>
@@ -652,14 +812,14 @@ export default function ManageHotels() {
                     />
                     {(!form.lat || !form.lng) && (
                       <p style={{ fontSize:12, color:'#f59e0b', marginTop:10, fontWeight:600, display:'flex', alignItems:'center', gap:5 }}>
-                        ⚠️ No pin set — hotel won't appear on the browse map
+                        ⚠ No pin set – hotel won't appear on the browse map
                       </p>
                     )}
                   </div>
                 </div>
               )}
 
-              {/* ── AMENITIES ── */}
+              {/* ── AMENITIES ───────────────────────────────────────────────── */}
               {formTab === 'amenities' && (
                 <div>
                   <p style={{ fontSize:13, color:'#6b7280', marginBottom:14 }}>Select all amenities available at this hotel:</p>
@@ -674,7 +834,7 @@ export default function ManageHotels() {
                 </div>
               )}
 
-              {/* ── IMAGES ── */}
+              {/* ── IMAGES ──────────────────────────────────────────────────── */}
               {formTab === 'images' && (
                 <div>
                   <input ref={fileRef} type="file" accept="image/*" multiple style={{ display:'none' }}
@@ -683,7 +843,7 @@ export default function ManageHotels() {
                     onClick={()=>fileRef.current?.click()}
                     onDragOver={e=>e.preventDefault()}
                     onDrop={e=>{e.preventDefault();handleFileUpload(e.dataTransfer.files);}}>
-                    <div style={{ fontSize:28, marginBottom:8 }}>{uploading?'⏳':'📷'}</div>
+                    <div style={{ fontSize:28, marginBottom:8 }}>{uploading?'⏳':'🖼️'}</div>
                     <div style={{ fontSize:14, fontWeight:700, color:'#0a2818', marginBottom:4 }}>{uploading?'Uploading…':'Upload photos from your device'}</div>
                     <div style={{ fontSize:12, color:'#6b7280', marginBottom:12 }}>Drag & drop or click · JPG, PNG, WebP</div>
                     {!uploading && (
@@ -701,7 +861,7 @@ export default function ManageHotels() {
                         {form.images.filter(i=>i.trim()).map((img,i)=>(
                           <div key={i} className="mh-img-thumb">
                             <img src={img} alt="" onError={e=>{e.target.style.display='none';}} />
-                            <button className="mh-img-del" onClick={()=>setForm(f=>({...f,images:f.images.filter(x=>x!==img)}))}>✕</button>
+                            <button className="mh-img-del" onClick={()=>setForm(f=>({...f,images:f.images.filter(x=>x!==img)}))}>&times;</button>
                           </div>
                         ))}
                       </div>
@@ -714,7 +874,7 @@ export default function ManageHotels() {
                       <input className="mh-inp" placeholder={`Image URL ${i+1}`} value={img}
                         onChange={e=>{const imgs=[...form.images];imgs[i]=e.target.value;setForm(f=>({...f,images:imgs}));}} />
                       {form.images.length>1 && (
-                        <button className="mh-btn-del" onClick={()=>setForm(f=>({...f,images:f.images.filter((_,j)=>j!==i)}))}>✕</button>
+                        <button className="mh-btn-del" onClick={()=>setForm(f=>({...f,images:f.images.filter((_,j)=>j!==i)}))}>&times;</button>
                       )}
                     </div>
                   ))}
@@ -723,7 +883,7 @@ export default function ManageHotels() {
                 </div>
               )}
 
-              {/* ── POLICIES ── */}
+              {/* ── POLICIES ────────────────────────────────────────────────── */}
               {formTab === 'policies' && (
                 <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
                   {[

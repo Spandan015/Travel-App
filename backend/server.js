@@ -6,6 +6,8 @@ const PORT     = process.env.PORT || 3000;
 
 require('./models/destination');
 require('./models/TravelPackage');
+require('./models/Message');
+require('./models/Notification');
 
 const esewaRoutes = require('./routes/esewaRoutes');
 const authRoutes             = require('./routes/authRoutes');
@@ -23,6 +25,11 @@ const regionRoutes           = require('./routes/regionRoutes');
 const trekRoutes             = require('./routes/trekRoutes');
 const packageBookingRoutes = require('./routes/packageBookingRoutes');
 const trekBookingRoutes    = require('./routes/trekBookingRoutes');
+
+const chatRoutes           = require('./routes/chatRoutes');
+const notificationRoutes   = require('./routes/notificationRoutes');
+const guideDashboardRoutes = require('./routes/guideDashboardRoutes');
+
 
 const connectDB = async () => {
   try {
@@ -61,6 +68,11 @@ app.use('/api/guide-applications', guideApplicationRoutes);
 app.use('/api/businesses',         businessRoutes);
 app.use('/api/package-bookings', packageBookingRoutes);
 app.use('/api/trek-bookings',    trekBookingRoutes);
+
+app.use('/api/chat',            chatRoutes);
+app.use('/api/notifications',   notificationRoutes);
+app.use('/api/guide-dashboard', guideDashboardRoutes);
+
 app.use((req, res) => res.status(404).json({ message: 'Route not found' }));
 
 let server = null;

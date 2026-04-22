@@ -38,19 +38,22 @@ import ManageTreks        from './pages/admin/ManageTreks';
 import GuideApplications  from './pages/admin/GuideApplications';
 import ManageUsers        from './pages/admin/ManageUsers';
 import ManageBookings     from './pages/admin/ManageBookings';
-
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentFailure from './pages/PaymentFailure';
+import HotelCheckout from './pages/HotelCheckout';
 
 function AppContent() {
   const location = useLocation();
-  const isAdmin  = location.pathname.startsWith('/admin');
-  const isGuide  = location.pathname.startsWith('/guide');
+  const isAdmin = location.pathname.startsWith('/admin');
+  const isGuide = location.pathname.startsWith('/guide');
+
+  // ✅ FIX: hide Navbar AND Footer for both admin and guide
+  const hideNav    = isAdmin || isGuide;
   const hideFooter = isAdmin || isGuide;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      {!isAdmin && <Navbar />}
+      {!hideNav && <Navbar />}
       <main style={{ flex: 1 }}>
         <Routes>
 
@@ -64,7 +67,7 @@ function AppContent() {
           <Route path="/contact"        element={<Contact />} />
           <Route path="/blog"           element={<Blog />} />
 
-          {/* ── Payment ── eSewa appends ?data=<base64> to these URLs */}
+          {/* ── Payment ── */}
           <Route path="/payment/success" element={<PaymentSuccess />} />
           <Route path="/payment/failure" element={<PaymentFailure />} />
 
@@ -91,10 +94,8 @@ function AppContent() {
           <Route path="/my-bookings" element={<ProtectedRoute allowedRoles={['user']}><UserBookings /></ProtectedRoute>} />
           <Route path="/apply-guide" element={<ProtectedRoute allowedRoles={['user']}><ApplyGuide /></ProtectedRoute>} />
 
-          {/* ── Guide ── */}
-          <Route path="/guide/dashboard" element={<ProtectedRoute allowedRoles={['guide']}><GuideDashboard /></ProtectedRoute>} />
-          <Route path="/guide/requests"  element={<ProtectedRoute allowedRoles={['guide']}><ComingSoon title="Booking Requests" /></ProtectedRoute>} />
-          <Route path="/guide/profile"   element={<ProtectedRoute allowedRoles={['guide']}><GuideProfile /></ProtectedRoute>} />
+          {/* ── Guide ── ✅ wildcard catches all /guide/* sub-routes */}
+          <Route path="/guide/*" element={<ProtectedRoute allowedRoles={['guide']}><GuideDashboard /></ProtectedRoute>} />
 
           {/* ── Admin ── */}
           <Route path="/admin/dashboard"    element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
@@ -109,6 +110,7 @@ function AppContent() {
 
           {/* ── Fallback ── */}
           <Route path="*" element={<ComingSoon title="Page Not Found" />} />
+          <Route path="/hotels/:id/checkout" element={<ProtectedRoute><HotelCheckout /></ProtectedRoute>} />
 
         </Routes>
       </main>

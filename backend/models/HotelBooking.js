@@ -31,6 +31,14 @@ const hotelBookingSchema = new mongoose.Schema({
     min: 1,
     default: 1
   },
+
+  // ── NEW: store which room type was selected ──────────────────
+  roomType: {
+    type: String,
+    default: null   // null = hotel booked without a specific room type (legacy bookings)
+  },
+  // ─────────────────────────────────────────────────────────────
+
   totalPrice: {
     type: Number,
     required: true
@@ -45,7 +53,7 @@ const hotelBookingSchema = new mongoose.Schema({
     default: 'pending'
   },
 
-  // ── eSewa Payment Fields ──────────────────────────────────
+  // eSewa Payment Fields
   paymentStatus: {
     type: String,
     enum: ['unpaid', 'pending', 'paid', 'failed'],
@@ -68,7 +76,6 @@ const hotelBookingSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
-  // ─────────────────────────────────────────────────────────
 
   specialRequests: {
     type: String,

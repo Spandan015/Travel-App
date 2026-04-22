@@ -1,358 +1,647 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import {
+  Calendar, MapPin, Clock, CheckCircle2, XCircle,
+  AlertCircle, Package, Compass, Hotel, Star, X,
+  Inbox, ArrowRight
+} from 'lucide-react';
 import bookingService from '../services/bookingService';
 import Loading from '../components/Loading';
 
-const UserBookings = () => {
+const STATUS_CFG = {
+  confirmed: { bg: '#dcfce7', color: '#15803d', dot: '#16a34a', label: 'Confirmed', Icon: CheckCircle2 },
+  pending:   { bg: '#fef9c3', color: '#854d0e', dot: '#ca8a04', label: 'Pending',   Icon: AlertCircle  },
+  cancelled: { bg: '#fee2e2', color: '#991b1b', dot: '#dc2626', label: 'Cancelled', Icon: XCircle      },
+  completed: { bg: '#ede9fe', color: '#5b21b6', dot: '#7c3aed', label: 'Completed', Icon: Star         },
+};
+
+const TYPE_CFG = {
+  package: { bg: '#dbeafe', color: '#1d4ed8', label: 'Travel Package', Icon: Package },
+  guide:   { bg: '#dcfce7', color: '#15803d', label: 'Guide Booking',  Icon: Compass },
+  hotel:   { bg: '#ffedd5', color: '#c2410c', label: 'Hotel Booking',  Icon: Hotel   },
+};
+
+const TABS = [
+  { key: 'all',       label: 'All Bookings', emoji: '🗂️' },
+  { key: 'packages',  label: 'Packages',     emoji: '🏔️' },
+  { key: 'guides',    label: 'Guides',       emoji: '🧭' },
+  { key: 'hotels',    label: 'Hotels',       emoji: '🏨' },
+  { key: 'upcoming',  label: 'Upcoming',     emoji: '🗓️' },
+  { key: 'pending',   label: 'Pending',      emoji: '⏳' },
+  { key: 'completed', label: 'Past',         emoji: '✓'  },
+];
+
+const EMPTY_STATES = {
+  all:       { Icon: Inbox,       title: 'No bookings yet',         sub: 'Start planning your next Himalayan adventure!' },
+  packages:  { Icon: Package,     title: 'No package bookings',     sub: 'Browse our curated Nepal trekking packages.' },
+  guides:    { Icon: Compass,     title: 'No guide bookings',       sub: 'Find a certified local guide for your trek.' },
+  hotels:    { Icon: Hotel,       title: 'No hotel bookings',       sub: 'Book your perfect mountain stay.' },
+  upcoming:  { Icon: Calendar,    title: 'No upcoming trips',       sub: 'Your confirmed adventures will appear here.' },
+  pending:   { Icon: AlertCircle, title: 'No pending bookings',     sub: 'All your bookings are confirmed or completed.' },
+  completed: { Icon: Star,        title: 'No past trips',           sub: 'Your completed adventures will appear here.' },
+};
+
+export default function UserBookings() {
   const location = useLocation();
-  const [bookings, setBookings] = useState([]);
+  const [bookings,      setBookings]      = useState([]);
   const [guideBookings, setGuideBookings] = useState([]);
   const [hotelBookings, setHotelBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('all');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [loading,       setLoading]       = useState(true);
+  const [activeTab,     setActiveTab]     = useState('all');
+  const [successMsg,    setSuccessMsg]    = useState('');
 
   useEffect(() => {
     fetchBookings();
-
-    // Check for success message from redirect
     if (location.state?.message) {
-      setSuccessMessage(location.state.message);
-      // Clear the message after 5 seconds
-      setTimeout(() => setSuccessMessage(''), 5000);
+      setSuccessMsg(location.state.message);
+      setTimeout(() => setSuccessMsg(''), 5000);
     }
   }, [location.state]);
 
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const [packageBookings, guideBookingData, hotelBookingData] = await Promise.all([
+      const [pkg, guide, hotel] = await Promise.all([
         bookingService.getUserBookings(),
         bookingService.getUserGuideBookings(),
-        bookingService.getUserHotelBookings()
+        bookingService.getUserHotelBookings(),
       ]);
-
-      setBookings(packageBookings.bookings || []);
-      setGuideBookings(guideBookingData.bookings || []);
-      setHotelBookings(hotelBookingData.bookings || []);
-    } catch (error) {
-      console.error('Error fetching bookings:', error);
+      setBookings(pkg.bookings || []);
+      setGuideBookings(guide.bookings || []);
+      setHotelBookings(hotel.bookings || []);
+    } catch (err) {
+      console.error('Error fetching bookings:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCancelBooking = async (bookingId, bookingType = 'package') => {
-    if (window.confirm('Are you sure you want to cancel this booking?')) {
-      try {
-        if (bookingType === 'guide') {
-          await bookingService.cancelGuideBooking(bookingId);
-        } else if (bookingType === 'hotel') {
-          await bookingService.cancelHotelBooking(bookingId);
-        } else {
-          await bookingService.cancelPackageBooking(bookingId);
-        }
-        alert('Booking cancelled successfully');
-        fetchBookings(); // Refresh the list
-      } catch (error) {
-        alert(error.response?.data?.message || 'Error cancelling booking');
-      }
+  const handleCancel = async (id, type = 'package') => {
+    if (!window.confirm('Are you sure you want to cancel this booking?')) return;
+    try {
+      if (type === 'guide')      await bookingService.cancelGuideBooking(id);
+      else if (type === 'hotel') await bookingService.cancelHotelBooking(id);
+      else                       await bookingService.cancelPackageBooking(id);
+      alert('Booking cancelled successfully');
+      fetchBookings();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error cancelling booking');
     }
   };
 
   const allBookings = [
-    ...bookings.map(booking => ({ ...booking, type: 'package' })),
-    ...guideBookings.map(booking => ({ ...booking, type: 'guide' })),
-    ...hotelBookings.map(booking => ({ ...booking, type: 'hotel' }))
+    ...bookings.map(b => ({ ...b, type: 'package' })),
+    ...guideBookings.map(b => ({ ...b, type: 'guide' })),
+    ...hotelBookings.map(b => ({ ...b, type: 'hotel' })),
   ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-  const filteredBookings = allBookings.filter(booking => {
-    if (activeTab === 'all') return true;
-    if (activeTab === 'packages') return booking.type === 'package';
-    if (activeTab === 'guides') return booking.type === 'guide';
-    if (activeTab === 'hotels') return booking.type === 'hotel';
-    if (activeTab === 'upcoming') {
-      if (booking.type === 'hotel') {
-        return new Date(booking.checkInDate) >= new Date() && booking.status === 'confirmed';
-      }
-      return new Date(booking.date) >= new Date() && booking.status === 'confirmed';
-    }
-    if (activeTab === 'pending') return booking.status === 'pending';
-    if (activeTab === 'completed') {
-      if (booking.type === 'hotel') {
-        return booking.status === 'completed' || new Date(booking.checkOutDate) < new Date();
-      }
-      return booking.status === 'completed' || new Date(booking.date) < new Date();
-    }
+  const isUpcoming = (b) =>
+    b.type === 'hotel'
+      ? new Date(b.checkInDate) >= new Date() && b.status === 'confirmed'
+      : new Date(b.date) >= new Date() && b.status === 'confirmed';
+
+  const isPast = (b) =>
+    b.type === 'hotel'
+      ? b.status === 'completed' || new Date(b.checkOutDate) < new Date()
+      : b.status === 'completed' || new Date(b.date) < new Date();
+
+  const tabCount = (key) => {
+    if (key === 'all')       return allBookings.length;
+    if (key === 'packages')  return bookings.length;
+    if (key === 'guides')    return guideBookings.length;
+    if (key === 'hotels')    return hotelBookings.length;
+    if (key === 'upcoming')  return allBookings.filter(isUpcoming).length;
+    if (key === 'pending')   return allBookings.filter(b => b.status === 'pending').length;
+    if (key === 'completed') return allBookings.filter(isPast).length;
+    return 0;
+  };
+
+  const filtered = allBookings.filter(b => {
+    if (activeTab === 'all')       return true;
+    if (activeTab === 'packages')  return b.type === 'package';
+    if (activeTab === 'guides')    return b.type === 'guide';
+    if (activeTab === 'hotels')    return b.type === 'hotel';
+    if (activeTab === 'upcoming')  return isUpcoming(b);
+    if (activeTab === 'pending')   return b.status === 'pending';
+    if (activeTab === 'completed') return isPast(b);
     return true;
   });
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'confirmed': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      case 'completed': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  const canCancel = (b) =>
+    b.status === 'confirmed' && (
+      b.type === 'hotel'
+        ? new Date(b.checkInDate) >= new Date()
+        : new Date(b.date) >= new Date()
+    );
 
-  if (loading) {
-    return <Loading />;
-  }
+  const fmtDate = (d, opts = { year: 'numeric', month: 'short', day: 'numeric' }) =>
+    d ? new Date(d).toLocaleDateString('en-US', opts) : '—';
+
+  if (loading) return <Loading />;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">My Bookings</h1>
-          <p className="text-xl text-gray-600">
-            Manage your travel bookings and guide reservations.
-          </p>
-        </div>
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
 
-        {/* Success Message */}
-        {successMessage && (
-          <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        @keyframes fadeUp    { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+        @keyframes fadeIn    { from{opacity:0} to{opacity:1} }
+        @keyframes slideDown { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:none} }
+
+        .ub-page {
+          font-family: 'Roboto', sans-serif;
+          background: #fafaf9;
+          color: #0f172a;
+          min-height: 100vh;
+        }
+
+        /* ── BANNER ── */
+        .ub-banner {
+          background: #071a0f;
+          padding: 3.5rem 2rem 3rem;
+          position: relative; overflow: hidden;
+        }
+        .ub-banner::before {
+          content: ''; position: absolute; inset: 0;
+          background: radial-gradient(ellipse 55% 80% at 80% 50%, rgba(22,163,74,0.18), transparent);
+          pointer-events: none;
+        }
+        .ub-banner-inner {
+          max-width: 1240px; margin: 0 auto;
+          position: relative; z-index: 1;
+          animation: fadeUp 0.7s cubic-bezier(0.22,1,0.36,1) both;
+        }
+        .ub-eyebrow {
+          font-size: 11px; font-weight: 700;
+          letter-spacing: 0.12em; text-transform: uppercase;
+          color: #4ade80; margin-bottom: 0.5rem;
+          display: flex; align-items: center; gap: 8px;
+          font-family: 'Roboto', sans-serif;
+        }
+        .ub-eyebrow::before {
+          content: ''; display: inline-block;
+          width: 20px; height: 2px;
+          background: #4ade80; border-radius: 2px;
+        }
+        .ub-title {
+          font-family: 'Roboto', sans-serif;
+          font-size: clamp(2.2rem, 5vw, 3.2rem);
+          font-weight: 700; color: #fff;
+          line-height: 1.1; letter-spacing: -0.02em;
+          margin-bottom: 0.6rem;
+        }
+        .ub-subtitle {
+          color: rgba(255,255,255,0.5);
+          font-size: 1rem; line-height: 1.65;
+          font-family: 'Roboto', sans-serif; font-weight: 400;
+        }
+
+        /* ── STATS ── */
+        .ub-stats {
+          display: flex; gap: 0; flex-wrap: wrap;
+          border-top: 1px solid rgba(255,255,255,0.07);
+          margin-top: 2.5rem;
+        }
+        .ub-stat {
+          padding: 1.5rem 2.5rem 0.5rem 0;
+          border-right: 1px solid rgba(255,255,255,0.08);
+          margin-right: 2.5rem;
+        }
+        .ub-stat:last-child { border-right: none; }
+        .ub-stat-num {
+          font-family: 'Roboto', sans-serif;
+          font-size: 2rem; font-weight: 700;
+          color: #fff; display: block; line-height: 1; margin-bottom: 4px;
+        }
+        .ub-stat-label {
+          font-size: 11px; color: rgba(255,255,255,0.4);
+          font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;
+          font-family: 'Roboto', sans-serif;
+        }
+
+        /* ── BODY ── */
+        .ub-body { max-width: 1240px; margin: 0 auto; padding: 2.5rem 2rem 5rem; }
+
+        /* ── TOAST ── */
+        .ub-toast {
+          background: #f0fdf4; border: 1px solid #bbf7d0;
+          border-radius: 14px; padding: 14px 18px;
+          display: flex; align-items: center; gap: 12px;
+          margin-bottom: 2rem;
+          animation: slideDown 0.4s ease both;
+        }
+        .ub-toast-icon { color: #16a34a; flex-shrink: 0; }
+        .ub-toast-text { font-size: 14px; font-weight: 500; color: #15803d; flex: 1; font-family: 'Roboto', sans-serif; }
+        .ub-toast-close {
+          color: #86efac; cursor: pointer; transition: color 0.2s;
+          background: none; border: none; display: flex; align-items: center;
+        }
+        .ub-toast-close:hover { color: #16a34a; }
+
+        /* ── TABS ── */
+        .ub-tabs-wrap {
+          display: flex; align-items: center;
+          gap: 6px; flex-wrap: wrap; margin-bottom: 2rem;
+        }
+        .ub-tab {
+          border: 1px solid #e2e8f0; background: #fff;
+          border-radius: 100px; padding: 8px 16px;
+          font-size: 13px; font-weight: 500;
+          cursor: pointer; color: #64748b;
+          font-family: 'Roboto', sans-serif;
+          transition: all 0.2s;
+          display: flex; align-items: center; gap: 6px; white-space: nowrap;
+        }
+        .ub-tab:hover { border-color: #16a34a; color: #16a34a; }
+        .ub-tab.active { background: #0f172a; border-color: #0f172a; color: #fff; }
+        .ub-tab-count {
+          background: rgba(0,0,0,0.08); border-radius: 100px;
+          padding: 1px 7px; font-size: 11px; font-weight: 700;
+          min-width: 22px; text-align: center;
+        }
+        .ub-tab.active .ub-tab-count { background: rgba(255,255,255,0.18); }
+
+        /* ── BOOKING CARD ── */
+        .ub-card {
+          background: #fff; border: 1px solid #e8f5ee;
+          border-radius: 20px; padding: 1.75rem;
+          margin-bottom: 1.25rem;
+          transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
+          animation: fadeUp 0.5s ease both;
+          display: flex; gap: 1.5rem; align-items: flex-start;
+        }
+        .ub-card:hover {
+          border-color: #bbf7d0;
+          box-shadow: 0 12px 40px rgba(22,163,74,0.1), 0 2px 8px rgba(0,0,0,0.04);
+          transform: translateY(-2px);
+        }
+        .ub-card-accent {
+          width: 4px; border-radius: 4px;
+          flex-shrink: 0; align-self: stretch; min-height: 60px;
+        }
+        .accent-confirmed { background: #16a34a; }
+        .accent-pending   { background: #ca8a04; }
+        .accent-cancelled { background: #dc2626; }
+        .accent-completed { background: #7c3aed; }
+
+        .ub-card-body { flex: 1; min-width: 0; }
+
+        .ub-badges { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 0.85rem; }
+        .ub-badge {
+          border-radius: 100px; padding: 4px 12px;
+          font-size: 11px; font-weight: 700;
+          display: inline-flex; align-items: center; gap: 5px;
+          font-family: 'Roboto', sans-serif;
+        }
+
+        .ub-booking-name {
+          font-size: 1.1rem; font-weight: 700;
+          color: #0f172a; margin-bottom: 0.75rem; line-height: 1.3;
+          font-family: 'Roboto', sans-serif;
+        }
+
+        .ub-meta {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+          gap: 8px 16px; margin-bottom: 1rem;
+        }
+        .ub-meta-item {
+          display: flex; align-items: center; gap: 7px;
+          font-size: 13px; color: #64748b; font-weight: 400;
+          font-family: 'Roboto', sans-serif;
+        }
+        .ub-meta-item strong { color: #374151; font-weight: 500; }
+        .ub-meta-icon { color: #94a3b8; flex-shrink: 0; }
+
+        .ub-special {
+          margin-top: 0.75rem; background: #f8fafc;
+          border: 1px solid #f1f5f9; border-radius: 10px;
+          padding: 10px 14px; font-size: 13px; color: #64748b;
+          line-height: 1.6; font-family: 'Roboto', sans-serif;
+        }
+        .ub-special strong { color: #374151; font-weight: 500; }
+
+        .ub-card-right {
+          flex-shrink: 0; display: flex; flex-direction: column;
+          align-items: flex-end; gap: 10px; min-width: 150px;
+        }
+        .ub-price-label {
+          font-size: 10px; color: #94a3b8; font-weight: 500;
+          text-align: right; text-transform: uppercase;
+          letter-spacing: 0.05em; margin-bottom: 2px;
+          font-family: 'Roboto', sans-serif;
+        }
+        .ub-price {
+          font-family: 'Roboto', sans-serif;
+          font-size: 1.6rem; font-weight: 700;
+          color: #0f172a; line-height: 1;
+        }
+
+        .ub-btn-cancel {
+          background: #fff; border: 1.5px solid #fecaca;
+          color: #dc2626; border-radius: 10px;
+          padding: 8px 14px; font-size: 12px; font-weight: 500;
+          cursor: pointer; font-family: 'Roboto', sans-serif;
+          transition: all 0.2s;
+          display: flex; align-items: center; gap: 6px; white-space: nowrap;
+        }
+        .ub-btn-cancel:hover { background: #fee2e2; border-color: #fca5a5; }
+
+        .ub-btn-view {
+          border: none; border-radius: 10px;
+          padding: 9px 16px; font-size: 12px; font-weight: 500;
+          cursor: pointer; font-family: 'Roboto', sans-serif;
+          transition: all 0.2s;
+          display: inline-flex; align-items: center; gap: 6px;
+          text-decoration: none; white-space: nowrap;
+        }
+        .ub-btn-view-package { background: #0f172a; color: #fff; }
+        .ub-btn-view-package:hover { background: #16a34a; }
+        .ub-btn-view-guide { background: #f0fdf4; color: #16a34a; border: 1.5px solid #bbf7d0; }
+        .ub-btn-view-guide:hover { background: #16a34a; color: #fff; border-color: #16a34a; }
+        .ub-btn-view-hotel { background: #fff7ed; color: #c2410c; border: 1.5px solid #fed7aa; }
+        .ub-btn-view-hotel:hover { background: #c2410c; color: #fff; border-color: #c2410c; }
+
+        /* ── EMPTY STATE ── */
+        .ub-empty {
+          text-align: center; padding: 5rem 2rem;
+          background: #fff; border: 1px solid #e8f5ee;
+          border-radius: 20px; animation: fadeIn 0.4s ease both;
+        }
+        .ub-empty-icon {
+          width: 80px; height: 80px; border-radius: 50%;
+          background: #f0fdf4; border: 1px solid #bbf7d0;
+          display: flex; align-items: center; justify-content: center;
+          margin: 0 auto 1.25rem; color: #16a34a;
+        }
+        .ub-empty-title {
+          font-family: 'Roboto', sans-serif;
+          font-size: 1.5rem; font-weight: 700;
+          color: #0f172a; margin-bottom: 0.5rem;
+        }
+        .ub-empty-sub {
+          font-size: 14px; color: #94a3b8; margin-bottom: 1.75rem;
+          line-height: 1.6; font-family: 'Roboto', sans-serif;
+        }
+        .ub-empty-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .ub-empty-btn-primary {
+          background: #16a34a; color: #fff;
+          padding: 11px 24px; border-radius: 12px;
+          font-weight: 500; font-size: 13px;
+          text-decoration: none; transition: all 0.2s;
+          font-family: 'Roboto', sans-serif;
+          display: flex; align-items: center; gap: 6px;
+        }
+        .ub-empty-btn-primary:hover { background: #15803d; transform: translateY(-1px); }
+        .ub-empty-btn-secondary {
+          background: #f0fdf4; color: #16a34a;
+          border: 1.5px solid #bbf7d0; padding: 11px 24px; border-radius: 12px;
+          font-weight: 500; font-size: 13px;
+          text-decoration: none; transition: all 0.2s;
+          font-family: 'Roboto', sans-serif;
+          display: flex; align-items: center; gap: 6px;
+        }
+        .ub-empty-btn-secondary:hover { background: #dcfce7; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+          .ub-card { flex-direction: column; gap: 1rem; }
+          .ub-card-accent { width: auto; height: 4px; align-self: auto; min-height: auto; }
+          .ub-card-right { align-items: flex-start; flex-direction: row; flex-wrap: wrap; }
+          .ub-banner { padding: 2.5rem 1.25rem 2rem; }
+          .ub-body { padding: 1.5rem 1rem 4rem; }
+          .ub-stat { padding: 1rem 1.5rem 0.5rem 0; margin-right: 1.5rem; }
+          .ub-stat-num { font-size: 1.5rem; }
+        }
+      `}</style>
+
+      <div className="ub-page">
+
+        {/* ── BANNER ── */}
+        <div className="ub-banner">
+          <div className="ub-banner-inner">
+            <div className="ub-eyebrow">My Account</div>
+            <h1 className="ub-title">My Bookings</h1>
+            <p className="ub-subtitle">Manage your trips, hotel stays, and guide reservations across Nepal.</p>
+            <div className="ub-stats">
+              <div className="ub-stat">
+                <span className="ub-stat-num">{allBookings.length}</span>
+                <span className="ub-stat-label">Total Bookings</span>
               </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-green-800">{successMessage}</p>
+              <div className="ub-stat">
+                <span className="ub-stat-num">{allBookings.filter(isUpcoming).length}</span>
+                <span className="ub-stat-label">Upcoming Trips</span>
+              </div>
+              <div className="ub-stat">
+                <span className="ub-stat-num">{allBookings.filter(b => b.status === 'pending').length}</span>
+                <span className="ub-stat-label">Pending</span>
+              </div>
+              <div className="ub-stat">
+                <span className="ub-stat-num">{allBookings.filter(isPast).length}</span>
+                <span className="ub-stat-label">Completed</span>
               </div>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-          <div className="flex flex-wrap gap-2 mb-6">
-            {[
-              { key: 'all', label: 'All Bookings', count: allBookings.length },
-              { key: 'packages', label: 'Travel Packages', count: bookings.length },
-              { key: 'guides', label: 'Guide Bookings', count: guideBookings.length },
-              { key: 'hotels', label: 'Hotel Bookings', count: hotelBookings.length },
-              { key: 'upcoming', label: 'Upcoming', count: allBookings.filter(b => {
-                if (b.type === 'hotel') return new Date(b.checkInDate) >= new Date() && b.status === 'confirmed';
-                return new Date(b.date) >= new Date() && b.status === 'confirmed';
-              }).length },
-              { key: 'pending', label: 'Pending', count: allBookings.filter(b => b.status === 'pending').length },
-              { key: 'completed', label: 'Past', count: allBookings.filter(b => {
-                if (b.type === 'hotel') return b.status === 'completed' || new Date(b.checkOutDate) < new Date();
-                return b.status === 'completed' || new Date(b.date) < new Date();
-              }).length }
-            ].map(tab => (
+        {/* ── BODY ── */}
+        <div className="ub-body">
+
+          {/* Toast */}
+          {successMsg && (
+            <div className="ub-toast">
+              <CheckCircle2 size={18} className="ub-toast-icon" />
+              <span className="ub-toast-text">{successMsg}</span>
+              <button className="ub-toast-close" onClick={() => setSuccessMsg('')}>
+                <X size={16} />
+              </button>
+            </div>
+          )}
+
+          {/* Tabs */}
+          <div className="ub-tabs-wrap">
+            {TABS.map(tab => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  activeTab === tab.key
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={`ub-tab${activeTab === tab.key ? ' active' : ''}`}
               >
-                {tab.label} ({tab.count})
+                <span>{tab.emoji}</span>
+                {tab.label}
+                <span className="ub-tab-count">{tabCount(tab.key)}</span>
               </button>
             ))}
           </div>
 
-          {/* Bookings List */}
-          {filteredBookings.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">
-                {activeTab === 'all' ? '📅' : activeTab === 'packages' ? '🎒' : activeTab === 'guides' ? '🗺️' : activeTab === 'hotels' ? '🏨' : '📅'}
+          {/* Empty state */}
+          {filtered.length === 0 ? (
+            <div className="ub-empty">
+              <div className="ub-empty-icon">
+                {(() => {
+                  const es = EMPTY_STATES[activeTab] || EMPTY_STATES.all;
+                  return <es.Icon size={36} strokeWidth={1.5} />;
+                })()}
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                {activeTab === 'all' ? 'No bookings yet' :
-                 activeTab === 'packages' ? 'No package bookings' :
-                 activeTab === 'guides' ? 'No guide bookings' :
-                 activeTab === 'hotels' ? 'No hotel bookings' :
-                 activeTab === 'upcoming' ? 'No upcoming trips' :
-                 activeTab === 'pending' ? 'No pending bookings' :
-                 'No past bookings'}
-              </h3>
-              <p className="text-gray-600 mb-4">
-                {activeTab === 'all' ? 'Start planning your next adventure!' :
-                 activeTab === 'packages' ? 'Browse our travel packages.' :
-                 activeTab === 'guides' ? 'Find a local guide for your trip.' :
-                 activeTab === 'hotels' ? 'Book your perfect stay.' :
-                 'Check back later.'}
-              </p>
-              {(activeTab === 'all' || activeTab === 'packages') && (
-                <Link
-                  to="/packages"
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Browse Packages
-                </Link>
-              )}
-              {(activeTab === 'all' || activeTab === 'guides') && (
-                <Link
-                  to="/guides"
-                  className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors ml-4"
-                >
-                  Browse Guides
-                </Link>
-              )}
+              <h3 className="ub-empty-title">{(EMPTY_STATES[activeTab] || EMPTY_STATES.all).title}</h3>
+              <p className="ub-empty-sub">{(EMPTY_STATES[activeTab] || EMPTY_STATES.all).sub}</p>
+              <div className="ub-empty-btns">
+                {['all', 'packages', 'upcoming', 'pending', 'completed'].includes(activeTab) && (
+                  <Link to="/packages" className="ub-empty-btn-primary">
+                    <Package size={14} /> Browse Packages
+                  </Link>
+                )}
+                {['all', 'guides'].includes(activeTab) && (
+                  <Link to="/guides" className="ub-empty-btn-secondary">
+                    <Compass size={14} /> Find a Guide
+                  </Link>
+                )}
+                {['hotels'].includes(activeTab) && (
+                  <Link to="/hotels" className="ub-empty-btn-secondary">
+                    <Hotel size={14} /> Browse Hotels
+                  </Link>
+                )}
+              </div>
             </div>
           ) : (
-            <div className="space-y-6">
-              {filteredBookings.map((booking) => (
-                <div key={booking._id} className="border border-gray-200 rounded-xl p-6 hover:bg-gray-50 transition-colors">
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
-                              {booking.status}
-                            </span>
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              booking.type === 'package' ? 'bg-blue-100 text-blue-800' :
-                              booking.type === 'guide' ? 'bg-green-100 text-green-800' :
-                              'bg-orange-100 text-orange-800'
-                            }`}>
-                              {booking.type === 'package' ? 'Travel Package' :
-                               booking.type === 'guide' ? 'Guide Booking' :
-                               'Hotel Booking'}
-                            </span>
-                          </div>
-                          <h3 className="text-xl font-bold text-gray-900 mb-1">
-                            {booking.type === 'package'
-                              ? booking.package?.name || 'Package Booking'
-                              : booking.type === 'guide'
-                              ? `Guide: ${booking.guide?.username || 'Unknown Guide'}`
-                              : booking.hotel?.name || 'Hotel Booking'}
-                          </h3>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-bold text-blue-600">
-                            ${booking.totalPrice || booking.price || 0}
-                          </div>
-                          {booking.type === 'guide' && (
-                            <div className="text-sm text-gray-600">
-                              {booking.duration} {booking.type === 'hourly' ? 'hour' : 'day'}{booking.duration > 1 ? 's' : ''}
-                            </div>
-                          )}
-                        </div>
+            <div>
+              {filtered.map((booking, idx) => {
+                const status = (booking.status || 'pending').toLowerCase();
+                const sc = STATUS_CFG[status] || STATUS_CFG.pending;
+                const tc = TYPE_CFG[booking.type] || TYPE_CFG.package;
+                const StatusIcon = sc.Icon;
+                const TypeIcon = tc.Icon;
+
+                const name =
+                  booking.type === 'package'
+                    ? booking.package?.name || 'Package Booking'
+                    : booking.type === 'guide'
+                    ? `Guide: ${booking.guide?.username || 'Unknown Guide'}`
+                    : booking.hotel?.name || 'Hotel Booking';
+
+                const primaryDate =
+                  booking.type === 'hotel' ? booking.checkInDate : booking.date;
+                const secondaryDate =
+                  booking.type === 'hotel' ? booking.checkOutDate : null;
+
+                const dest =
+                  booking.type === 'hotel'
+                    ? booking.hotel?.location
+                    : booking.location || booking.package?.destinations?.[0]?.name;
+
+                const viewLink =
+                  booking.type === 'package' && booking.package
+                    ? `/packages/${booking.package._id}`
+                    : booking.type === 'guide' && booking.guide
+                    ? `/guides/${booking.guide._id}`
+                    : booking.type === 'hotel' && booking.hotel
+                    ? `/hotels/${booking.hotel._id}`
+                    : null;
+
+                return (
+                  <div
+                    key={booking._id}
+                    className="ub-card"
+                    style={{ animationDelay: `${idx * 0.05}s` }}
+                  >
+                    {/* Accent bar */}
+                    <div className={`ub-card-accent accent-${status}`} />
+
+                    {/* Body */}
+                    <div className="ub-card-body">
+                      <div className="ub-badges">
+                        <span className="ub-badge" style={{ background: sc.bg, color: sc.color }}>
+                          <StatusIcon size={11} />
+                          {sc.label}
+                        </span>
+                        <span className="ub-badge" style={{ background: tc.bg, color: tc.color }}>
+                          <TypeIcon size={11} />
+                          {tc.label}
+                        </span>
                       </div>
 
-                      <div className="grid md:grid-cols-2 gap-4 text-gray-600">
-                        <div>
-                          <strong>
-                            {booking.type === 'hotel' ? 'Check-in:' : 'Date:'}
-                          </strong> {
-                            booking.type === 'hotel'
-                              ? new Date(booking.checkInDate).toLocaleDateString('en-US', {
-                                  weekday: 'long',
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric'
-                                })
-                              : new Date(booking.date).toLocaleDateString('en-US', {
-                                  weekday: 'long',
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })
-                          }
+                      <div className="ub-booking-name">{name}</div>
+
+                      <div className="ub-meta">
+                        <div className="ub-meta-item">
+                          <Calendar size={13} className="ub-meta-icon" />
+                          <span>
+                            <strong>{booking.type === 'hotel' ? 'Check-in: ' : 'Date: '}</strong>
+                            {fmtDate(primaryDate)}
+                          </span>
                         </div>
-                        {/* Check-out date for hotels */}
-                        {booking.type === 'hotel' && (
-                          <div>
-                            <strong>Check-out:</strong> {new Date(booking.checkOutDate).toLocaleDateString('en-US', {
-                              weekday: 'long',
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })}
+                        {secondaryDate && (
+                          <div className="ub-meta-item">
+                            <Calendar size={13} className="ub-meta-icon" />
+                            <span><strong>Check-out: </strong>{fmtDate(secondaryDate)}</span>
                           </div>
                         )}
-                        {/* Location/Destination */}
-                        {(booking.location || booking.hotel?.location || booking.package?.destinations?.[0]) && (
-                          <div>
-                            <strong>
-                              {booking.type === 'hotel' ? 'Location:' : 'Destination:'}
-                            </strong> {
-                              booking.type === 'hotel'
-                                ? booking.hotel?.location || 'Unknown Location'
-                                : booking.location || booking.package?.destinations?.[0]?.name || 'Unknown Destination'
-                            }
+                        {dest && (
+                          <div className="ub-meta-item">
+                            <MapPin size={13} className="ub-meta-icon" />
+                            <span>
+                              <strong>{booking.type === 'hotel' ? 'Location: ' : 'Destination: '}</strong>
+                              {dest}
+                            </span>
                           </div>
                         )}
-                        {booking.package?.destinations?.[0] && booking.type !== 'hotel' && (
-                          <div>
-                            <strong>Destination:</strong> {booking.package.destinations[0].name}
+                        {booking.type === 'guide' && booking.duration && (
+                          <div className="ub-meta-item">
+                            <Clock size={13} className="ub-meta-icon" />
+                            <span>
+                              <strong>Duration: </strong>
+                              {booking.duration} {booking.bookingType === 'hourly' ? 'hour' : 'day'}{booking.duration > 1 ? 's' : ''}
+                            </span>
                           </div>
                         )}
-                        <div>
-                          <strong>Booked on:</strong> {new Date(booking.createdAt).toLocaleDateString()}
+                        <div className="ub-meta-item">
+                          <Clock size={13} className="ub-meta-icon" />
+                          <span><strong>Booked: </strong>{fmtDate(booking.createdAt)}</span>
                         </div>
                       </div>
 
                       {booking.specialRequests && (
-                        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                          <strong>Special Requests:</strong>
-                          <p className="text-gray-700 mt-1">{booking.specialRequests}</p>
+                        <div className="ub-special">
+                          <strong>Special Requests: </strong>{booking.specialRequests}
                         </div>
                       )}
                     </div>
 
-                    <div className="mt-6 lg:mt-0 lg:ml-6 flex flex-col gap-2">
-                      {booking.status === 'confirmed' && (
-                        (booking.type === 'hotel' && new Date(booking.checkInDate) >= new Date()) ||
-                        (booking.type !== 'hotel' && new Date(booking.date) >= new Date())
-                      ) && (
+                    {/* Right */}
+                    <div className="ub-card-right">
+                      <div>
+                        <div className="ub-price-label">Total</div>
+                        <div className="ub-price">${booking.totalPrice || booking.price || 0}</div>
+                      </div>
+
+                      {viewLink && (
+                        <Link to={viewLink} className={`ub-btn-view ub-btn-view-${booking.type}`}>
+                          {booking.type === 'package' ? <Package size={13} /> :
+                           booking.type === 'guide'   ? <Compass size={13} /> :
+                           <Hotel size={13} />}
+                          View {booking.type === 'package' ? 'Package' : booking.type === 'guide' ? 'Guide' : 'Hotel'}
+                          <ArrowRight size={13} />
+                        </Link>
+                      )}
+
+                      {canCancel(booking) && (
                         <button
-                          onClick={() => handleCancelBooking(booking._id, booking.type)}
-                          className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                          onClick={() => handleCancel(booking._id, booking.type)}
+                          className="ub-btn-cancel"
                         >
-                          Cancel Booking
+                          <XCircle size={13} />
+                          Cancel
                         </button>
-                      )}
-
-                      {booking.type === 'package' && booking.package && (
-                        <Link
-                          to={`/packages/${booking.package._id}`}
-                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-center"
-                        >
-                          View Package
-                        </Link>
-                      )}
-
-                      {booking.type === 'guide' && booking.guide && (
-                        <Link
-                          to={`/guides/${booking.guide._id}`}
-                          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-center"
-                        >
-                          View Guide
-                        </Link>
-                      )}
-
-                      {booking.type === 'hotel' && booking.hotel && (
-                        <Link
-                          to={`/hotels/${booking.hotel._id}`}
-                          className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors text-center"
-                        >
-                          View Hotel
-                        </Link>
                       )}
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
       </div>
-    </div>
+    </>
   );
-};
-
-export default UserBookings;
+}
