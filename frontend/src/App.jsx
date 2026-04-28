@@ -42,6 +42,15 @@ import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentFailure from './pages/PaymentFailure';
 import HotelCheckout from './pages/HotelCheckout';
 
+import ChangePassword     from './pages/ChangePassword';
+import ManageGuides       from './pages/admin/ManageGuides';
+
+import UserChat from './pages/UserChat';
+
+import BrowsePlaces from './pages/BrowsePlaces';
+
+import DestinationDetail from './pages/DestinationDetail';
+
 function AppContent() {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
@@ -83,6 +92,7 @@ function AppContent() {
           <Route path="/browse-destinations" element={<BrowseDestinations />} />
           <Route path="/destinations/:slug"  element={<RegionDetail />} />
           <Route path="/treks/:slug"         element={<TrekDetail />} />
+          <Route path="/browse-places" element={<BrowsePlaces />} />
 
           {/* ── Tools ── */}
           <Route path="/currency-exchanger"  element={<CurrencyExchanger />} />
@@ -92,7 +102,7 @@ function AppContent() {
           {/* ── User (logged in) ── */}
           <Route path="/dashboard"   element={<ProtectedRoute allowedRoles={['user']}><Home /></ProtectedRoute>} />
           <Route path="/my-bookings" element={<ProtectedRoute allowedRoles={['user']}><UserBookings /></ProtectedRoute>} />
-          <Route path="/apply-guide" element={<ProtectedRoute allowedRoles={['user']}><ApplyGuide /></ProtectedRoute>} />
+          {/* <Route path="/apply-guide" element={<ProtectedRoute allowedRoles={['user']}><ApplyGuide /></ProtectedRoute>} /> */}
 
           {/* ── Guide ── ✅ wildcard catches all /guide/* sub-routes */}
           <Route path="/guide/*" element={<ProtectedRoute allowedRoles={['guide']}><GuideDashboard /></ProtectedRoute>} />
@@ -108,9 +118,19 @@ function AppContent() {
           <Route path="/admin/users"        element={<ProtectedRoute allowedRoles={['admin']}><ManageUsers /></ProtectedRoute>} />
           <Route path="/admin/bookings"     element={<ProtectedRoute allowedRoles={['admin']}><ManageBookings /></ProtectedRoute>} />
 
+          <Route path="/admin/guides"       element={<ProtectedRoute allowedRoles={['admin']}><ManageGuides /></ProtectedRoute>} /> 
+
           {/* ── Fallback ── */}
           <Route path="*" element={<ComingSoon title="Page Not Found" />} />
           <Route path="/hotels/:id/checkout" element={<ProtectedRoute><HotelCheckout /></ProtectedRoute>} />
+          
+          <Route path="/my-chats/:bookingId?" element={<ProtectedRoute><UserChat /></ProtectedRoute>} />
+
+          <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
+
+          <Route path="/apply-guide" element={<ApplyGuide />} />
+
+          <Route path="/places/:id" element={<DestinationDetail />} />
 
         </Routes>
       </main>

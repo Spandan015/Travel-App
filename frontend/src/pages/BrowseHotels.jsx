@@ -199,7 +199,7 @@ export default function BrowseHotels() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
 
         :root {
           --green-primary: #16a34a;
@@ -224,7 +224,7 @@ export default function BrowseHotels() {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         .bh-root {
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           background: var(--bg-page);
           min-height: 100vh;
           padding-top: 68px;
@@ -289,7 +289,7 @@ export default function BrowseHotels() {
         .bh-search-input {
           border: none;
           outline: none;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           font-size: 13.5px;
           color: var(--text-primary);
           background: transparent;
@@ -299,7 +299,7 @@ export default function BrowseHotels() {
         .bh-search-seg-select {
           border: none;
           outline: none;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           font-size: 13px;
           color: var(--text-secondary);
           background: transparent;
@@ -312,7 +312,7 @@ export default function BrowseHotels() {
           background: var(--green-primary);
           color: #fff;
           border: none;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           font-size: 14px;
           font-weight: 700;
           padding: 14px 32px;
@@ -378,7 +378,7 @@ export default function BrowseHotels() {
           background: none;
           border: none;
           cursor: pointer;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
         }
         .bh-filter-section { margin-bottom: 20px; }
         .bh-filter-section:last-child { margin-bottom: 0; }
@@ -397,7 +397,7 @@ export default function BrowseHotels() {
           border: 1.5px solid var(--border);
           border-radius: var(--radius-sm);
           font-size: 13px;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           color: var(--text-primary);
           outline: none;
           background: #fff;
@@ -421,7 +421,7 @@ export default function BrowseHotels() {
           font-size: 12px;
           font-weight: 600;
           cursor: pointer;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           background: transparent;
           color: var(--text-muted);
           transition: all 0.2s;
@@ -448,7 +448,7 @@ export default function BrowseHotels() {
           border: 1.5px solid var(--border);
           border-radius: 8px;
           font-size: 13px;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           outline: none;
           color: var(--text-primary);
           transition: border-color 0.15s;
@@ -488,7 +488,7 @@ export default function BrowseHotels() {
           cursor: pointer;
           background: #fff;
           color: var(--text-secondary);
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           transition: all 0.15s;
         }
         .bh-amenity-chip.active {
@@ -526,7 +526,7 @@ export default function BrowseHotels() {
           border: 1.5px solid var(--border);
           border-radius: 10px;
           font-size: 13px;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           color: var(--text-secondary);
           outline: none;
           background: #fff;
@@ -711,7 +711,7 @@ export default function BrowseHotels() {
           font-size: 12.5px;
           font-weight: 700;
           cursor: pointer;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           transition: all 0.2s;
           white-space: nowrap;
         }
@@ -771,14 +771,14 @@ export default function BrowseHotels() {
         .bh-list-actions { display: flex; gap: 8px; }
         .bh-detail-btn {
           padding: 9px 16px; border-radius: 10px; font-size: 12.5px; font-weight: 600;
-          cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.2s;
+          cursor: pointer; font-family: 'Roboto', sans-serif; transition: all 0.2s;
           text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
           border: 1.5px solid var(--border); background: #fff; color: var(--text-secondary);
         }
         .bh-detail-btn:hover { border-color: var(--green-primary); color: var(--green-primary); }
         .bh-book-btn2 {
           padding: 9px 20px; border-radius: 10px; font-size: 12.5px; font-weight: 700;
-          cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.2s;
+          cursor: pointer; font-family: 'Roboto', sans-serif; transition: all 0.2s;
           background: var(--green-primary); color: #fff; border: none;
         }
         .bh-book-btn2:hover { background: var(--green-mid); transform: translateY(-1px); }
@@ -813,7 +813,7 @@ export default function BrowseHotels() {
         @media(max-width:480px){ .bh-form-row { grid-template-columns: 1fr; } }
         .bh-form-field { display: flex; flex-direction: column; gap: 4px; }
         .bh-form-label { font-size: 12px; font-weight: 700; color: var(--text-secondary); }
-        .bh-form-input { padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif; color: var(--text-primary); outline: none; transition: border 0.15s; }
+        .bh-form-input { padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 13px; font-family: 'Roboto', sans-serif; color: var(--text-primary); outline: none; transition: border 0.15s; }
         .bh-form-input:focus { border-color: var(--green-primary); }
         .bh-nights-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--green-light); border: 1px solid var(--green-border); color: var(--green-mid); font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 20px; margin-top: 10px; }
         .bh-counter-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid #f8fafc; }
@@ -827,7 +827,7 @@ export default function BrowseHotels() {
         .bh-price-summary { background: #f8fafc; border-radius: 12px; padding: 14px; margin-top: 4px; border: 1px solid var(--border); }
         .bh-price-row2 { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-muted); margin-bottom: 7px; }
         .bh-price-total { display: flex; justify-content: space-between; font-size: 15px; font-weight: 800; color: var(--text-primary); border-top: 1px solid var(--border); padding-top: 10px; margin-top: 4px; }
-        .bh-confirm-btn { background: var(--green-primary); color: #fff; border: none; border-radius: 12px; padding: 14px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.2s; width: 100%; margin-top: 18px; letter-spacing: -0.01em; }
+        .bh-confirm-btn { background: var(--green-primary); color: #fff; border: none; border-radius: 12px; padding: 14px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Roboto', sans-serif; transition: all 0.2s; width: 100%; margin-top: 18px; letter-spacing: -0.01em; }
         .bh-confirm-btn:hover:not(:disabled) { background: var(--green-mid); }
         .bh-confirm-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .bh-success { text-align: center; padding: 36px 22px; }
@@ -852,9 +852,9 @@ export default function BrowseHotels() {
         .bh-cta h2 { font-size: 1.9rem; font-weight: 800; color: #fff; margin-bottom: 10px; position: relative; letter-spacing: -0.03em; }
         .bh-cta p { color: rgba(255,255,255,0.55); font-size: 0.95rem; margin-bottom: 28px; position: relative; }
         .bh-cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; position: relative; }
-        .bh-cta-primary { background: var(--green-primary); color: #fff; text-decoration: none; padding: 13px 30px; border-radius: 12px; font-weight: 700; font-size: 14px; transition: background 0.2s; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .bh-cta-primary { background: var(--green-primary); color: #fff; text-decoration: none; padding: 13px 30px; border-radius: 12px; font-weight: 700; font-size: 14px; transition: background 0.2s; font-family: 'Roboto', sans-serif; }
         .bh-cta-primary:hover { background: var(--green-mid); }
-        .bh-cta-secondary { background: rgba(255,255,255,0.08); color: #fff; text-decoration: none; padding: 13px 30px; border-radius: 12px; font-weight: 700; font-size: 14px; border: 1px solid rgba(255,255,255,0.15); transition: background 0.2s; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .bh-cta-secondary { background: rgba(255,255,255,0.08); color: #fff; text-decoration: none; padding: 13px 30px; border-radius: 12px; font-weight: 700; font-size: 14px; border: 1px solid rgba(255,255,255,0.15); transition: background 0.2s; font-family: 'Roboto', sans-serif; }
         .bh-cta-secondary:hover { background: rgba(255,255,255,0.15); }
 
         @media(max-width:600px) {

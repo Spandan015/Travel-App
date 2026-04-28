@@ -1,35 +1,39 @@
 const express = require('express');
-const router = express.Router();
+const router  = express.Router();
+const { protect, adminOnly } = require('../middleware/authMiddleware');
 const {
-  applyAsGuide,
-  getMyApplication,
+  submitApplication,
   getAllApplications,
   getApplicationById,
   approveApplication,
   rejectApplication,
-  updateGuideProfile,
-  getApplicationStats,
-  bulkApproveApplications,
-  bulkRejectApplications
+  markUnderReview,
+  saveScores,
+  suspendGuide,
+  reactivateGuide,
+  getAllGuides,
+  changePassword,
+  getEmailLogs,
 } = require('../controllers/guideApplicationController');
-const { protect, adminOnly, guideOnly } = require('../middleware/authMiddleware');
 
-// User routes
-router.post('/', protect, applyAsGuide);
-router.get('/my', protect, getMyApplication);
+// ── Public / User ──────────────────────────────────────────
+router.post('/', protect, submitApplication);
 
-// Guide routes
-router.put('/profile', protect, guideOnly, updateGuideProfile);
+// ── Admin: applications ────────────────────────────────────
+router.get('/',                        protect, adminOnly, getAllApplications);
+router.get('/email-logs',              protect, adminOnly, getEmailLogs);
+router.get('/guides',                  protect, adminOnly, getAllGuides);
+router.get('/:id',                     protect, adminOnly, getApplicationById);
+router.put('/:id/approve',             protect, adminOnly, approveApplication);
+router.put('/:id/reject',              protect, adminOnly, rejectApplication);
+router.put('/:id/review',              protect, adminOnly, markUnderReview);
+router.put('/:id/score',               protect, adminOnly, saveScores);
 
-// Admin routes
-router.get('/stats', protect, adminOnly, getApplicationStats);
-router.get('/', protect, adminOnly, getAllApplications);
-router.get('/:id', protect, adminOnly, getApplicationById);
-router.put('/:id/approve', protect, adminOnly, approveApplication);
-router.put('/:id/reject', protect, adminOnly, rejectApplication);
+// ── Admin: guide management ────────────────────────────────
+router.put('/guides/:userId/suspend',    protect, adminOnly, suspendGuide);
+router.put('/guides/:userId/reactivate', protect, adminOnly, reactivateGuide);
 
-// Admin bulk operations
-router.post('/bulk-approve', protect, adminOnly, bulkApproveApplications);
-router.post('/bulk-reject', protect, adminOnly, bulkRejectApplications);
+// ── Guide: force change password on first login ────────────
+router.put('/change-password', protect, changePassword);
 
 module.exports = router;

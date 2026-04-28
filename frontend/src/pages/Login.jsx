@@ -16,17 +16,24 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [email, setEmail] = useState('');
+  const [email, setEmail]     = useState('');
   const [password, setPassword] = useState('');
-  const [showPw, setShowPw] = useState(false);
+  const [showPw, setShowPw]   = useState(false);
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [slide, setSlide] = useState(0);
-  const [fading, setFading] = useState(false);
+  const [error, setError]     = useState('');
+  const [slide, setSlide]     = useState(0);
+  const [fading, setFading]   = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated && user) navigate(ROLE_REDIRECTS[user.role] || '/');
+    if (isAuthenticated && user) {
+      // ✅ If already logged in and must change password, redirect there
+      if (user.mustChangePassword) {
+        navigate('/change-password');
+      } else {
+        navigate(ROLE_REDIRECTS[user.role] || '/');
+      }
+    }
   }, [isAuthenticated, user]);
 
   useEffect(() => {
@@ -44,11 +51,18 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email.trim()) return setError('Please enter your email');
-    if (!password) return setError('Please enter your password');
-    setLoading(true); setError('');
+    if (!password)     return setError('Please enter your password');
+    setLoading(true);
+    setError('');
     try {
       const data = await login({ email, password });
-      navigate(ROLE_REDIRECTS[data.user?.role] || '/');
+
+      // ✅ Check mustChangePassword BEFORE redirecting to role dashboard
+      if (data.user?.mustChangePassword) {
+        navigate('/change-password');
+      } else {
+        navigate(ROLE_REDIRECTS[data.user?.role] || '/');
+      }
     } catch (err) {
       setError(err?.response?.data?.message || 'Invalid email or password');
     } finally {
@@ -95,7 +109,6 @@ export default function Login() {
           padding: 2.5rem;
         }
 
-        /* Logo */
         .lp-logo {
           display: flex; align-items: center; gap: 10px;
           text-decoration: none;
@@ -149,7 +162,6 @@ export default function Login() {
 
         .lp-card { width: 100%; max-width: 420px; }
 
-        /* Tabs */
         .lp-tabs {
           display: flex; gap: 0;
           background: #f1f5f9;
@@ -169,7 +181,6 @@ export default function Login() {
         .lp-heading { font-size: 1.6rem; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
         .lp-sub { font-size: 14px; color: #64748b; margin-bottom: 1.75rem; }
 
-        /* Google button */
         .lp-google {
           width: 100%; padding: 12px;
           border: 1.5px solid #e2e8f0; border-radius: 10px;
@@ -186,7 +197,6 @@ export default function Login() {
         .lp-div-line { flex: 1; height: 1px; background: #e2e8f0; }
         .lp-div-text { font-size: 12px; color: #94a3b8; white-space: nowrap; }
 
-        /* Error */
         .lp-error {
           background: #fef2f2; border: 1px solid #fecaca;
           border-radius: 8px; padding: 10px 14px;
@@ -195,7 +205,6 @@ export default function Login() {
           display: flex; align-items: center; gap: 8px;
         }
 
-        /* Fields */
         .lp-field { margin-bottom: 1rem; }
         .lp-label-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
         .lp-label { font-size: 13px; font-weight: 600; color: #374151; }
@@ -226,7 +235,6 @@ export default function Login() {
         .lp-remember input { accent-color: #16a34a; width: 15px; height: 15px; }
         .lp-remember label { font-size: 13px; color: #64748b; cursor: pointer; }
 
-        /* Submit */
         .lp-submit {
           width: 100%; padding: 13px;
           background: #16a34a; color: #fff; border: none; cursor: pointer;
@@ -245,7 +253,6 @@ export default function Login() {
         .lp-footer-text a { color: #16a34a; font-weight: 600; text-decoration: none; }
         .lp-footer-text a:hover { text-decoration: underline; }
 
-        /* Mobile logo */
         .lp-mobile-logo {
           display: flex; align-items: center; gap: 8px;
           margin-bottom: 2rem; text-decoration: none;

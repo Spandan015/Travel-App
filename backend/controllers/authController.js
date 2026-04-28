@@ -35,10 +35,8 @@ async function sendOTP(email, otp, type) {
       await sendMail(email, otp, type);
     } catch (e) {
       console.error('Email send error (non-fatal):', e.message);
-      // In development, just log the OTP so you can still test
     }
   }
-  // Always log OTP in dev so you can test even if email fails
   if (process.env.NODE_ENV !== 'production') {
     console.log('='.repeat(50));
     console.log(`OTP for ${email}: ${otp}  [${type}]`);
@@ -348,7 +346,17 @@ exports.login = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Your account has been suspended.' });
 
     const token = signToken(user);
-    return res.json({ success: true, message: 'Login successful', token, user: safeUser(user) });
+
+    // ✅ Build safe user object and explicitly include mustChangePassword
+    const userData = safeUser(user);
+    userData.mustChangePassword = user.mustChangePassword || false;
+
+    return res.json({
+      success: true,
+      message: 'Login successful',
+      token,
+      user: userData,
+    });
   } catch (err) {
     console.error('login error:', err);
     res.status(500).json({ success: false, message: 'Server error. Please try again.' });
@@ -396,8 +404,10 @@ exports.changePassword = async (req, res) => {
     const valid = await bcrypt.compare(currentPassword, user.password);
     if (!valid) return res.status(400).json({ message: 'Current password is incorrect' });
 
-    user.password = await bcrypt.hash(newPassword, 10);
+    user.password           = await bcrypt.hash(newPassword, 10);
+    user.mustChangePassword = false; // ✅ clear the flag after password change
     await user.save();
+
     res.json({ success: true, message: 'Password changed successfully' });
   } catch (err) {
     res.status(500).json({ message: err.message });

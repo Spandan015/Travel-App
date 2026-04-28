@@ -47,7 +47,8 @@ function Navbar() {
     { label: 'Hotels',       to: '/browse-hotels' },
     { label: 'Packages',     to: '/browse-packages' },
     { label: 'Guides',       to: '/browse-guides' },
-    { label: 'Destinations', to: '/browse-destinations' },
+    { label: 'Trekkings', to: '/browse-destinations' },
+    { label: 'Destinations', to: '/browse-places' }, 
   ];
 
   const toolLinks = [
@@ -56,7 +57,6 @@ function Navbar() {
     { label: 'Currency Exchanger', to: '/currency-exchanger', icon: '💱' },
   ];
 
-  // ── Fixed: regular users go to '/' (the unified home/dashboard)
   const getDashboardLink = () => {
     if (isAdmin) return '/admin/dashboard';
     if (isGuide) return '/guide/dashboard';
@@ -68,6 +68,9 @@ function Navbar() {
     if (isGuide) return '📊 Guide Dashboard';
     return '🏠 My Home';
   };
+
+  // Regular user = logged in but not admin and not guide
+  const isRegularUser = isAuthenticated && user && !isAdmin && !isGuide;
 
   return (
     <>
@@ -222,13 +225,20 @@ function Navbar() {
                       </span>
                     </div>
 
-                    {/* ── Fixed dashboard link ── */}
                     <Link to={getDashboardLink()} className="nav-profile-link" onClick={() => setProfileOpen(false)}>
                       {getDashboardLabel()}
                     </Link>
                     <Link to="/my-bookings" className="nav-profile-link" onClick={() => setProfileOpen(false)}>
                       🎒 My Bookings
                     </Link>
+
+                    {/* ── NEW: My Chats link — only for regular users ── */}
+                    {isRegularUser && (
+                      <Link to="/my-chats" className="nav-profile-link" onClick={() => setProfileOpen(false)}>
+                        💬 My Guide Chats
+                      </Link>
+                    )}
+
                     {!isAdmin && !isGuide && (
                       <Link to="/apply-guide" className="nav-profile-link" onClick={() => setProfileOpen(false)}>
                         🧭 Apply as Guide
@@ -273,6 +283,12 @@ function Navbar() {
           <>
             <Link to={getDashboardLink()} className="mobile-link">{getDashboardLabel()}</Link>
             <Link to="/my-bookings" className="mobile-link">🎒 My Bookings</Link>
+
+            {/* ── NEW: My Chats link in mobile menu — only for regular users ── */}
+            {isRegularUser && (
+              <Link to="/my-chats" className="mobile-link">💬 My Guide Chats</Link>
+            )}
+
             {!isAdmin && !isGuide && (
               <Link to="/apply-guide" className="mobile-link">🧭 Apply as Guide</Link>
             )}

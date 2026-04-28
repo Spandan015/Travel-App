@@ -41,6 +41,12 @@ const EMPTY_STATES = {
   completed: { Icon: Star,        title: 'No past trips',           sub: 'Your completed adventures will appear here.' },
 };
 
+// ── Format NPR currency ───────────────────────────────────────────────────────
+const fmtPrice = (amount) => {
+  if (!amount && amount !== 0) return 'NPR 0';
+  return `NPR ${Number(amount).toLocaleString('en-NP')}`;
+};
+
 export default function UserBookings() {
   const location = useLocation();
   const [bookings,      setBookings]      = useState([]);
@@ -61,14 +67,21 @@ export default function UserBookings() {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const [pkg, guide, hotel] = await Promise.all([
+      const [pkg, guide, hotel] = await Promise.allSettled([
         bookingService.getUserBookings(),
-        bookingService.getUserGuideBookings(),
+        bookingService.getUserGuideBookings(),   // ✅ FIXED: was getUserGuideBookings (didn't exist)
         bookingService.getUserHotelBookings(),
       ]);
-      setBookings(pkg.bookings || []);
-      setGuideBookings(guide.bookings || []);
-      setHotelBookings(hotel.bookings || []);
+
+      // Use allSettled so one failing endpoint doesn't blank out the others
+      setBookings(pkg.status   === 'fulfilled' ? (pkg.value.bookings   || []) : []);
+      setGuideBookings(guide.status === 'fulfilled' ? (guide.value.bookings || []) : []);
+      setHotelBookings(hotel.status === 'fulfilled' ? (hotel.value.bookings || []) : []);
+
+      // Log any failures for debugging
+      if (pkg.status   === 'rejected') console.error('Package bookings failed:', pkg.reason);
+      if (guide.status === 'rejected') console.error('Guide bookings failed:',   guide.reason);
+      if (hotel.status === 'rejected') console.error('Hotel bookings failed:',   hotel.reason);
     } catch (err) {
       console.error('Error fetching bookings:', err);
     } finally {
@@ -95,15 +108,23 @@ export default function UserBookings() {
     ...hotelBookings.map(b => ({ ...b, type: 'hotel' })),
   ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-  const isUpcoming = (b) =>
-    b.type === 'hotel'
-      ? new Date(b.checkInDate) >= new Date() && b.status === 'confirmed'
-      : new Date(b.date) >= new Date() && b.status === 'confirmed';
+  // ── FIXED: hotel uses checkInDate not date ─────────────────────────────────
+  const isUpcoming = (b) => {
+    const notCancelled = b.status !== 'cancelled';
+    if (b.type === 'hotel') {
+      return notCancelled && b.checkInDate && new Date(b.checkInDate) >= new Date();
+    }
+    return notCancelled && b.date && new Date(b.date) >= new Date() && b.status === 'confirmed';
+  };
 
-  const isPast = (b) =>
-    b.type === 'hotel'
-      ? b.status === 'completed' || new Date(b.checkOutDate) < new Date()
-      : b.status === 'completed' || new Date(b.date) < new Date();
+  const isPast = (b) => {
+    if (b.type === 'hotel') {
+      return b.status === 'completed' ||
+        (b.checkOutDate && new Date(b.checkOutDate) < new Date());
+    }
+    return b.status === 'completed' ||
+      (b.date && new Date(b.date) < new Date());
+  };
 
   const tabCount = (key) => {
     if (key === 'all')       return allBookings.length;
@@ -127,12 +148,14 @@ export default function UserBookings() {
     return true;
   });
 
-  const canCancel = (b) =>
-    b.status === 'confirmed' && (
-      b.type === 'hotel'
-        ? new Date(b.checkInDate) >= new Date()
-        : new Date(b.date) >= new Date()
-    );
+  // ── FIXED: hotel cancel uses checkInDate, not date ────────────────────────
+  const canCancel = (b) => {
+    if (['cancelled', 'completed'].includes(b.status)) return false;
+    if (b.type === 'hotel') {
+      return b.checkInDate && new Date(b.checkInDate) >= new Date();
+    }
+    return b.status === 'confirmed' && b.date && new Date(b.date) >= new Date();
+  };
 
   const fmtDate = (d, opts = { year: 'numeric', month: 'short', day: 'numeric' }) =>
     d ? new Date(d).toLocaleDateString('en-US', opts) : '—';
@@ -157,7 +180,6 @@ export default function UserBookings() {
           min-height: 100vh;
         }
 
-        /* ── BANNER ── */
         .ub-banner {
           background: #071a0f;
           padding: 3.5rem 2rem 3rem;
@@ -178,7 +200,6 @@ export default function UserBookings() {
           letter-spacing: 0.12em; text-transform: uppercase;
           color: #4ade80; margin-bottom: 0.5rem;
           display: flex; align-items: center; gap: 8px;
-          font-family: 'Roboto', sans-serif;
         }
         .ub-eyebrow::before {
           content: ''; display: inline-block;
@@ -186,7 +207,6 @@ export default function UserBookings() {
           background: #4ade80; border-radius: 2px;
         }
         .ub-title {
-          font-family: 'Roboto', sans-serif;
           font-size: clamp(2.2rem, 5vw, 3.2rem);
           font-weight: 700; color: #fff;
           line-height: 1.1; letter-spacing: -0.02em;
@@ -194,11 +214,8 @@ export default function UserBookings() {
         }
         .ub-subtitle {
           color: rgba(255,255,255,0.5);
-          font-size: 1rem; line-height: 1.65;
-          font-family: 'Roboto', sans-serif; font-weight: 400;
+          font-size: 1rem; line-height: 1.65; font-weight: 400;
         }
-
-        /* ── STATS ── */
         .ub-stats {
           display: flex; gap: 0; flex-wrap: wrap;
           border-top: 1px solid rgba(255,255,255,0.07);
@@ -211,20 +228,16 @@ export default function UserBookings() {
         }
         .ub-stat:last-child { border-right: none; }
         .ub-stat-num {
-          font-family: 'Roboto', sans-serif;
           font-size: 2rem; font-weight: 700;
           color: #fff; display: block; line-height: 1; margin-bottom: 4px;
         }
         .ub-stat-label {
           font-size: 11px; color: rgba(255,255,255,0.4);
           font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;
-          font-family: 'Roboto', sans-serif;
         }
 
-        /* ── BODY ── */
         .ub-body { max-width: 1240px; margin: 0 auto; padding: 2.5rem 2rem 5rem; }
 
-        /* ── TOAST ── */
         .ub-toast {
           background: #f0fdf4; border: 1px solid #bbf7d0;
           border-radius: 14px; padding: 14px 18px;
@@ -233,14 +246,13 @@ export default function UserBookings() {
           animation: slideDown 0.4s ease both;
         }
         .ub-toast-icon { color: #16a34a; flex-shrink: 0; }
-        .ub-toast-text { font-size: 14px; font-weight: 500; color: #15803d; flex: 1; font-family: 'Roboto', sans-serif; }
+        .ub-toast-text { font-size: 14px; font-weight: 500; color: #15803d; flex: 1; }
         .ub-toast-close {
           color: #86efac; cursor: pointer; transition: color 0.2s;
           background: none; border: none; display: flex; align-items: center;
         }
         .ub-toast-close:hover { color: #16a34a; }
 
-        /* ── TABS ── */
         .ub-tabs-wrap {
           display: flex; align-items: center;
           gap: 6px; flex-wrap: wrap; margin-bottom: 2rem;
@@ -250,9 +262,9 @@ export default function UserBookings() {
           border-radius: 100px; padding: 8px 16px;
           font-size: 13px; font-weight: 500;
           cursor: pointer; color: #64748b;
-          font-family: 'Roboto', sans-serif;
           transition: all 0.2s;
           display: flex; align-items: center; gap: 6px; white-space: nowrap;
+          font-family: inherit;
         }
         .ub-tab:hover { border-color: #16a34a; color: #16a34a; }
         .ub-tab.active { background: #0f172a; border-color: #0f172a; color: #fff; }
@@ -263,7 +275,6 @@ export default function UserBookings() {
         }
         .ub-tab.active .ub-tab-count { background: rgba(255,255,255,0.18); }
 
-        /* ── BOOKING CARD ── */
         .ub-card {
           background: #fff; border: 1px solid #e8f5ee;
           border-radius: 20px; padding: 1.75rem;
@@ -287,19 +298,16 @@ export default function UserBookings() {
         .accent-completed { background: #7c3aed; }
 
         .ub-card-body { flex: 1; min-width: 0; }
-
         .ub-badges { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 0.85rem; }
         .ub-badge {
           border-radius: 100px; padding: 4px 12px;
           font-size: 11px; font-weight: 700;
           display: inline-flex; align-items: center; gap: 5px;
-          font-family: 'Roboto', sans-serif;
         }
 
         .ub-booking-name {
           font-size: 1.1rem; font-weight: 700;
           color: #0f172a; margin-bottom: 0.75rem; line-height: 1.3;
-          font-family: 'Roboto', sans-serif;
         }
 
         .ub-meta {
@@ -310,40 +318,45 @@ export default function UserBookings() {
         .ub-meta-item {
           display: flex; align-items: center; gap: 7px;
           font-size: 13px; color: #64748b; font-weight: 400;
-          font-family: 'Roboto', sans-serif;
         }
         .ub-meta-item strong { color: #374151; font-weight: 500; }
         .ub-meta-icon { color: #94a3b8; flex-shrink: 0; }
 
+        /* Payment status pill */
+        .ub-payment-pill {
+          display: inline-flex; align-items: center; gap: 5px;
+          border-radius: 100px; padding: 3px 10px;
+          font-size: 11px; font-weight: 700;
+        }
+        .ub-payment-paid   { background: #dcfce7; color: #15803d; }
+        .ub-payment-unpaid { background: #fef9c3; color: #854d0e; }
+
         .ub-special {
           margin-top: 0.75rem; background: #f8fafc;
           border: 1px solid #f1f5f9; border-radius: 10px;
-          padding: 10px 14px; font-size: 13px; color: #64748b;
-          line-height: 1.6; font-family: 'Roboto', sans-serif;
+          padding: 10px 14px; font-size: 13px; color: #64748b; line-height: 1.6;
         }
         .ub-special strong { color: #374151; font-weight: 500; }
 
         .ub-card-right {
           flex-shrink: 0; display: flex; flex-direction: column;
-          align-items: flex-end; gap: 10px; min-width: 150px;
+          align-items: flex-end; gap: 10px; min-width: 160px;
         }
         .ub-price-label {
           font-size: 10px; color: #94a3b8; font-weight: 500;
           text-align: right; text-transform: uppercase;
           letter-spacing: 0.05em; margin-bottom: 2px;
-          font-family: 'Roboto', sans-serif;
         }
         .ub-price {
-          font-family: 'Roboto', sans-serif;
-          font-size: 1.6rem; font-weight: 700;
-          color: #0f172a; line-height: 1;
+          font-size: 1.3rem; font-weight: 700;
+          color: #0f172a; line-height: 1; text-align: right;
         }
 
         .ub-btn-cancel {
           background: #fff; border: 1.5px solid #fecaca;
           color: #dc2626; border-radius: 10px;
           padding: 8px 14px; font-size: 12px; font-weight: 500;
-          cursor: pointer; font-family: 'Roboto', sans-serif;
+          cursor: pointer; font-family: inherit;
           transition: all 0.2s;
           display: flex; align-items: center; gap: 6px; white-space: nowrap;
         }
@@ -352,7 +365,7 @@ export default function UserBookings() {
         .ub-btn-view {
           border: none; border-radius: 10px;
           padding: 9px 16px; font-size: 12px; font-weight: 500;
-          cursor: pointer; font-family: 'Roboto', sans-serif;
+          cursor: pointer; font-family: inherit;
           transition: all 0.2s;
           display: inline-flex; align-items: center; gap: 6px;
           text-decoration: none; white-space: nowrap;
@@ -364,7 +377,6 @@ export default function UserBookings() {
         .ub-btn-view-hotel { background: #fff7ed; color: #c2410c; border: 1.5px solid #fed7aa; }
         .ub-btn-view-hotel:hover { background: #c2410c; color: #fff; border-color: #c2410c; }
 
-        /* ── EMPTY STATE ── */
         .ub-empty {
           text-align: center; padding: 5rem 2rem;
           background: #fff; border: 1px solid #e8f5ee;
@@ -377,13 +389,11 @@ export default function UserBookings() {
           margin: 0 auto 1.25rem; color: #16a34a;
         }
         .ub-empty-title {
-          font-family: 'Roboto', sans-serif;
           font-size: 1.5rem; font-weight: 700;
           color: #0f172a; margin-bottom: 0.5rem;
         }
         .ub-empty-sub {
-          font-size: 14px; color: #94a3b8; margin-bottom: 1.75rem;
-          line-height: 1.6; font-family: 'Roboto', sans-serif;
+          font-size: 14px; color: #94a3b8; margin-bottom: 1.75rem; line-height: 1.6;
         }
         .ub-empty-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
         .ub-empty-btn-primary {
@@ -391,7 +401,6 @@ export default function UserBookings() {
           padding: 11px 24px; border-radius: 12px;
           font-weight: 500; font-size: 13px;
           text-decoration: none; transition: all 0.2s;
-          font-family: 'Roboto', sans-serif;
           display: flex; align-items: center; gap: 6px;
         }
         .ub-empty-btn-primary:hover { background: #15803d; transform: translateY(-1px); }
@@ -400,12 +409,10 @@ export default function UserBookings() {
           border: 1.5px solid #bbf7d0; padding: 11px 24px; border-radius: 12px;
           font-weight: 500; font-size: 13px;
           text-decoration: none; transition: all 0.2s;
-          font-family: 'Roboto', sans-serif;
           display: flex; align-items: center; gap: 6px;
         }
         .ub-empty-btn-secondary:hover { background: #dcfce7; }
 
-        /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
           .ub-card { flex-direction: column; gap: 1rem; }
           .ub-card-accent { width: auto; height: 4px; align-self: auto; min-height: auto; }
@@ -419,7 +426,7 @@ export default function UserBookings() {
 
       <div className="ub-page">
 
-        {/* ── BANNER ── */}
+        {/* BANNER */}
         <div className="ub-banner">
           <div className="ub-banner-inner">
             <div className="ub-eyebrow">My Account</div>
@@ -446,10 +453,9 @@ export default function UserBookings() {
           </div>
         </div>
 
-        {/* ── BODY ── */}
+        {/* BODY */}
         <div className="ub-body">
 
-          {/* Toast */}
           {successMsg && (
             <div className="ub-toast">
               <CheckCircle2 size={18} className="ub-toast-icon" />
@@ -511,7 +517,7 @@ export default function UserBookings() {
                 const sc = STATUS_CFG[status] || STATUS_CFG.pending;
                 const tc = TYPE_CFG[booking.type] || TYPE_CFG.package;
                 const StatusIcon = sc.Icon;
-                const TypeIcon = tc.Icon;
+                const TypeIcon   = tc.Icon;
 
                 const name =
                   booking.type === 'package'
@@ -521,14 +527,18 @@ export default function UserBookings() {
                     : booking.hotel?.name || 'Hotel Booking';
 
                 const primaryDate =
-                  booking.type === 'hotel' ? booking.checkInDate : booking.date;
+                  booking.type === 'hotel' ? booking.checkInDate : booking.startDate || booking.date;
                 const secondaryDate =
-                  booking.type === 'hotel' ? booking.checkOutDate : null;
+                  booking.type === 'hotel' ? booking.checkOutDate
+                  : booking.type === 'guide' ? booking.endDate
+                  : null;
 
                 const dest =
                   booking.type === 'hotel'
                     ? booking.hotel?.location
-                    : booking.location || booking.package?.destinations?.[0]?.name;
+                    : booking.type === 'guide'
+                    ? booking.destination?.name
+                    : booking.package?.destinations?.[0]?.name;
 
                 const viewLink =
                   booking.type === 'package' && booking.package
@@ -539,16 +549,17 @@ export default function UserBookings() {
                     ? `/hotels/${booking.hotel._id}`
                     : null;
 
+                // Payment status — hotel bookings have paymentStatus field
+                const paymentStatus = booking.paymentStatus;
+
                 return (
                   <div
                     key={booking._id}
                     className="ub-card"
                     style={{ animationDelay: `${idx * 0.05}s` }}
                   >
-                    {/* Accent bar */}
                     <div className={`ub-card-accent accent-${status}`} />
 
-                    {/* Body */}
                     <div className="ub-card-body">
                       <div className="ub-badges">
                         <span className="ub-badge" style={{ background: sc.bg, color: sc.color }}>
@@ -559,6 +570,12 @@ export default function UserBookings() {
                           <TypeIcon size={11} />
                           {tc.label}
                         </span>
+                        {/* Payment status pill for hotel bookings */}
+                        {booking.type === 'hotel' && paymentStatus && (
+                          <span className={`ub-payment-pill ${paymentStatus === 'paid' ? 'ub-payment-paid' : 'ub-payment-unpaid'}`}>
+                            {paymentStatus === 'paid' ? '✓ Paid' : '⏳ Payment Pending'}
+                          </span>
+                        )}
                       </div>
 
                       <div className="ub-booking-name">{name}</div>
@@ -567,14 +584,17 @@ export default function UserBookings() {
                         <div className="ub-meta-item">
                           <Calendar size={13} className="ub-meta-icon" />
                           <span>
-                            <strong>{booking.type === 'hotel' ? 'Check-in: ' : 'Date: '}</strong>
+                            <strong>{booking.type === 'hotel' ? 'Check-in: ' : 'Start: '}</strong>
                             {fmtDate(primaryDate)}
                           </span>
                         </div>
                         {secondaryDate && (
                           <div className="ub-meta-item">
                             <Calendar size={13} className="ub-meta-icon" />
-                            <span><strong>Check-out: </strong>{fmtDate(secondaryDate)}</span>
+                            <span>
+                              <strong>{booking.type === 'hotel' ? 'Check-out: ' : 'End: '}</strong>
+                              {fmtDate(secondaryDate)}
+                            </span>
                           </div>
                         )}
                         {dest && (
@@ -586,12 +606,28 @@ export default function UserBookings() {
                             </span>
                           </div>
                         )}
+                        {booking.type === 'hotel' && booking.numberOfRooms && (
+                          <div className="ub-meta-item">
+                            <Hotel size={13} className="ub-meta-icon" />
+                            <span>
+                              <strong>Rooms: </strong>
+                              {booking.numberOfRooms}
+                              {booking.roomType ? ` (${booking.roomType})` : ''}
+                            </span>
+                          </div>
+                        )}
+                        {booking.type === 'hotel' && booking.numberOfGuests && (
+                          <div className="ub-meta-item">
+                            <MapPin size={13} className="ub-meta-icon" />
+                            <span><strong>Guests: </strong>{booking.numberOfGuests}</span>
+                          </div>
+                        )}
                         {booking.type === 'guide' && booking.duration && (
                           <div className="ub-meta-item">
                             <Clock size={13} className="ub-meta-icon" />
                             <span>
                               <strong>Duration: </strong>
-                              {booking.duration} {booking.bookingType === 'hourly' ? 'hour' : 'day'}{booking.duration > 1 ? 's' : ''}
+                              {booking.duration} {booking.durationType === 'hourly' ? 'hour' : 'day'}{booking.duration > 1 ? 's' : ''}
                             </span>
                           </div>
                         )}
@@ -608,11 +644,12 @@ export default function UserBookings() {
                       )}
                     </div>
 
-                    {/* Right */}
+                    {/* Right panel */}
                     <div className="ub-card-right">
                       <div>
                         <div className="ub-price-label">Total</div>
-                        <div className="ub-price">${booking.totalPrice || booking.price || 0}</div>
+                        {/* ✅ FIXED: NPR instead of $ */}
+                        <div className="ub-price">{fmtPrice(booking.totalPrice || booking.price)}</div>
                       </div>
 
                       {viewLink && (
