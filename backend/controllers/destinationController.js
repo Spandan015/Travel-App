@@ -1,37 +1,27 @@
-const Destination = require('../models/destination');
+const Destination   = require('../models/destination');
+const Hotel         = require('../models/Hotel');
+const TravelPackage = require('../models/TravelPackage');
 
 // Get all destinations with filtering and pagination
 exports.getAll = async (req, res) => {
   try {
     const {
-      page = 1,
-      limit = 10,
-      category,
-      province,
-      isActive,
-      isPopular,
-      featured,
-      search
+      page = 1, limit = 10, category, province,
+      isActive, isPopular, featured, search
     } = req.query;
 
     const filter = {};
-
-    // Apply filters
-    if (category) filter.category = category;
-    if (province) filter.province = province;
-    if (isActive !== undefined) filter.isActive = isActive === 'true';
+    if (category)                filter.category  = category;
+    if (province)                filter.province  = province;
+    if (isActive !== undefined)  filter.isActive  = isActive  === 'true';
     if (isPopular !== undefined) filter.isPopular = isPopular === 'true';
-    if (featured !== undefined) filter.featured = featured === 'true';
-
-    // Text search
-    if (search) {
-      filter.$text = { $search: search };
-    }
+    if (featured !== undefined)  filter.featured  = featured  === 'true';
+    if (search)                  filter.$text     = { $search: search };
 
     const options = {
-      page: parseInt(page),
+      page:  parseInt(page),
       limit: parseInt(limit),
-      sort: { isPopular: -1, createdAt: -1 }
+      sort:  { isPopular: -1, createdAt: -1 },
     };
 
     const destinations = await Destination.find(filter)
@@ -45,11 +35,9 @@ exports.getAll = async (req, res) => {
       success: true,
       destinations,
       pagination: {
-        page: options.page,
-        limit: options.limit,
-        total,
-        pages: Math.ceil(total / options.limit)
-      }
+        page: options.page, limit: options.limit,
+        total, pages: Math.ceil(total / options.limit),
+      },
     });
   } catch (err) {
     console.error('Error fetching destinations:', err);
@@ -61,9 +49,7 @@ exports.getAll = async (req, res) => {
 exports.getById = async (req, res) => {
   try {
     const dest = await Destination.findById(req.params.id);
-    if (!dest) {
-      return res.status(404).json({ message: 'Destination not found' });
-    }
+    if (!dest) return res.status(404).json({ message: 'Destination not found' });
     res.json({ success: true, destination: dest });
   } catch (err) {
     console.error('Error fetching destination:', err);
@@ -71,20 +57,58 @@ exports.getById = async (req, res) => {
   }
 };
 
+// ✅ NEW: Get related hotels and packages for a destination
+exports.getRelated = async (req, res) => {
+  try {
+    const dest = await Destination.findById(req.params.id);
+    if (!dest) return res.status(404).json({ message: 'Destination not found' });
+
+    // Build location keywords to match against hotel.location string
+    // e.g. destination.name = "Pokhara", destination.location = "Pokhara Valley"
+    const keywords = [
+      dest.name,
+      dest.location,
+      dest.district,
+    ].filter(Boolean).map((k) => k.toLowerCase());
+
+    // Match hotels whose location string contains any of the keywords
+    const allHotels = await Hotel.find({ isActive: true })
+      .select('name location mainImage images pricePerNight starRating rating totalReviews amenities')
+      .lean();
+
+    const hotels = allHotels.filter((h) => {
+      const loc = (h.location || '').toLowerCase();
+      return keywords.some((k) => loc.includes(k) || k.includes(loc));
+    }).slice(0, 6);
+
+    // Match packages that reference this destination's _id
+    const packages = await TravelPackage.find({
+      isActive:     true,
+      destinations: dest._id,
+    })
+      .select('name description mainImage images price duration difficulty rating totalReviews destinations')
+      .populate('destinations', 'name')
+      .limit(6)
+      .lean();
+
+    res.json({
+      success:  true,
+      hotels,
+      packages,
+      hotelCount:   hotels.length,
+      packageCount: packages.length,
+    });
+  } catch (err) {
+    console.error('Error fetching related content:', err);
+    res.status(500).json({ message: 'Error fetching related content' });
+  }
+};
+
 // Create new destination (Admin only)
 exports.create = async (req, res) => {
   try {
-    const data = {
-      ...req.body,
-      addedBy: req.user.id
-    };
-
-    const dest = await Destination.create(data);
-    res.status(201).json({
-      success: true,
-      message: 'Destination created successfully',
-      destination: dest
-    });
+    const dest = await Destination.create({ ...req.body, addedBy: req.user.id });
+    res.status(201).json({ success: true, message: 'Destination created successfully', destination: dest });
   } catch (err) {
     console.error('Error creating destination:', err);
     res.status(500).json({ message: 'Error creating destination' });
@@ -94,21 +118,9 @@ exports.create = async (req, res) => {
 // Update destination (Admin only)
 exports.update = async (req, res) => {
   try {
-    const dest = await Destination.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-
-    if (!dest) {
-      return res.status(404).json({ message: 'Destination not found' });
-    }
-
-    res.json({
-      success: true,
-      message: 'Destination updated successfully',
-      destination: dest
-    });
+    const dest = await Destination.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!dest) return res.status(404).json({ message: 'Destination not found' });
+    res.json({ success: true, message: 'Destination updated successfully', destination: dest });
   } catch (err) {
     console.error('Error updating destination:', err);
     res.status(500).json({ message: 'Error updating destination' });
@@ -119,15 +131,8 @@ exports.update = async (req, res) => {
 exports.delete = async (req, res) => {
   try {
     const dest = await Destination.findByIdAndDelete(req.params.id);
-
-    if (!dest) {
-      return res.status(404).json({ message: 'Destination not found' });
-    }
-
-    res.json({
-      success: true,
-      message: 'Destination deleted successfully'
-    });
+    if (!dest) return res.status(404).json({ message: 'Destination not found' });
+    res.json({ success: true, message: 'Destination deleted successfully' });
   } catch (err) {
     console.error('Error deleting destination:', err);
     res.status(500).json({ message: 'Error deleting destination' });
@@ -138,21 +143,11 @@ exports.delete = async (req, res) => {
 exports.toggleStatus = async (req, res) => {
   try {
     const dest = await Destination.findById(req.params.id);
-
-    if (!dest) {
-      return res.status(404).json({ message: 'Destination not found' });
-    }
-
+    if (!dest) return res.status(404).json({ message: 'Destination not found' });
     dest.isActive = !dest.isActive;
     await dest.save();
-
-    res.json({
-      success: true,
-      message: `Destination ${dest.isActive ? 'activated' : 'deactivated'} successfully`,
-      destination: dest
-    });
+    res.json({ success: true, message: `Destination ${dest.isActive ? 'activated' : 'deactivated'}`, destination: dest });
   } catch (err) {
-    console.error('Error toggling destination status:', err);
     res.status(500).json({ message: 'Error updating destination status' });
   }
 };
@@ -161,21 +156,11 @@ exports.toggleStatus = async (req, res) => {
 exports.togglePopular = async (req, res) => {
   try {
     const dest = await Destination.findById(req.params.id);
-
-    if (!dest) {
-      return res.status(404).json({ message: 'Destination not found' });
-    }
-
+    if (!dest) return res.status(404).json({ message: 'Destination not found' });
     dest.isPopular = !dest.isPopular;
     await dest.save();
-
-    res.json({
-      success: true,
-      message: `Destination ${dest.isPopular ? 'marked as popular' : 'unmarked as popular'}`,
-      destination: dest
-    });
+    res.json({ success: true, message: `Destination ${dest.isPopular ? 'marked as popular' : 'unmarked'}`, destination: dest });
   } catch (err) {
-    console.error('Error toggling popular status:', err);
     res.status(500).json({ message: 'Error updating popular status' });
   }
 };
@@ -184,21 +169,11 @@ exports.togglePopular = async (req, res) => {
 exports.toggleFeatured = async (req, res) => {
   try {
     const dest = await Destination.findById(req.params.id);
-
-    if (!dest) {
-      return res.status(404).json({ message: 'Destination not found' });
-    }
-
+    if (!dest) return res.status(404).json({ message: 'Destination not found' });
     dest.featured = !dest.featured;
     await dest.save();
-
-    res.json({
-      success: true,
-      message: `Destination ${dest.featured ? 'featured' : 'unfeatured'}`,
-      destination: dest
-    });
+    res.json({ success: true, message: `Destination ${dest.featured ? 'featured' : 'unfeatured'}`, destination: dest });
   } catch (err) {
-    console.error('Error toggling featured status:', err);
     res.status(500).json({ message: 'Error updating featured status' });
   }
 };
@@ -206,18 +181,10 @@ exports.toggleFeatured = async (req, res) => {
 // Get destinations by category
 exports.getByCategory = async (req, res) => {
   try {
-    const { category } = req.params;
-    const destinations = await Destination.find({
-      category,
-      isActive: true
-    }).sort({ isPopular: -1, rating: -1 });
-
-    res.json({
-      success: true,
-      destinations
-    });
+    const destinations = await Destination.find({ category: req.params.category, isActive: true })
+      .sort({ isPopular: -1, rating: -1 });
+    res.json({ success: true, destinations });
   } catch (err) {
-    console.error('Error fetching destinations by category:', err);
     res.status(500).json({ message: 'Error fetching destinations' });
   }
 };
@@ -225,17 +192,10 @@ exports.getByCategory = async (req, res) => {
 // Get popular destinations
 exports.getPopular = async (req, res) => {
   try {
-    const destinations = await Destination.find({
-      isPopular: true,
-      isActive: true
-    }).sort({ rating: -1 }).limit(10);
-
-    res.json({
-      success: true,
-      destinations
-    });
+    const destinations = await Destination.find({ isPopular: true, isActive: true })
+      .sort({ rating: -1 }).limit(10);
+    res.json({ success: true, destinations });
   } catch (err) {
-    console.error('Error fetching popular destinations:', err);
     res.status(500).json({ message: 'Error fetching popular destinations' });
   }
 };
@@ -243,17 +203,10 @@ exports.getPopular = async (req, res) => {
 // Get featured destinations
 exports.getFeatured = async (req, res) => {
   try {
-    const destinations = await Destination.find({
-      featured: true,
-      isActive: true
-    }).sort({ createdAt: -1 });
-
-    res.json({
-      success: true,
-      destinations
-    });
+    const destinations = await Destination.find({ featured: true, isActive: true })
+      .sort({ createdAt: -1 });
+    res.json({ success: true, destinations });
   } catch (err) {
-    console.error('Error fetching featured destinations:', err);
     res.status(500).json({ message: 'Error fetching featured destinations' });
   }
 };
@@ -262,24 +215,15 @@ exports.getFeatured = async (req, res) => {
 exports.search = async (req, res) => {
   try {
     const { q } = req.query;
+    if (!q) return res.status(400).json({ message: 'Search query is required' });
 
-    if (!q) {
-      return res.status(400).json({ message: 'Search query is required' });
-    }
+    const destinations = await Destination.find(
+      { $text: { $search: q }, isActive: true },
+      { score: { $meta: 'textScore' } }
+    ).sort({ score: { $meta: 'textScore' } }).limit(20);
 
-    const destinations = await Destination.find({
-      $text: { $search: q },
-      isActive: true
-    }, {
-      score: { $meta: 'textScore' }
-    }).sort({ score: { $meta: 'textScore' } }).limit(20);
-
-    res.json({
-      success: true,
-      destinations
-    });
+    res.json({ success: true, destinations });
   } catch (err) {
-    console.error('Error searching destinations:', err);
     res.status(500).json({ message: 'Error searching destinations' });
   }
 };
