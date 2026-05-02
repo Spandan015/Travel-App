@@ -4,6 +4,7 @@ import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 import MapView from '../components/MapView';
 import BookingModal from '../components/BookingModal';
+import GuidePicker from '../components/GuidePicker';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -84,12 +85,16 @@ const STYLES = `
 .pd-book-price span { font-size:14px; font-weight:400; color:var(--muted); }
 .pd-reserve-btn { width:100%; padding:15px; background:var(--blue); color:#fff; border:none; border-radius:10px; font-size:15px; font-weight:800; cursor:pointer; font-family:'Roboto',sans-serif; transition:all 0.2s; margin-bottom:10px; }
 .pd-reserve-btn:hover { background:var(--blue-dark); transform:translateY(-1px); box-shadow:0 6px 20px rgba(27,79,138,0.3); }
+.pd-reserve-btn:disabled { background:#9ca3af; cursor:not-allowed; transform:none; box-shadow:none; }
 .pd-book-foot { font-size:11.5px; color:var(--muted); text-align:center; margin-bottom:12px; }
 .pd-trust { display:flex; justify-content:center; gap:14px; flex-wrap:wrap; }
 .pd-trust-item { display:flex; align-items:center; gap:4px; font-size:11px; color:var(--muted); }
 .pd-loading { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:60vh; gap:16px; }
 .pd-spinner { width:44px; height:44px; border:3px solid var(--border); border-top-color:var(--blue); border-radius:50%; animation:pdSpin 0.8s linear infinite; }
 @keyframes pdSpin { to{transform:rotate(360deg);} }
+.pd-price-breakdown { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin-bottom:14px; font-size:12px; }
+.pd-price-row { display:flex; justify-content:space-between; align-items:center; padding:4px 0; color:var(--muted); }
+.pd-price-row.total { font-weight:800; font-size:14px; color:var(--text); border-top:1px solid var(--border); margin-top:4px; padding-top:8px; }
 `;
 
 export default function PackageDetails() {
@@ -102,8 +107,11 @@ export default function PackageDetails() {
   const [lightboxIdx, setLightboxIdx] = useState(0);
   const [showFullDesc, setShowFullDesc] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
-  // ✅ BookingModal state
   const [showBookingModal, setShowBookingModal] = useState(false);
+
+  // ── Phase 2: Guide state ──────────────────────────────────────────────────
+  const [selectedGuide,   setSelectedGuide]   = useState(null);
+  const [guideRequested,  setGuideRequested]   = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -117,27 +125,36 @@ export default function PackageDetails() {
     load();
   }, [id]);
 
+  const handleGuideSelect = (guide, requested) => {
+    setSelectedGuide(guide);
+    setGuideRequested(requested);
+  };
+
   const name = pkg ? (pkg.name || pkg.title || 'Package') : '';
   const allImages = pkg
     ? [pkg.mainImage, ...(pkg.images || [])].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i)
     : [];
   const fallback = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80';
-  const price = pkg ? (typeof pkg.price === 'object' ? pkg.price?.amount : pkg.price) : 0;
+  const basePrice    = pkg ? (typeof pkg.price === 'object' ? pkg.price?.amount : pkg.price) : 0;
+  const guideFeeTotal = selectedGuide ? (selectedGuide.guideProfile?.dailyRate || 0) * (pkg?.duration || 1) : 0;
+  const totalPrice    = Number(basePrice || 0) + guideFeeTotal;
+
+  const canBook = !guideRequested || (guideRequested && selectedGuide);
 
   const TABS = ['overview', 'itinerary', 'includes', 'destinations'];
 
   if (loading) return (
     <><style>{STYLES}</style>
-      <div className="pd-root"><div className="pd-loading"><div className="pd-spinner" /><p style={{ color: 'var(--muted)', fontFamily: 'Roboto,sans-serif', fontSize: 14 }}>Loading package…</p></div></div>
+      <div className="pd-root"><div className="pd-loading"><div className="pd-spinner" /><p style={{ color:'var(--muted)', fontFamily:'Roboto,sans-serif', fontSize:14 }}>Loading package…</p></div></div>
     </>
   );
 
   if (!pkg) return (
     <><style>{STYLES}</style>
-      <div className="pd-root" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', flexDirection: 'column', gap: 16, fontFamily: 'Roboto,sans-serif' }}>
-        <div style={{ fontSize: '3rem' }}>🗺️</div>
-        <h2 style={{ color: 'var(--text)', fontWeight: 800 }}>Package Not Found</h2>
-        <Link to="/browse-packages" style={{ background: 'var(--blue)', color: '#fff', padding: '11px 24px', borderRadius: 10, fontWeight: 700, textDecoration: 'none' }}>← Back to Packages</Link>
+      <div className="pd-root" style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:'80vh', flexDirection:'column', gap:16, fontFamily:'Roboto,sans-serif' }}>
+        <div style={{ fontSize:'3rem' }}>🗺️</div>
+        <h2 style={{ color:'var(--text)', fontWeight:800 }}>Package Not Found</h2>
+        <Link to="/browse-packages" style={{ background:'var(--blue)', color:'#fff', padding:'11px 24px', borderRadius:10, fontWeight:700, textDecoration:'none' }}>← Back to Packages</Link>
       </div>
     </>
   );
@@ -152,10 +169,10 @@ export default function PackageDetails() {
             <div className="pd-gp pd-gp-main">
               {allImages[0] ? <img src={allImages[0]} alt={name} onError={e => { e.target.src = fallback; }} /> : '🏔️'}
             </div>
-            {[1, 2, 3, 4].map(i => (
+            {[1,2,3,4].map(i => (
               <div key={i} className="pd-gp">
                 {allImages[i] ? <img src={allImages[i]} alt="" onError={e => { e.target.src = fallback; }} /> : '🏔️'}
-                {i === 4 && allImages.length > 5 && <div className="pd-gallery-more-btn">+{allImages.length - 5} photos</div>}
+                {i===4 && allImages.length>5 && <div className="pd-gallery-more-btn">+{allImages.length-5} photos</div>}
               </div>
             ))}
           </div>
@@ -165,10 +182,10 @@ export default function PackageDetails() {
         {lightboxOpen && (
           <div className="pd-lightbox" onClick={() => setLightboxOpen(false)}>
             <button className="pd-lightbox-close" onClick={() => setLightboxOpen(false)}>✕</button>
-            <button className="pd-lightbox-nav pd-lightbox-prev" onClick={e => { e.stopPropagation(); setLightboxIdx(i => (i - 1 + allImages.length) % allImages.length); }}>‹</button>
-            <img className="pd-lightbox-img" src={allImages[lightboxIdx] || fallback} alt="" onClick={e => e.stopPropagation()} onError={e => { e.target.src = fallback; }} />
-            <button className="pd-lightbox-nav pd-lightbox-next" onClick={e => { e.stopPropagation(); setLightboxIdx(i => (i + 1) % allImages.length); }}>›</button>
-            <div className="pd-lightbox-count">{lightboxIdx + 1} / {allImages.length}</div>
+            <button className="pd-lightbox-nav pd-lightbox-prev" onClick={e => { e.stopPropagation(); setLightboxIdx(i=>(i-1+allImages.length)%allImages.length); }}>‹</button>
+            <img className="pd-lightbox-img" src={allImages[lightboxIdx]||fallback} alt="" onClick={e=>e.stopPropagation()} onError={e=>{e.target.src=fallback;}} />
+            <button className="pd-lightbox-nav pd-lightbox-next" onClick={e => { e.stopPropagation(); setLightboxIdx(i=>(i+1)%allImages.length); }}>›</button>
+            <div className="pd-lightbox-count">{lightboxIdx+1} / {allImages.length}</div>
           </div>
         )}
 
@@ -179,11 +196,10 @@ export default function PackageDetails() {
           </div>
           <div className="pd-header-row"><h1 className="pd-name">{name}</h1></div>
           <div className="pd-meta-row">
-            {pkg.difficulty && <span className="pd-diff-badge" style={{ background: DIFF_BG[pkg.difficulty] || '#F1F5F9', color: DIFF_COLOR[pkg.difficulty] || '#374151' }}>{pkg.difficulty}</span>}
-            {pkg.category && <span className="pd-meta-pill">🏷 {pkg.category}</span>}
+            {pkg.difficulty && <span className="pd-diff-badge" style={{ background:DIFF_BG[pkg.difficulty]||'#F1F5F9', color:DIFF_COLOR[pkg.difficulty]||'#374151' }}>{pkg.difficulty}</span>}
+            {pkg.category   && <span className="pd-meta-pill">🏷 {pkg.category}</span>}
             <span className="pd-meta-pill">📅 {pkg.duration} days</span>
             {pkg.maxGroupSize && <span className="pd-meta-pill">👥 Max {pkg.maxGroupSize} people</span>}
-            {pkg.startLocation && <span className="pd-meta-pill">📍 {pkg.startLocation}{pkg.endLocation ? ` → ${pkg.endLocation}` : ''}</span>}
             {pkg.rating > 0 && <span className="pd-meta-pill">⭐ {pkg.rating.toFixed(1)}</span>}
           </div>
         </div>
@@ -192,8 +208,8 @@ export default function PackageDetails() {
         <div className="pd-nav-tabs">
           <div className="pd-nav-inner">
             {TABS.map(t => (
-              <button key={t} className={`pd-nav-tab${activeTab === t ? ' active' : ''}`} onClick={() => setActiveTab(t)}>
-                {t.charAt(0).toUpperCase() + t.slice(1)}
+              <button key={t} className={`pd-nav-tab${activeTab===t?' active':''}`} onClick={() => setActiveTab(t)}>
+                {t.charAt(0).toUpperCase()+t.slice(1)}
               </button>
             ))}
           </div>
@@ -201,28 +217,28 @@ export default function PackageDetails() {
 
         {/* ── BODY ── */}
         <div className="pd-body">
-          {/* ── LEFT ── */}
+          {/* LEFT */}
           <div>
             {activeTab === 'overview' && (
               <>
                 <div className="pd-section">
                   <h2 className="pd-section-title">About this package</h2>
                   <p className="pd-desc">
-                    {showFullDesc || !pkg.description || pkg.description.length <= 300
+                    {showFullDesc || !pkg.description || pkg.description.length<=300
                       ? (pkg.description || "An incredible journey through Nepal's most breathtaking landscapes.")
-                      : pkg.description.slice(0, 300) + '…'}
+                      : pkg.description.slice(0,300)+'…'}
                   </p>
                   {pkg.description?.length > 300 && (
-                    <button className="pd-read-more" onClick={() => setShowFullDesc(v => !v)}>
+                    <button className="pd-read-more" onClick={() => setShowFullDesc(v=>!v)}>
                       {showFullDesc ? 'Show less ▲' : 'Read more ▼'}
                     </button>
                   )}
                 </div>
-                {pkg.highlights?.filter(h => h.trim()).length > 0 && (
+                {pkg.highlights?.filter(h=>h.trim()).length > 0 && (
                   <div className="pd-section">
                     <h2 className="pd-section-title">Package highlights</h2>
                     <div className="pd-highlights">
-                      {pkg.highlights.filter(h => h.trim()).map((h, i) => (
+                      {pkg.highlights.filter(h=>h.trim()).map((h,i) => (
                         <div key={i} className="pd-hl"><div className="pd-check">✓</div><span>{h}</span></div>
                       ))}
                     </div>
@@ -231,9 +247,9 @@ export default function PackageDetails() {
                 {pkg.bestSeason?.length > 0 && (
                   <div className="pd-section">
                     <h2 className="pd-section-title">Best time to visit</h2>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
                       {pkg.bestSeason.map(s => (
-                        <span key={s} style={{ background: 'var(--blue-light)', color: 'var(--blue)', padding: '6px 14px', borderRadius: 20, fontSize: 13, fontWeight: 600 }}>🌤 {s}</span>
+                        <span key={s} style={{ background:'var(--blue-light)', color:'var(--blue)', padding:'6px 14px', borderRadius:20, fontSize:13, fontWeight:600 }}>🌤 {s}</span>
                       ))}
                     </div>
                   </div>
@@ -244,24 +260,18 @@ export default function PackageDetails() {
             {activeTab === 'itinerary' && (
               <div className="pd-section">
                 <h2 className="pd-section-title">Day-by-day itinerary</h2>
-                {pkg.itinerary?.length > 0 ? pkg.itinerary.map((day, i) => (
+                {pkg.itinerary?.length > 0 ? pkg.itinerary.map((day,i) => (
                   <div key={i} className="pd-day">
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-                      <div className="pd-day-num">D{day.day || i + 1}</div>
-                      {i < pkg.itinerary.length - 1 && <div style={{ width: 2, background: 'var(--border)', flex: 1, minHeight: 20 }} />}
+                    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', flexShrink:0 }}>
+                      <div className="pd-day-num">D{day.day||i+1}</div>
+                      {i < pkg.itinerary.length-1 && <div style={{ width:2, background:'var(--border)', flex:1, minHeight:20 }} />}
                     </div>
                     <div className="pd-day-content">
-                      <div className="pd-day-title">{day.title || `Day ${day.day || i + 1}`}</div>
+                      <div className="pd-day-title">{day.title||`Day ${day.day||i+1}`}</div>
                       {day.description && <div className="pd-day-desc">{day.description}</div>}
-                      {(day.elevation || day.distance) && (
-                        <div className="pd-day-meta">
-                          {day.elevation && <span>⛰ {day.elevation}m</span>}
-                          {day.distance  && <span>🚶 {day.distance}km</span>}
-                        </div>
-                      )}
                     </div>
                   </div>
-                )) : <p style={{ fontSize: 13, color: 'var(--muted)' }}>No itinerary added yet.</p>}
+                )) : <p style={{ fontSize:13, color:'var(--muted)' }}>No itinerary added yet.</p>}
               </div>
             )}
 
@@ -273,21 +283,14 @@ export default function PackageDetails() {
                     {pkg.includes?.accommodation && <div className="pd-include-item">🏨 Accommodation</div>}
                     {pkg.includes?.guide         && <div className="pd-include-item">🧭 Professional Guide</div>}
                     {pkg.includes?.transport     && <div className="pd-include-item">🚌 Transport</div>}
-                    {pkg.includes?.meals         && <div className="pd-include-item">🍽️ {pkg.includes.meals === 'All meals' ? 'All Meals' : pkg.includes.meals}</div>}
+                    {pkg.includes?.meals         && <div className="pd-include-item">🍽️ {pkg.includes.meals}</div>}
                     {pkg.includes?.activities?.map(a => <div key={a} className="pd-include-item">✅ {a}</div>)}
                   </div>
-                  {!pkg.includes?.accommodation && !pkg.includes?.guide && !pkg.includes?.transport && !pkg.includes?.meals && (
-                    <p style={{ fontSize: 13, color: 'var(--muted)' }}>Includes details not specified.</p>
-                  )}
                 </div>
-                {pkg.excludes?.filter(e => e.trim()).length > 0 && (
+                {pkg.excludes?.filter(e=>e.trim()).length > 0 && (
                   <div className="pd-section">
                     <h2 className="pd-section-title">What's not included</h2>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      {pkg.excludes.filter(e => e.trim()).map((ex, i) => (
-                        <div key={i} className="pd-exclude-item">❌ {ex}</div>
-                      ))}
-                    </div>
+                    {pkg.excludes.filter(e=>e.trim()).map((ex,i) => <div key={i} className="pd-exclude-item">❌ {ex}</div>)}
                   </div>
                 )}
               </>
@@ -299,33 +302,20 @@ export default function PackageDetails() {
                 {pkg.destinations?.length > 0 ? (
                   <>
                     <div className="pd-dest-chips">
-                      {pkg.destinations.map((d, i) => (
+                      {pkg.destinations.map((d,i) => (
                         <div key={i} className="pd-dest-chip">
-                          <div className="pd-dest-chip-name">📍 {d.name || d}</div>
+                          <div className="pd-dest-chip-name">📍 {d.name||d}</div>
                           {d.location && <div className="pd-dest-chip-loc">{d.location}</div>}
                         </div>
                       ))}
                     </div>
                     {(() => {
-                      const mapMarkers = pkg.destinations
-                        .filter(d => d.coordinates?.latitude && d.coordinates?.longitude)
-                        .map((d, i) => ({ lat: Number(d.coordinates.latitude), lng: Number(d.coordinates.longitude), title: d.name || 'Destination', description: d.location || '', primary: i === 0 }));
-                      return mapMarkers.length > 0
-                        ? <MapView height="280px" markers={mapMarkers} />
-                        : <p style={{ fontSize: 13, color: 'var(--muted)' }}>Add coordinates to destinations to show the map.</p>;
+                      const markers = pkg.destinations.filter(d=>d.coordinates?.latitude&&d.coordinates?.longitude).map((d,i)=>({ lat:Number(d.coordinates.latitude), lng:Number(d.coordinates.longitude), title:d.name||'Destination', description:d.location||'', primary:i===0 }));
+                      return markers.length > 0 ? <MapView height="280px" markers={markers} /> : null;
                     })()}
                   </>
                 ) : (
-                  <div>
-                    {(pkg.region || pkg.destination || pkg.location) ? (
-                      <div className="pd-dest-chip" style={{ display: 'inline-block' }}>
-                        <div className="pd-dest-chip-name">📍 {pkg.destination || pkg.location || pkg.region}</div>
-                        {pkg.region && pkg.destination && <div className="pd-dest-chip-loc">{pkg.region}</div>}
-                      </div>
-                    ) : (
-                      <p style={{ fontSize: 13, color: 'var(--muted)' }}>No destinations assigned to this package yet.</p>
-                    )}
-                  </div>
+                  <p style={{ fontSize:13, color:'var(--muted)' }}>No destinations assigned yet.</p>
                 )}
               </div>
             )}
@@ -335,24 +325,50 @@ export default function PackageDetails() {
           <div>
             <div className="pd-book-card">
               <div className="pd-book-price">
-                NPR {Number(price || 0).toLocaleString()} <span>/ person</span>
+                NPR {Number(basePrice||0).toLocaleString()} <span>/ person</span>
               </div>
-              <div style={{ fontSize: 12, color: 'var(--muted)', margin: '4px 0 18px' }}>
+              <div style={{ fontSize:12, color:'var(--muted)', margin:'4px 0 18px' }}>
                 📅 {pkg.duration} days · {pkg.maxGroupSize ? `Max ${pkg.maxGroupSize} people` : 'Flexible group'}
               </div>
 
-              {/* ✅ Single button → BookingModal with eSewa */}
+              {/* ── Phase 2: Guide Picker ── */}
+              <div style={{ marginBottom:16 }}>
+                <GuidePicker
+                  duration={pkg.duration || 1}
+                  onGuideSelect={handleGuideSelect}
+                />
+              </div>
+
+              {/* Price breakdown when guide selected */}
+              {selectedGuide && (
+                <div className="pd-price-breakdown">
+                  <div className="pd-price-row">
+                    <span>Package</span>
+                    <span>NPR {Number(basePrice||0).toLocaleString()}</span>
+                  </div>
+                  <div className="pd-price-row">
+                    <span>Guide ({pkg.duration} days)</span>
+                    <span>+NPR {Number(guideFeeTotal).toLocaleString()}</span>
+                  </div>
+                  <div className="pd-price-row total">
+                    <span>Total</span>
+                    <span>NPR {Number(totalPrice).toLocaleString()}</span>
+                  </div>
+                </div>
+              )}
+
               <button
                 className="pd-reserve-btn"
+                disabled={!canBook}
                 onClick={() => {
                   if (!user) { navigate('/login'); return; }
                   setShowBookingModal(true);
                 }}
               >
-                Book Now · Pay with eSewa
+                {!canBook ? '⚠️ Select a guide to continue' : `Book Now · NPR ${Number(totalPrice).toLocaleString()}`}
               </button>
 
-              <p className="pd-book-foot">📅 {pkg.duration} day journey · Secure payment</p>
+              <p className="pd-book-foot">📅 {pkg.duration} day journey · Secure eSewa payment</p>
               <div className="pd-trust">
                 <div className="pd-trust-item">🔒 Secure</div>
                 <div className="pd-trust-item">✅ Instant confirmation</div>
@@ -363,11 +379,12 @@ export default function PackageDetails() {
         </div>
       </div>
 
-      {/* ✅ BookingModal — handles booking creation + eSewa redirect */}
       {showBookingModal && (
         <BookingModal
           type="package"
           item={pkg}
+          guideId={selectedGuide?._id || null}
+          guideRequested={guideRequested}
           onClose={() => setShowBookingModal(false)}
         />
       )}

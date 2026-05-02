@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from './AdminLayout';
 import axios from 'axios';
+import guideService from '../../services/guideService';
 
 const API   = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const token = () => localStorage.getItem('nt_token');
@@ -21,6 +22,7 @@ const TYPE_STYLE = {
   hotel:   { bg:'#f0fdf4', color:'#15803d', label:'🏨 Hotel'   },
   guide:   { bg:'#FFF4ED', color:'#EA580C', label:'🧭 Guide'   },
   package: { bg:'#F5F3FF', color:'#7C3AED', label:'📦 Package' },
+  trek:    { bg:'#EEF4FB', color:'#1B4F8A', label:'🥾 Trek'    },
 };
 
 const STYLES = `
@@ -61,38 +63,365 @@ const STYLES = `
   .mb-spinner{width:36px;height:36px;border:3px solid #d1fae5;border-top:3px solid #16a34a;border-radius:50%;animation:mb-spin 0.9s linear infinite;}
   @keyframes mb-spin{to{transform:rotate(360deg);}}
   .mb-empty{text-align:center;padding:56px 24px;color:#9ca3af;}
+  .mb-guide-btn{padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid;font-family:inherit;transition:all 0.15s;white-space:nowrap;}
+  .mb-guide-btn.assign{background:#EEF4FB;color:#1B4F8A;border-color:#93c5fd;}
+  .mb-guide-btn.assign:hover{background:#1B4F8A;color:#fff;}
+  .mb-guide-btn.assigned{background:#f0fdf4;color:#16a34a;border-color:#86efac;}
+  .mb-guide-btn.assigned:hover{background:#fef2f2;color:#b91c1c;border-color:#fca5a5;}
+
+  /* Modal */
+  .ag-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;}
+  .ag-modal{background:#fff;border-radius:20px;width:100%;max-width:500px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.2);}
+  .ag-header{padding:20px 24px 14px;border-bottom:1px solid #e5f0e8;display:flex;align-items:center;justify-content:space-between;}
+  .ag-title{font-size:17px;font-weight:800;color:#0a2818;}
+  .ag-sub{font-size:12px;color:#6b7280;margin-top:2px;}
+  .ag-close{width:32px;height:32px;border-radius:50%;border:1px solid #e5f0e8;background:#f8faf8;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:#6b7280;flex-shrink:0;}
+  .ag-body{padding:16px 20px;overflow-y:auto;flex:1;}
+  .ag-search{width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid #e5f0e8;border-radius:10px;font-size:13px;font-family:inherit;outline:none;margin-bottom:12px;}
+  .ag-search:focus{border-color:#16a34a;}
+  .ag-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+
+  /* Guide item in modal — grid layout to prevent wrapping */
+  .ag-item{
+    display:grid;
+    grid-template-columns:36px 1fr auto;
+    gap:10px;
+    align-items:center;
+    padding:11px 12px;
+    border:1.5px solid #e5f0e8;
+    border-radius:12px;
+    cursor:pointer;
+    transition:all 0.15s;
+    background:#fff;
+  }
+  .ag-item:hover{border-color:#16a34a;background:#fafff8;}
+  .ag-item.sel{border-color:#16a34a;background:#f0fdf4;box-shadow:0 0 0 3px rgba(22,163,74,0.08);}
+  .ag-item.none-item{grid-template-columns:24px 1fr auto;border-style:dashed;color:#6b7280;}
+  .ag-item.none-item:hover{border-color:#fca5a5;background:#fef2f2;color:#b91c1c;}
+  .ag-item.none-item.sel{border-color:#fca5a5;background:#fef2f2;color:#b91c1c;}
+
+  .ag-av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#0a2818,#16a34a);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;overflow:hidden;flex-shrink:0;}
+  .ag-item.sel .ag-av{border:2px solid #16a34a;}
+  .ag-av img{width:100%;height:100%;object-fit:cover;display:block;}
+
+  .ag-info{min-width:0;}
+  .ag-name{font-size:13px;font-weight:700;color:#0a2818;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;}
+  .ag-meta{font-size:11px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ag-meta .star{color:#f59e0b;}
+
+  .ag-rate-col{text-align:right;flex-shrink:0;}
+  .ag-rate{font-size:12px;font-weight:800;color:#16a34a;white-space:nowrap;}
+  .ag-rate-label{font-size:10px;color:#9ca3af;}
+  .ag-check{font-size:10px;color:#16a34a;font-weight:700;margin-top:2px;}
+
+  .ag-fee-box{background:#f0fdf4;border:1px solid #d1fae5;border-radius:10px;padding:12px 14px;margin-bottom:14px;}
+  .ag-fee-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#16a34a;margin-bottom:8px;}
+  .ag-fee-row{display:flex;justify-content:space-between;font-size:12px;color:#374151;padding:3px 0;}
+  .ag-fee-row.total{font-weight:800;font-size:13px;color:#0a2818;border-top:1px dashed #d1fae5;margin-top:4px;padding-top:8px;}
+  .ag-fee-row.dim{color:#94a3b8;font-size:11px;}
+
+  .ag-notes{width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid #e5f0e8;border-radius:10px;font-size:13px;font-family:inherit;outline:none;resize:vertical;margin-bottom:4px;}
+  .ag-notes:focus{border-color:#16a34a;}
+  .ag-notes-hint{font-size:11px;color:#9ca3af;margin-bottom:14px;}
+  .ag-error{background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:10px 14px;color:#b91c1c;font-size:12px;margin-bottom:10px;}
+  .ag-footer{padding:14px 20px;border-top:1px solid #e5f0e8;display:flex;gap:10px;}
+  .ag-confirm{flex:1;padding:12px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;transition:background 0.15s;}
+  .ag-confirm:hover{background:#15803d;}
+  .ag-confirm:disabled{background:#9ca3af;cursor:not-allowed;}
+  .ag-cancel{padding:12px 20px;background:#f9fafb;color:#374151;border:1px solid #d1d5db;border-radius:10px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;}
 `;
 
-export default function ManageBookings() {
-  const [activeTab, setActiveTab] = useState('all');
+// ── Assign Guide Modal ────────────────────────────────────────────────────────
+function AssignGuideModal({ booking, onClose, onAssigned }) {
+  const [guides,    setGuides]    = useState([]);
+  const [loading,   setLoading]   = useState(true);
   const [search,    setSearch]    = useState('');
-  const [statusF,   setStatusF]   = useState('');
-  const [msg,       setMsg]       = useState('');
-  const [updating,  setUpdating]  = useState(null);
+  // selected stores the userId (what backend expects)
+  const [selected,  setSelected]  = useState('__none__');
+  const [notes,     setNotes]     = useState(booking.guideNotes || '');
+  const [saving,    setSaving]    = useState(false);
+  const [error,     setError]     = useState('');
+
+  const bookingType = booking._type;
+  const duration    = booking.package?.duration || booking.trek?.duration || 1;
+  const itemName    = booking.package?.name || booking.trek?.name || 'Booking';
+
+  useEffect(() => {
+    // getApprovedGuides uses /guides which returns flat fields:
+    // { _id (Guide doc or User doc), userId, firstName, lastName,
+    //   specializations[], languages[], dailyRate, rating, profileImage }
+    guideService.getApprovedGuides().then(guides => {
+      setGuides(guides);
+      setLoading(false);
+
+      // Pre-select currently assigned guide if any
+      // assignedGuide on booking is a User ID
+      const assignedId = booking.assignedGuide?._id || booking.assignedGuide;
+      if (assignedId) {
+        // Match by userId field (for Guide-model entries) or _id (for User-model entries)
+        const match = guides.find(g =>
+          (g.userId && g.userId.toString() === assignedId.toString()) ||
+          g._id.toString() === assignedId.toString()
+        );
+        if (match) {
+          // Use userId if available (Guide model), otherwise _id (User model)
+          setSelected(match.userId?.toString() || match._id.toString());
+        }
+      }
+    });
+  }, []);
+
+  const filtered = guides.filter(g => {
+    if (!search) return true;
+    const name  = `${g.firstName||''} ${g.lastName||''}`.toLowerCase();
+    const specs = (g.specializations||[]).join(' ').toLowerCase();
+    const langs = (g.languages||[]).join(' ').toLowerCase();
+    const q = search.toLowerCase();
+    return name.includes(q) || specs.includes(q) || langs.includes(q);
+  });
+
+  // The guide object for the currently selected userId
+  const selectedGuide = selected !== '__none__'
+    ? guides.find(g =>
+        (g.userId && g.userId.toString() === selected) ||
+        g._id.toString() === selected
+      )
+    : null;
+
+  // Fee calc — uses flat dailyRate field from /guides endpoint
+  const dailyRate     = selectedGuide?.dailyRate || 0;
+  const totalFee      = dailyRate * duration;
+  const guideEarns    = Math.round(totalFee * 0.75);
+  const platformFee   = Math.round(totalFee * 0.25);
+
+  // Get the correct User ID to send to backend
+  const getGuideUserId = (g) => {
+    // userId field exists when guide comes from Guide model (populated user)
+    // _id is the User ID when guide comes from User model directly
+    return g.userId?.toString() || g._id.toString();
+  };
+
+  const handleConfirm = async () => {
+    setSaving(true);
+    setError('');
+    try {
+      // Send null to remove, or the User ID
+      const guideUserId = selected === '__none__' ? null : selected;
+      if (bookingType === 'package') {
+        await guideService.assignGuideToPackageBooking(booking._id, guideUserId, notes);
+      } else {
+        await guideService.assignGuideToTrekBooking(booking._id, guideUserId, notes);
+      }
+      onAssigned();
+      onClose();
+    } catch (e) {
+      setError(e.response?.data?.message || 'Failed to assign guide. Check console for details.');
+      console.error('Assign guide error:', e.response?.data || e.message);
+    }
+    setSaving(false);
+  };
+
+  return (
+    <div className="ag-overlay" onClick={onClose}>
+      <div className="ag-modal" onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div className="ag-header">
+          <div>
+            <div className="ag-title">🧭 Assign Guide</div>
+            <div className="ag-sub">
+              {bookingType === 'package' ? '📦' : '🥾'} {itemName} · {duration} day{duration !== 1 ? 's' : ''}
+            </div>
+          </div>
+          <button className="ag-close" onClick={onClose}>✕</button>
+        </div>
+
+        {/* Body */}
+        <div className="ag-body">
+          <input
+            className="ag-search"
+            placeholder="Search guides by name, specialty or language…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            autoFocus
+          />
+
+          {loading ? (
+            <div style={{ textAlign:'center', padding:'32px', color:'#9ca3af', fontSize:13 }}>
+              <div style={{ width:28, height:28, border:'3px solid #d1fae5', borderTop:'3px solid #16a34a', borderRadius:'50%', animation:'mb-spin 0.9s linear infinite', margin:'0 auto 10px' }} />
+              Loading guides…
+            </div>
+          ) : (
+            <div className="ag-list">
+              {/* No guide option */}
+              <div
+                className={`ag-item none-item${selected === '__none__' ? ' sel' : ''}`}
+                onClick={() => setSelected('__none__')}
+              >
+                <span style={{ fontSize:'1.1rem' }}>🚫</span>
+                <span style={{ fontSize:13, fontWeight:600 }}>No guide — remove assignment</span>
+                {selected === '__none__' && <span style={{ fontSize:11, fontWeight:700, color:'#b91c1c' }}>✓</span>}
+              </div>
+
+              {filtered.length === 0 && (
+                <div style={{ textAlign:'center', padding:'24px', color:'#9ca3af', fontSize:13 }}>
+                  {search ? `No guides match "${search}"` : 'No approved guides found.'}
+                </div>
+              )}
+
+              {filtered.map(g => {
+                const name     = `${g.firstName||''} ${g.lastName||''}`.trim() || 'Guide';
+                // Use userId for Guide-model guides, _id for User-model guides
+                const uid      = getGuideUserId(g);
+                const isSel    = selected === uid;
+                const specs    = (g.specializations||[]).slice(0, 2);
+                const rate     = g.dailyRate || 0;
+
+                return (
+                  <div
+                    key={g._id}
+                    className={`ag-item${isSel ? ' sel' : ''}`}
+                    onClick={() => setSelected(uid)}
+                  >
+                    {/* Avatar */}
+                    <div className="ag-av">
+                      {g.profileImage
+                        ? <img src={g.profileImage} alt="" onError={e => e.target.style.display='none'} />
+                        : name.charAt(0).toUpperCase()
+                      }
+                    </div>
+
+                    {/* Info */}
+                    <div className="ag-info">
+                      <div className="ag-name">{name}</div>
+                      <div className="ag-meta">
+                        {specs.length > 0 ? specs.join(' · ') : 'General guide'}
+                        {g.rating > 0 && <span className="star"> · ⭐ {Number(g.rating).toFixed(1)}</span>}
+                        {g.yearsExperience > 0 && ` · ${g.yearsExperience}yr`}
+                      </div>
+                    </div>
+
+                    {/* Rate + check */}
+                    <div className="ag-rate-col">
+                      <div className="ag-rate">
+                        {rate > 0 ? `NPR ${Number(rate).toLocaleString()}` : '—'}
+                      </div>
+                      <div className="ag-rate-label">per day</div>
+                      {isSel && <div className="ag-check">✓ Selected</div>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Fee breakdown */}
+          {selectedGuide && dailyRate > 0 && (
+            <div className="ag-fee-box">
+              <div className="ag-fee-title">💰 Revenue Breakdown</div>
+              <div className="ag-fee-row">
+                <span>Daily rate × {duration} day{duration!==1?'s':''}</span>
+                <span>NPR {Number(totalFee).toLocaleString()}</span>
+              </div>
+              <div className="ag-fee-row" style={{ color:'#16a34a' }}>
+                <span>Guide earns (75%)</span>
+                <span>NPR {Number(guideEarns).toLocaleString()}</span>
+              </div>
+              <div className="ag-fee-row dim">
+                <span>Platform fee (25%)</span>
+                <span>NPR {Number(platformFee).toLocaleString()}</span>
+              </div>
+              <div className="ag-fee-row total">
+                <span>Total guide fee</span>
+                <span>NPR {Number(totalFee).toLocaleString()}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Notes */}
+          <textarea
+            className="ag-notes"
+            rows={2}
+            placeholder="Admin notes (optional — internal only, not shown to tourist)"
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+          />
+          <div className="ag-notes-hint">Notes are internal only and not visible to the tourist.</div>
+
+          {error && <div className="ag-error">⚠️ {error}</div>}
+        </div>
+
+        {/* Footer */}
+        <div className="ag-footer">
+          <button className="ag-cancel" onClick={onClose}>Cancel</button>
+          <button className="ag-confirm" onClick={handleConfirm} disabled={saving}>
+            {saving ? '⏳ Saving…' : selected === '__none__' ? '🚫 Remove Guide' : '✓ Assign Guide'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Component ────────────────────────────────────────────────────────────
+export default function ManageBookings() {
+  const [activeTab,  setActiveTab]  = useState('all');
+  const [search,     setSearch]     = useState('');
+  const [statusF,    setStatusF]    = useState('');
+  const [msg,        setMsg]        = useState('');
+  const [updating,   setUpdating]   = useState(null);
+  const [assignModal,setAssignModal]= useState(null);
 
   const [hotelBookings,   setHotelBookings]   = useState([]);
   const [guideBookings,   setGuideBookings]   = useState([]);
   const [packageBookings, setPackageBookings] = useState([]);
-  const [loading,         setLoading]         = useState({ hotel:true, guide:true, package:true });
+  const [trekBookings,    setTrekBookings]    = useState([]);
+  const [loading,         setLoading]         = useState({ hotel:true, guide:true, package:true, trek:true });
 
   const notify = m => { setMsg(m); setTimeout(() => setMsg(''), 3500); };
 
-  useEffect(() => { fetchHotelBookings(); fetchGuideBookings(); fetchPackageBookings(); }, []);
+  useEffect(() => {
+    fetchHotelBookings();
+    fetchGuideBookings();
+    fetchPackageBookings();
+    fetchTrekBookings();
+  }, []);
 
   const fetchHotelBookings = async () => {
-    try { const { data } = await axios.get(`${API}/hotel-bookings/admin/all`, { headers:{ Authorization:`Bearer ${token()}` } }); setHotelBookings((data.bookings||data||[]).map(b=>({...b,_type:'hotel'}))); }
-    catch { setHotelBookings([]); }
-    setLoading(l => ({...l, hotel:false}));
+    try {
+      const { data } = await axios.get(`${API}/hotel-bookings/admin/all`, { headers:{ Authorization:`Bearer ${token()}` } });
+      setHotelBookings((data.bookings||data||[]).map(b => ({ ...b, _type:'hotel' })));
+    } catch { setHotelBookings([]); }
+    setLoading(l => ({ ...l, hotel:false }));
   };
+
   const fetchGuideBookings = async () => {
-    try { const { data } = await axios.get(`${API}/guide-bookings/admin/all`, { headers:{ Authorization:`Bearer ${token()}` } }); setGuideBookings((data.bookings||data||[]).map(b=>({...b,_type:'guide'}))); }
-    catch { setGuideBookings([]); }
-    setLoading(l => ({...l, guide:false}));
+    try {
+      const { data } = await axios.get(`${API}/guide-bookings/admin/all`, { headers:{ Authorization:`Bearer ${token()}` } });
+      setGuideBookings((data.bookings||data||[]).map(b => ({ ...b, _type:'guide' })));
+    } catch { setGuideBookings([]); }
+    setLoading(l => ({ ...l, guide:false }));
   };
+
   const fetchPackageBookings = async () => {
-    try { const { data } = await axios.get(`${API}/bookings`, { headers:{ Authorization:`Bearer ${token()}` } }); setPackageBookings((data.bookings||data||[]).map(b=>({...b,_type:'package'}))); }
-    catch { setPackageBookings([]); }
-    setLoading(l => ({...l, package:false}));
+    try {
+      const { data } = await axios.get(`${API}/bookings/admin/all`, { headers:{ Authorization:`Bearer ${token()}` } });
+      setPackageBookings((data.bookings||data||[]).map(b => ({ ...b, _type:'package' })));
+    } catch { setPackageBookings([]); }
+    setLoading(l => ({ ...l, package:false }));
+  };
+
+  const fetchTrekBookings = async () => {
+    try {
+      const { data } = await axios.get(`${API}/trek-bookings/admin/all`, { headers:{ Authorization:`Bearer ${token()}` } });
+      setTrekBookings((data.bookings||data||[]).map(b => ({ ...b, _type:'trek' })));
+    } catch { setTrekBookings([]); }
+    setLoading(l => ({ ...l, trek:false }));
+  };
+
+  const refetchByType = (type) => {
+    if (type === 'package') fetchPackageBookings();
+    if (type === 'trek')    fetchTrekBookings();
   };
 
   const handleStatusUpdate = async (booking, newStatus) => {
@@ -101,61 +430,113 @@ export default function ManageBookings() {
       let url;
       if (booking._type === 'hotel')   url = `${API}/hotel-bookings/${booking._id}/status`;
       if (booking._type === 'guide')   url = `${API}/guide-bookings/${booking._id}/${newStatus==='accepted'?'accept':newStatus==='rejected'?'reject':newStatus==='completed'?'complete':'cancel'}`;
-      if (booking._type === 'package') url = `${API}/bookings/${booking._id}`;
-      await axios.put(url, { status: newStatus }, { headers:{ Authorization:`Bearer ${token()}` } });
+      if (booking._type === 'package') url = `${API}/bookings/${booking._id}/status`;
+      if (booking._type === 'trek')    url = `${API}/trek-bookings/${booking._id}/status`;
+      await axios.put(url, { status:newStatus }, { headers:{ Authorization:`Bearer ${token()}` } });
       notify(`✓ Status updated to ${newStatus}`);
       if (booking._type === 'hotel')   fetchHotelBookings();
       if (booking._type === 'guide')   fetchGuideBookings();
       if (booking._type === 'package') fetchPackageBookings();
-    } catch (err) { notify(`⚠️ ${err.response?.data?.message || 'Failed to update status'}`); }
+      if (booking._type === 'trek')    fetchTrekBookings();
+    } catch (err) {
+      notify(`⚠️ ${err.response?.data?.message || 'Failed to update status'}`);
+    }
     setUpdating(null);
   };
 
-  const allBookings = [...hotelBookings, ...guideBookings, ...packageBookings].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-  const tabData = { all:allBookings, hotel:hotelBookings, guide:guideBookings, package:packageBookings };
-  const isLoading = loading.hotel || loading.guide || loading.package;
-  const totalRevenue = allBookings.reduce((s,b) => s+(b.totalPrice||0), 0);
+  const allBookings = [...hotelBookings, ...guideBookings, ...packageBookings, ...trekBookings]
+    .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  const tabData  = { all:allBookings, hotel:hotelBookings, guide:guideBookings, package:packageBookings, trek:trekBookings };
+  const isLoading = loading.hotel || loading.guide || loading.package || loading.trek;
+  const totalRevenue = allBookings.reduce((s,b) => s + (b.totalPrice||0), 0);
   const confirmed    = allBookings.filter(b => b.status==='confirmed'||b.status==='accepted').length;
   const pending      = allBookings.filter(b => b.status==='pending').length;
 
-  const filtered = tabData[activeTab].filter(b => {
-    const userName  = b.user?.username || b.user?.email || '';
-    const propName  = b.hotel?.name || b.destination?.name || b.guide?.username || '';
+  const filtered = (tabData[activeTab]||[]).filter(b => {
+    const userName = b.user?.username || b.user?.email || '';
+    const propName = b.hotel?.name || b.destination?.name || b.guide?.username || b.package?.name || b.trek?.name || '';
     const matchSearch = !search || userName.toLowerCase().includes(search.toLowerCase()) || propName.toLowerCase().includes(search.toLowerCase()) || b._id?.toLowerCase().includes(search.toLowerCase());
     const matchStatus = !statusF || b.status === statusF;
     return matchSearch && matchStatus;
   });
 
-  const getUserName  = b => b.user?.username || b.user?.email?.split('@')[0] || 'Guest';
-  const getUserInit  = b => (b.user?.username?.[0] || b.user?.email?.[0] || 'G').toUpperCase();
-  const getProperty  = b => {
-    if (b._type==='hotel')   return b.hotel?.name || 'Hotel Booking';
-    if (b._type==='guide')   return `Guide: ${b.guide?.username || b.guide?.email || 'Guide'}`;
-    if (b._type==='package') return b.destination?.name || 'Package Booking';
+  const getUserName = b => b.user?.username || b.user?.email?.split('@')[0] || 'Guest';
+  const getUserInit = b => (b.user?.username?.[0] || b.user?.email?.[0] || 'G').toUpperCase();
+  const getProperty = b => {
+    if (b._type==='hotel')   return b.hotel?.name   || 'Hotel Booking';
+    if (b._type==='guide')   return `Guide: ${b.guide?.username || 'Guide'}`;
+    if (b._type==='package') return b.package?.name || 'Package Booking';
+    if (b._type==='trek')    return b.trek?.name    || 'Trek Booking';
     return 'Booking';
   };
-  const getDate = b => { const d = b.checkInDate||b.startDate||b.createdAt; return d ? new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—'; };
-  const getStatusOptions = b => { if (b._type==='hotel') return HOTEL_STATUSES; if (b._type==='guide') return GUIDE_STATUSES; return PACKAGE_STATUSES; };
+  const getDate = b => {
+    const d = b.checkInDate || b.startDate || b.createdAt;
+    return d ? new Date(d).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '—';
+  };
+  const getStatusOptions = b => {
+    if (b._type==='hotel') return HOTEL_STATUSES;
+    if (b._type==='guide') return GUIDE_STATUSES;
+    return PACKAGE_STATUSES;
+  };
+
+  const showGuideCol = activeTab==='package' || activeTab==='trek' ||
+    (activeTab==='all' && (packageBookings.length>0 || trekBookings.length>0));
 
   const TABS = [
-    { id:'all',     label:'All Bookings', icon:'📋', count:allBookings.length    },
-    { id:'hotel',   label:'Hotels',       icon:'🏨', count:hotelBookings.length   },
-    { id:'guide',   label:'Guides',       icon:'🧭', count:guideBookings.length   },
-    { id:'package', label:'Packages',     icon:'📦', count:packageBookings.length },
+    { id:'all',     label:'All',      icon:'📋', count:allBookings.length    },
+    { id:'hotel',   label:'Hotels',   icon:'🏨', count:hotelBookings.length   },
+    { id:'guide',   label:'Guides',   icon:'🧭', count:guideBookings.length   },
+    { id:'package', label:'Packages', icon:'📦', count:packageBookings.length },
+    { id:'trek',    label:'Treks',    icon:'🥾', count:trekBookings.length    },
   ];
 
+  const renderGuideCell = (b) => {
+    if (b._type !== 'package' && b._type !== 'trek') return <td style={{ color:'#9ca3af', fontSize:12 }}>—</td>;
+    const guide = b.assignedGuide;
+    const name  = guide
+      ? (`${guide.firstName||''} ${guide.lastName||''}`.trim() || guide.username || 'Guide')
+      : null;
+    return (
+      <td>
+        {guide ? (
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <div style={{ width:26, height:26, borderRadius:'50%', background:'#16a34a', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontSize:10, fontWeight:800, flexShrink:0, overflow:'hidden' }}>
+              {guide.guideProfile?.profileImage
+                ? <img src={guide.guideProfile.profileImage} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} onError={e=>e.target.style.display='none'} />
+                : name.charAt(0).toUpperCase()
+              }
+            </div>
+            <div>
+              <div style={{ fontSize:12, fontWeight:700, color:'#0a2818', marginBottom:2 }}>{name}</div>
+              <button className="mb-guide-btn assigned" onClick={() => setAssignModal(b)}>✓ Assigned · Change</button>
+            </div>
+          </div>
+        ) : (
+          <button className="mb-guide-btn assign" onClick={() => setAssignModal(b)}>+ Assign Guide</button>
+        )}
+      </td>
+    );
+  };
+
   return (
-    <AdminLayout title="Bookings" subtitle="Manage all hotel, guide and package bookings">
+    <AdminLayout title="Bookings" subtitle="Manage all hotel, guide, package and trek bookings">
       <style>{STYLES}</style>
       <div className="mb-root">
-        {msg && <div className="mb-msg" style={{ background:msg.startsWith('✓')?'#f0fdf4':'#FEF3F2', color:msg.startsWith('✓')?'#16a34a':'#B42318', border:`1px solid ${msg.startsWith('✓')?'#d1fae5':'#FDA29B'}` }}>{msg}</div>}
 
+        {msg && (
+          <div className="mb-msg" style={{ background:msg.startsWith('✓')?'#f0fdf4':'#FEF3F2', color:msg.startsWith('✓')?'#16a34a':'#B42318', border:`1px solid ${msg.startsWith('✓')?'#d1fae5':'#FDA29B'}` }}>
+            {msg}
+          </div>
+        )}
+
+        {/* Stats */}
         <div className="mb-stats">
           {[
-            { icon:'📋', label:'Total Bookings', value:allBookings.length,              bg:'#f0fdf4', color:'#16a34a', trend:'Live' },
-            { icon:'✅', label:'Confirmed',       value:confirmed,                       bg:'#ECFDF3', color:'#027A48', trend:null },
-            { icon:'⏳', label:'Pending',         value:pending,                         bg:'#FFFAEB', color:'#B54708', trend:pending>0?'Needs action':null },
-            { icon:'💰', label:'Total Revenue',   value:`NPR ${Number(totalRevenue).toLocaleString()}`, bg:'#F5F3FF', color:'#7C3AED', trend:'Live' },
+            { icon:'📋', label:'Total Bookings', value:allBookings.length,                           bg:'#f0fdf4', color:'#16a34a', trend:'Live'          },
+            { icon:'✅', label:'Confirmed',       value:confirmed,                                   bg:'#ECFDF3', color:'#027A48', trend:null             },
+            { icon:'⏳', label:'Pending',         value:pending,                                     bg:'#FFFAEB', color:'#B54708', trend:pending>0?'Action needed':null },
+            { icon:'💰', label:'Total Revenue',   value:`NPR ${Number(totalRevenue).toLocaleString()}`, bg:'#F5F3FF', color:'#7C3AED', trend:'Live'       },
           ].map(s => (
             <div key={s.label} className="mb-stat">
               <div className="mb-stat-top">
@@ -168,28 +549,35 @@ export default function ManageBookings() {
           ))}
         </div>
 
+        {/* Tabs */}
         <div className="mb-tabs">
           {TABS.map(t => (
-            <button key={t.id} className={`mb-tab${activeTab===t.id?' on':''}`} onClick={() => { setActiveTab(t.id); setSearch(''); setStatusF(''); }}>
-              {t.icon} {t.label}<span className="mb-tab-count">{isLoading?'…':t.count}</span>
+            <button key={t.id} className={`mb-tab${activeTab===t.id?' on':''}`}
+              onClick={() => { setActiveTab(t.id); setSearch(''); setStatusF(''); }}>
+              {t.icon} {t.label}
+              <span className="mb-tab-count">{isLoading?'…':t.count}</span>
             </button>
           ))}
         </div>
 
+        {/* Toolbar */}
         <div className="mb-toolbar">
           <div style={{ display:'flex', alignItems:'center', gap:10, flex:1, flexWrap:'wrap' }}>
             <div className="mb-search-wrap">
               <span style={{ color:'#9ca3af' }}>🔍</span>
-              <input className="mb-search" placeholder="Search by guest, property or ID…" value={search} onChange={e => setSearch(e.target.value)} />
+              <input className="mb-search" placeholder="Search guest, booking or ID…" value={search} onChange={e=>setSearch(e.target.value)} />
             </div>
-            <select className="mb-filter-sel" value={statusF} onChange={e => setStatusF(e.target.value)}>
+            <select className="mb-filter-sel" value={statusF} onChange={e=>setStatusF(e.target.value)}>
               <option value="">All Statuses</option>
-              {['pending','confirmed','accepted','completed','cancelled','rejected'].map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase()+s.slice(1)}</option>)}
+              {['pending','confirmed','accepted','completed','cancelled','rejected'].map(s =>
+                <option key={s} value={s}>{s.charAt(0).toUpperCase()+s.slice(1)}</option>
+              )}
             </select>
             <span className="mb-count">{filtered.length} booking{filtered.length!==1?'s':''}</span>
           </div>
         </div>
 
+        {/* Table */}
         <div className="mb-card">
           {isLoading ? (
             <div className="mb-loading"><div className="mb-spinner" /><p style={{ color:'#9ca3af', fontSize:13 }}>Loading bookings…</p></div>
@@ -205,11 +593,12 @@ export default function ManageBookings() {
                 <thead>
                   <tr>
                     <th>Guest</th>
-                    {activeTab === 'all' && <th>Type</th>}
+                    {activeTab==='all' && <th>Type</th>}
                     <th>Booking</th>
                     <th>Date</th>
                     <th>Amount</th>
                     <th>Status</th>
+                    {showGuideCol && <th>Guide</th>}
                     <th>Update</th>
                   </tr>
                 </thead>
@@ -228,19 +617,24 @@ export default function ManageBookings() {
                             </div>
                           </div>
                         </td>
-                        {activeTab === 'all' && <td><span className="mb-type-badge" style={{ background:tc.bg, color:tc.color }}>{tc.label}</span></td>}
+                        {activeTab==='all' && (
+                          <td><span className="mb-type-badge" style={{ background:tc.bg, color:tc.color }}>{tc.label}</span></td>
+                        )}
                         <td>
                           <div style={{ fontWeight:600, color:'#0a2818', fontSize:13 }}>{getProperty(b)}</div>
                           <div style={{ fontSize:11, color:'#9ca3af', marginTop:1 }}>#{String(b._id).slice(-8).toUpperCase()}</div>
                         </td>
                         <td style={{ color:'#667085', fontSize:12, whiteSpace:'nowrap' }}>{getDate(b)}</td>
-                        <td style={{ fontWeight:700, color:'#0a2818', whiteSpace:'nowrap' }}>{b.totalPrice ? `NPR ${Number(b.totalPrice).toLocaleString()}` : '—'}</td>
+                        <td style={{ fontWeight:700, color:'#0a2818', whiteSpace:'nowrap' }}>
+                          {b.totalPrice ? `NPR ${Number(b.totalPrice).toLocaleString()}` : '—'}
+                        </td>
                         <td><span className="mb-badge" style={{ background:sc.bg, color:sc.color }}>{b.status||'pending'}</span></td>
+                        {showGuideCol && renderGuideCell(b)}
                         <td>
-                          {updating === b._id ? (
+                          {updating===b._id ? (
                             <span style={{ fontSize:12, color:'#9ca3af' }}>⏳ Updating…</span>
                           ) : (
-                            <select className="mb-status-sel" value={b.status||'pending'} onChange={e => handleStatusUpdate(b, e.target.value)}>
+                            <select className="mb-status-sel" value={b.status||'pending'} onChange={e=>handleStatusUpdate(b, e.target.value)}>
                               {getStatusOptions(b).map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase()+s.slice(1)}</option>)}
                             </select>
                           )}
@@ -254,6 +648,17 @@ export default function ManageBookings() {
           )}
         </div>
       </div>
+
+      {assignModal && (
+        <AssignGuideModal
+          booking={assignModal}
+          onClose={() => setAssignModal(null)}
+          onAssigned={() => {
+            notify('✓ Guide assigned successfully');
+            refetchByType(assignModal._type);
+          }}
+        />
+      )}
     </AdminLayout>
   );
 }

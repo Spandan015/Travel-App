@@ -5,12 +5,18 @@ const {
   getUserPackageBookings,
   getAllPackageBookings,
   cancelPackageBooking,
+  updatePackageBookingStatus,
+  assignGuideToPackageBooking,
+  getAssignedPackageBookings,
 } = require('../controllers/packageBookingController');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 
-router.post('/',          protect, createPackageBooking);
-router.get('/my',         protect, getUserPackageBookings);
-router.get('/admin/all',  protect, adminOnly, getAllPackageBookings);
-router.put('/:id/cancel', protect, cancelPackageBooking);
+router.post('/',                    protect,              createPackageBooking);
+router.get('/my',                   protect,              getUserPackageBookings);
+router.get('/guide/assigned',       protect,              getAssignedPackageBookings);
+router.get('/admin/all',            protect, adminOnly,   getAllPackageBookings);
+router.put('/:id/cancel',           protect,              cancelPackageBooking);
+router.put('/:id/status',           protect, adminOnly,   updatePackageBookingStatus);
+router.put('/:id/assign-guide',     protect, adminOnly,   assignGuideToPackageBooking);
 
 module.exports = router;

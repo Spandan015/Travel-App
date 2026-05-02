@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 
+
 // Create transporter
 const createTransporter = () => {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD) {
@@ -844,6 +845,71 @@ const sendPackagePaymentConfirmed = async (booking, transaction = {}) => {
   }
 };
 
+
+const sendGuideAssignmentEmail = async ({ booking, guide, bookingType, itemName }) => {
+  try {
+    const guideEmail = guide?.email;
+    const guideName  = guide?.username || `${guide?.firstName || ''} ${guide?.lastName || ''}`.trim() || 'Guide';
+    if (!guideEmail) return;
+
+    const userEmail  = booking.contactInfo?.email || booking.user?.email || '';
+    const userName   = booking.contactInfo?.name  || booking.user?.username || 'Traveller';
+    const startDate  = booking.startDate ? new Date(booking.startDate).toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' }) : 'TBD';
+    const guests     = booking.numberOfGuests || booking.numberOfPeople || 1;
+    const guideFee   = booking.guidePayment?.guideFee || 0;
+    const emoji      = bookingType === 'trek' ? '🥾' : '📦';
+    const typeLabel  = bookingType === 'trek' ? 'Trek' : 'Package';
+
+    const html = emailWrapper(`
+      <div class="header">
+        <div class="header-logo">🏔️ Nepal <span>Travel</span></div>
+        <div class="header-tagline">Your Gateway to the Himalayas</div>
+        <div class="confirm-badge" style="background:#2d6a4f;color:#fff;">🧭 New ${typeLabel} Assignment</div>
+      </div>
+      <div class="body">
+        <div class="greeting">Hello, ${guideName}! 🧭</div>
+        <p class="subtext">You have been assigned as the guide for a ${typeLabel.toLowerCase()} booking. Please review the details below and prepare accordingly.</p>
+        <div class="section-title">${emoji} ${typeLabel} Details</div>
+        <div class="info-card">
+          <div class="info-row"><span class="info-label">${typeLabel} Name</span><span class="info-value">${itemName}</span></div>
+          <div class="info-row"><span class="info-label">Booking ID</span><span class="info-value"><span class="booking-id">${booking._id}</span></span></div>
+          <div class="info-row"><span class="info-label">Start Date</span><span class="info-value">${startDate}</span></div>
+          <div class="info-row"><span class="info-label">Guests</span><span class="info-value">${guests} person${guests > 1 ? 's' : ''}</span></div>
+        </div>
+        <div class="section-title">👤 Tourist Details</div>
+        <div class="info-card">
+          <div class="info-row"><span class="info-label">Name</span><span class="info-value">${userName}</span></div>
+          ${userEmail ? `<div class="info-row"><span class="info-label">Email</span><span class="info-value">${userEmail}</span></div>` : ''}
+          ${booking.user?.phone ? `<div class="info-row"><span class="info-label">Phone</span><span class="info-value">${booking.user.phone}</span></div>` : ''}
+          ${booking.specialRequests ? `<div class="info-row"><span class="info-label">Special Requests</span><span class="info-value">${booking.specialRequests}</span></div>` : ''}
+        </div>
+        <div class="section-title">💰 Your Earnings</div>
+        <div class="info-card">
+          <div class="info-row"><span class="info-label">Revenue Split</span><span class="info-value">75% Guide / 25% Platform</span></div>
+          <div class="info-row"><span class="info-label">Your Earnings</span><span class="info-value" style="color:#2d6a4f;font-size:15px;font-weight:800;">NPR ${Number(guideFee).toLocaleString('en-NP')}</span></div>
+          <div class="info-row"><span class="info-label">Payment Status</span><span class="info-value">⏳ Paid after trip completion</span></div>
+        </div>
+        <div class="note-box">
+          📌 <strong>What's next?</strong><br/>
+          1. Log in to your guide dashboard to view full booking details.<br/>
+          2. Contact the tourist to introduce yourself and plan the trip.<br/>
+          3. Your earnings will be processed after the trip is marked as completed.
+        </div>
+      </div>
+      ${sharedFooter}
+    `);
+
+    await sendEmail({ to: guideEmail, subject: `🧭 New ${typeLabel} Assignment – ${itemName} | Nepal Travel`, html });
+    console.log(`✅ Guide assignment email sent to ${guideEmail}`);
+  } catch (err) {
+    console.error('❌ Failed to send guide assignment email:', err.message);
+  }
+};
+
+
+
+
+
 const sendTrekPaymentConfirmed = async (booking, transaction = {}) => {
   try {
     const userEmail = booking.contactInfo?.email || booking.user?.email;
@@ -958,4 +1024,5 @@ module.exports = {
   sendHotelPaymentConfirmed,
   sendPackagePaymentConfirmed,
   sendTrekPaymentConfirmed,
+  sendGuideAssignmentEmail, 
 };
