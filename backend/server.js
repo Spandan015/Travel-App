@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express  = require('express');
 const mongoose = require('mongoose');
+const path     = require('path');
 const app      = express();
 const PORT     = process.env.PORT || 3000;
 
@@ -21,7 +22,7 @@ const guideApplicationRoutes = require('./routes/guideApplicationRoutes');
 const businessRoutes         = require('./routes/businessRoutes');
 const bookingRoutes          = require('./routes/bookingRoutes');
 const guideRoutes            = require('./routes/guideRoutes');
-const guideBookingRoutes     = require('./routes/guideBookingRoutes'); // ✅ ADDED
+const guideBookingRoutes     = require('./routes/guideBookingRoutes');
 const destinationRoutes      = require('./routes/destinationRoutes');
 const regionRoutes           = require('./routes/regionRoutes');
 const trekRoutes             = require('./routes/trekRoutes');
@@ -30,6 +31,7 @@ const trekBookingRoutes      = require('./routes/trekBookingRoutes');
 const chatRoutes             = require('./routes/chatRoutes');
 const notificationRoutes     = require('./routes/notificationRoutes');
 const guideDashboardRoutes   = require('./routes/guideDashboardRoutes');
+const reviewRoutes           = require('./routes/reviewRoutes');
 
 const connectDB = async () => {
   try {
@@ -38,6 +40,7 @@ const connectDB = async () => {
   } catch (err) { console.error('❌ MongoDB failed:', err.message); }
 };
 
+// ── CORS ──────────────────────────────────────────────────────────
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
@@ -46,32 +49,43 @@ app.use((req, res, next) => {
   next();
 });
 
+// ── Static files ──────────────────────────────────────────────────
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// ── Body parsers — MUST be before any routes that read req.body ───
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use('/uploads', express.static('uploads'));
+
+// ── Request logger ────────────────────────────────────────────────
 app.use((req, res, next) => { console.log(`🌐 ${req.method} ${req.path}`); next(); });
 
-app.use('/api/esewa',             esewaRoutes);
+// ── Routes ────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'OK', message: 'My Travel Buddy API', time: new Date().toISOString() }));
-app.use('/api/auth',              authRoutes);
-app.use('/api/hotels',            hotelRoutes);
-app.use('/api/packages',          packageRoutes);
-app.use('/api/images',            imageRoutes);
-app.use('/api/hotel-bookings',    hotelBookingRoutes);
-app.use('/api/bookings',          bookingRoutes);
-app.use('/api/guides',            guideRoutes);
-app.use('/api/guide-bookings',    guideBookingRoutes);    // ✅ ADDED
-app.use('/api/destinations',      destinationRoutes);
-app.use('/api/regions',           regionRoutes);
-app.use('/api/treks',             trekRoutes);
-app.use('/api/admin',             adminRoutes);
-app.use('/api/guide-applications',guideApplicationRoutes);
-app.use('/api/businesses',        businessRoutes);
-app.use('/api/package-bookings',  packageBookingRoutes);
-app.use('/api/trek-bookings',     trekBookingRoutes);
-app.use('/api/chat',              chatRoutes);
-app.use('/api/notifications',     notificationRoutes);
-app.use('/api/guide-dashboard',   guideDashboardRoutes);
+app.use('/api/esewa',              esewaRoutes);
+app.use('/api/auth',               authRoutes);
+app.use('/api/hotels',             hotelRoutes);
+app.use('/api/packages',           packageRoutes);
+app.use('/api/images',             imageRoutes);
+app.use('/api/hotel-bookings',     hotelBookingRoutes);
+app.use('/api/bookings',           bookingRoutes);
+app.use('/api/guides',             guideRoutes);
+app.use('/api/guide-bookings',     guideBookingRoutes);
+app.use('/api/destinations',       destinationRoutes);
+app.use('/api/regions',            regionRoutes);
+app.use('/api/treks',              trekRoutes);
+app.use('/api/admin',              adminRoutes);
+app.use('/api/guide-applications', guideApplicationRoutes);
+app.use('/api/businesses',         businessRoutes);
+app.use('/api/package-bookings',   packageBookingRoutes);
+app.use('/api/trek-bookings',      trekBookingRoutes);
+app.use('/api/chat',               chatRoutes);
+app.use('/api/notifications',      notificationRoutes);
+app.use('/api/guide-dashboard',    guideDashboardRoutes);
+app.use('/api/reviews',            reviewRoutes);
+
+app.use('/api/admin',              adminRoutes);
+const adminProfileRoutes = require('./routes/adminProfileRoutes');
+app.use('/api/admin',              adminProfileRoutes);
 
 app.use((req, res) => res.status(404).json({ message: 'Route not found' }));
 

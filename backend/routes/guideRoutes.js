@@ -3,12 +3,19 @@ const router = express.Router();
 const {
   getAllGuides,
   getGuideById,
-  searchGuides
+  searchGuides,
+  updateMyProfile,
+  uploadGuideImage,
 } = require('../controllers/guideController');
 
-// Public routes - anyone can browse guides
-router.get('/', getAllGuides);
+const { protect, guideOnly } = require('../middleware/authMiddleware');
+
+// ── Public routes ─────────────────────────────────────────────────
+router.get('/',       getAllGuides);
 router.get('/search', searchGuides);
-router.get('/:id', getGuideById);
+router.get('/:id',    getGuideById);
+
+// ── Protected: guide updates own profile ─────────────────────────
+router.put('/me', protect, guideOnly, uploadGuideImage.single('profileImage'), updateMyProfile);
 
 module.exports = router;

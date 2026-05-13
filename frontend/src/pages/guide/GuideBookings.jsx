@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import {
-  CheckCircle, XCircle, Clock, CalendarDays,
-  User, MapPin, DollarSign, Package, Mountain
+  CheckCircle, XCircle, CalendarDays, User, MapPin,
+  DollarSign, Clock, Package, Mountain, ArrowUpDown,
+  ArrowDown, ArrowUp, MessageSquare, ChevronDown, ChevronUp,
+  Filter, RefreshCw
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import guideDashboardService from '../../services/guideDashboardService';
 import guideService from '../../services/guideService';
 
@@ -17,198 +20,286 @@ const STATUS_STYLES = {
 
 const GUIDE_TABS    = ['all','pending','accepted','completed','rejected','cancelled'];
 const ASSIGNED_TABS = ['all','pending','confirmed','completed','cancelled'];
+const fmt  = (n) => Number(n||0).toLocaleString();
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : 'TBD';
 
-const fmt = (n) => Number(n || 0).toLocaleString();
+const S = `
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  .gb-root * { box-sizing: border-box; }
+  .gb-root { font-family: 'Inter', sans-serif; }
+  .gb-table { width:100%; border-collapse:collapse; }
+  .gb-table th {
+    padding:10px 14px; text-align:left; font-size:11px; font-weight:700;
+    color:#9ca3af; text-transform:uppercase; letter-spacing:0.06em;
+    background:#f8faf8; border-bottom:1px solid #e5f0e8; white-space:nowrap;
+  }
+  .gb-table th.sortable { cursor:pointer; user-select:none; }
+  .gb-table th.sortable:hover { color:#16a34a; }
+  .gb-table td {
+    padding:12px 14px; border-bottom:1px solid #f0fdf4;
+    font-size:13px; color:#374151; vertical-align:middle;
+  }
+  .gb-table tr:last-child td { border-bottom:none; }
+  .gb-table tr:hover td { background:#fafff8; }
+  .gb-expand-row td { padding:0; background:#fafff8; }
+  .gb-expand-body { padding:16px 14px; border-top:1px solid #f0fdf4; }
+  .gb-badge { font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; text-transform:capitalize; white-space:nowrap; }
+  .gb-type-badge { font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; display:inline-flex; align-items:center; gap:4px; }
+  .gb-avatar { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:#fff; flex-shrink:0; overflow:hidden; }
+  .gb-btn { padding:6px 14px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; border:1.5px solid; font-family:inherit; transition:all 0.15s; display:inline-flex; align-items:center; gap:5px; }
+  .gb-btn-green  { background:#16a34a; color:#fff; border-color:#16a34a; }
+  .gb-btn-green:hover { background:#15803d; }
+  .gb-btn-red    { background:#fef2f2; color:#b91c1c; border-color:#fca5a5; }
+  .gb-btn-red:hover { background:#fee2e2; }
+  .gb-btn-blue   { background:#eff6ff; color:#1d4ed8; border-color:#93c5fd; }
+  .gb-btn-blue:hover { background:#dbeafe; }
+  .gb-btn-gray   { background:#f9fafb; color:#6b7280; border-color:#d1d5db; }
+  .gb-btn-chat   { background:#f0fdf4; color:#16a34a; border-color:#86efac; }
+  .gb-btn-chat:hover { background:#dcfce7; }
+  .gb-icon-cell  { display:flex; align-items:center; gap:10px; }
+  .gb-spinner    { width:28px; height:28px; border:3px solid #d1fae5; border-top-color:#16a34a; border-radius:50%; animation:gbspin 0.8s linear infinite; margin:0 auto; }
+  @keyframes gbspin { to { transform:rotate(360deg); } }
+  .gb-sort-icon  { display:inline-flex; align-items:center; margin-left:4px; opacity:0.5; }
+  .gb-sort-icon.active { opacity:1; color:#16a34a; }
+  .gb-msg-input  { width:100%; padding:8px 12px; border:1.5px solid #d1fae5; border-radius:8px; font-size:12px; font-family:inherit; outline:none; resize:vertical; }
+  .gb-msg-input:focus { border-color:#16a34a; }
+`;
 
-// ── Direct Guide Booking Card (existing functionality) ────────────────────────
-function GuideBookingCard({ booking, onAccept, onReject, onComplete, onCancel }) {
+// ── Item icon (replaces images) ───────────────────────────────────────────────
+function ItemIcon({ type, size = 32 }) {
+  const style = {
+    width: size, height: size, borderRadius: 8, flexShrink: 0,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  };
+  if (type === 'package') return <div style={{ ...style, background: '#F5F3FF' }}><Package size={size * 0.55} color="#7C3AED" /></div>;
+  if (type === 'trek')    return <div style={{ ...style, background: '#EEF4FB' }}><Mountain size={size * 0.55} color="#1B4F8A" /></div>;
+  return <div style={{ ...style, background: '#f0fdf4' }}><User size={size * 0.55} color="#16a34a" /></div>;
+}
+
+// ── Sort helper ───────────────────────────────────────────────────────────────
+function SortIcon({ field, sortField, sortDir }) {
+  if (sortField !== field) return <span className="gb-sort-icon"><ArrowUpDown size={12} /></span>;
+  return <span className="gb-sort-icon active">{sortDir === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />}</span>;
+}
+
+// ── Direct guide booking row ──────────────────────────────────────────────────
+function DirectRow({ booking, onAccept, onReject, onComplete, onCancel, onChat }) {
+  const [open, setOpen]         = useState(false);
+  const [msgInput, setMsgInput] = useState('');
   const st      = STATUS_STYLES[booking.status] || STATUS_STYLES.pending;
   const tourist = booking.user;
-  const [expanded, setExpanded] = useState(false);
-  const [msgInput, setMsgInput] = useState('');
 
   return (
-    <div style={{ background:'#fff', borderRadius:16, border:`1px solid ${st.border}`, padding:'20px', marginBottom:12, boxShadow:'0 2px 8px rgba(0,0,0,0.04)' }}>
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:10 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-          <div style={{ width:44, height:44, borderRadius:'50%', background:'#16a34a', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight:700, fontSize:16, flexShrink:0 }}>
-            {(tourist?.firstName?.[0] || tourist?.username?.[0] || 'T').toUpperCase()}
-          </div>
-          <div>
-            <div style={{ fontWeight:700, color:'#0a2818', fontSize:15 }}>{tourist?.firstName || tourist?.username || 'Tourist'}</div>
-            <div style={{ fontSize:12, color:'#6b7280' }}>{tourist?.email}</div>
-            {tourist?.phone && <div style={{ fontSize:12, color:'#6b7280' }}>{tourist?.phone}</div>}
-          </div>
-        </div>
-        <div style={{ textAlign:'right' }}>
-          <span style={{ display:'inline-block', padding:'4px 12px', borderRadius:20, background:st.bg, color:st.color, fontSize:12, fontWeight:700, border:`1px solid ${st.border}`, marginBottom:6 }}>
-            {st.label}
-          </span>
-          <div style={{ fontSize:18, fontWeight:800, color:'#16a34a' }}>NPR {fmt(booking.totalPrice)}</div>
-        </div>
-      </div>
-
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))', gap:10, margin:'14px 0', padding:'14px 0', borderTop:'1px solid #f0fdf4', borderBottom:'1px solid #f0fdf4' }}>
-        {[
-          { icon:Clock,      label:'Duration',    val:`${booking.duration} ${booking.durationType==='hourly'?'hour(s)':'day(s)'}` },
-          { icon:User,       label:'People',      val:`${booking.numberOfPeople} person${booking.numberOfPeople>1?'s':''}` },
-          { icon:DollarSign, label:'Rate',        val:`NPR ${fmt(booking.pricePerUnit)}/${booking.durationType==='hourly'?'hr':'day'}` },
-          { icon:CalendarDays,label:'Start',      val:new Date(booking.startDate).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) },
-          ...(booking.tourType    ? [{ icon:MapPin, label:'Tour Type',   val:booking.tourType }] : []),
-          ...(booking.destination ? [{ icon:MapPin, label:'Destination', val:booking.destination?.name }] : []),
-        ].map(({ icon:Icon, label, val }) => (
-          <div key={label}>
-            <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, color:'#9ca3af', marginBottom:2 }}>
-              <Icon size={12} />{label}
+    <>
+      <tr>
+        {/* Tourist */}
+        <td>
+          <div className="gb-icon-cell">
+            <div className="gb-avatar" style={{ background:'linear-gradient(135deg,#0a2818,#16a34a)' }}>
+              {(tourist?.firstName?.[0] || tourist?.username?.[0] || 'T').toUpperCase()}
             </div>
-            <div style={{ fontSize:13, fontWeight:600, color:'#0a2818' }}>{val}</div>
+            <div>
+              <div style={{ fontWeight:700, color:'#0f172a', fontSize:13 }}>{tourist?.firstName || tourist?.username || 'Tourist'}</div>
+              <div style={{ fontSize:11, color:'#9ca3af' }}>{tourist?.email}</div>
+            </div>
           </div>
-        ))}
-      </div>
-
-      {booking.specialRequests && (
-        <div style={{ background:'#f8faf8', borderRadius:8, padding:'10px 14px', marginBottom:14, fontSize:13, color:'#374151' }}>
-          <strong style={{ color:'#0a2818' }}>Special requests:</strong> {booking.specialRequests}
-        </div>
-      )}
-
-      {booking.status === 'pending' && (
-        <div>
-          <button onClick={() => setExpanded(v=>!v)} style={{ fontSize:12, color:'#6b7280', background:'none', border:'none', cursor:'pointer', marginBottom:8, padding:0 }}>
-            {expanded ? '▲ Hide message' : '▼ Add a message (optional)'}
-          </button>
-          {expanded && (
-            <textarea value={msgInput} onChange={e => setMsgInput(e.target.value)} placeholder="Add a message to the tourist..." style={{ width:'100%', boxSizing:'border-box', padding:'10px 14px', border:'1.5px solid #d1fae5', borderRadius:10, fontSize:13, fontFamily:'inherit', resize:'vertical', outline:'none', marginBottom:10 }} rows={2} />
-          )}
-          <div style={{ display:'flex', gap:10 }}>
-            <button onClick={() => onAccept(booking._id, msgInput)} style={{ flex:1, padding:'11px', background:'#16a34a', color:'#fff', border:'none', borderRadius:10, fontWeight:700, fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
-              <CheckCircle size={16} /> Accept Booking
-            </button>
-            <button onClick={() => onReject(booking._id, msgInput)} style={{ flex:1, padding:'11px', background:'#fef2f2', color:'#b91c1c', border:'1.5px solid #fca5a5', borderRadius:10, fontWeight:700, fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
-              <XCircle size={16} /> Reject
-            </button>
+        </td>
+        {/* Type */}
+        <td>
+          <span className="gb-type-badge" style={{ background:'#FFF4ED', color:'#EA580C', border:'1px solid #fed7aa' }}>
+            <User size={10} /> Direct
+          </span>
+        </td>
+        {/* Booking info */}
+        <td>
+          <div style={{ fontSize:13, color:'#374151' }}>
+            {booking.tourType || booking.destination?.name || 'Guide Booking'}
           </div>
-        </div>
-      )}
+          <div style={{ fontSize:11, color:'#9ca3af', marginTop:1 }}>#{String(booking._id).slice(-8).toUpperCase()}</div>
+        </td>
+        {/* Date */}
+        <td style={{ whiteSpace:'nowrap', color:'#374151', fontSize:12 }}>{fmtDate(booking.startDate)}</td>
+        {/* Guests */}
+        <td style={{ textAlign:'center', fontWeight:600 }}>{booking.numberOfPeople || 1}</td>
+        {/* Earnings */}
+        <td style={{ fontWeight:800, color:'#16a34a', whiteSpace:'nowrap' }}>NPR {fmt(booking.totalPrice)}</td>
+        {/* Status */}
+        <td>
+          <span className="gb-badge" style={{ background:st.bg, color:st.color, border:`1px solid ${st.border}` }}>{st.label}</span>
+        </td>
+        {/* Actions */}
+        <td>
+          <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+            <button className="gb-btn gb-btn-gray" style={{ padding:'5px 8px' }} onClick={() => setOpen(v=>!v)} title="Details">
+              {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
+            {(booking.status==='accepted'||booking.status==='completed') && (
+              <button className="gb-btn gb-btn-chat" style={{ padding:'5px 8px' }} onClick={() => onChat(booking._id)} title="Chat">
+                <MessageSquare size={14} />
+              </button>
+            )}
+          </div>
+        </td>
+      </tr>
 
-      {booking.status === 'accepted' && (
-        <div style={{ display:'flex', gap:10 }}>
-          <button onClick={() => onComplete(booking._id)} style={{ flex:1, padding:'11px', background:'#eff6ff', color:'#1d4ed8', border:'1.5px solid #93c5fd', borderRadius:10, fontWeight:700, fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
-            <CheckCircle size={16} /> Mark as Completed
-          </button>
-          <button onClick={() => onCancel(booking._id)} style={{ padding:'11px 16px', background:'#f9fafb', color:'#6b7280', border:'1.5px solid #d1d5db', borderRadius:10, fontWeight:600, fontSize:14, cursor:'pointer' }}>
-            Cancel
-          </button>
-        </div>
+      {/* Expanded row */}
+      {open && (
+        <tr className="gb-expand-row">
+          <td colSpan={8}>
+            <div className="gb-expand-body">
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))', gap:10, marginBottom:12 }}>
+                <div><div style={{ fontSize:10, color:'#9ca3af', fontWeight:700, textTransform:'uppercase', marginBottom:2 }}>Duration</div><div style={{ fontSize:13, fontWeight:600 }}>{booking.duration} {booking.durationType==='hourly'?'hour(s)':'day(s)'}</div></div>
+                <div><div style={{ fontSize:10, color:'#9ca3af', fontWeight:700, textTransform:'uppercase', marginBottom:2 }}>Rate</div><div style={{ fontSize:13, fontWeight:600 }}>NPR {fmt(booking.pricePerUnit)}/{booking.durationType==='hourly'?'hr':'day'}</div></div>
+                {booking.destination && <div><div style={{ fontSize:10, color:'#9ca3af', fontWeight:700, textTransform:'uppercase', marginBottom:2 }}>Destination</div><div style={{ fontSize:13, fontWeight:600 }}>{booking.destination?.name}</div></div>}
+              </div>
+              {booking.specialRequests && (
+                <div style={{ background:'#f0fdf4', borderRadius:8, padding:'8px 12px', fontSize:12, color:'#374151', marginBottom:12 }}>
+                  <strong>Special requests:</strong> {booking.specialRequests}
+                </div>
+              )}
+              {booking.status === 'pending' && (
+                <div>
+                  <textarea className="gb-msg-input" rows={2} placeholder="Optional message to tourist…" value={msgInput} onChange={e=>setMsgInput(e.target.value)} style={{ marginBottom:8 }} />
+                  <div style={{ display:'flex', gap:8 }}>
+                    <button className="gb-btn gb-btn-green" onClick={() => onAccept(booking._id, msgInput)}><CheckCircle size={13} /> Accept</button>
+                    <button className="gb-btn gb-btn-red"   onClick={() => onReject(booking._id, msgInput)}><XCircle size={13} /> Reject</button>
+                  </div>
+                </div>
+              )}
+              {booking.status === 'accepted' && (
+                <div style={{ display:'flex', gap:8 }}>
+                  <button className="gb-btn gb-btn-blue" onClick={() => onComplete(booking._id)}><CheckCircle size={13} /> Mark Completed</button>
+                  <button className="gb-btn gb-btn-gray" onClick={() => onCancel(booking._id)}>Cancel</button>
+                </div>
+              )}
+            </div>
+          </td>
+        </tr>
       )}
-    </div>
+    </>
   );
 }
 
-// ── Assigned Package/Trek Card ────────────────────────────────────────────────
-function AssignedBookingCard({ booking, type }) {
+// ── Assigned booking row ──────────────────────────────────────────────────────
+function AssignedRow({ booking, type, onChat }) {
+  const [open, setOpen] = useState(false);
   const st      = STATUS_STYLES[booking.status] || STATUS_STYLES.pending;
   const tourist = booking.user;
   const item    = type === 'package' ? booking.package : booking.trek;
-  const icon    = type === 'package' ? '📦' : '🥾';
-  const label   = type === 'package' ? 'Package' : 'Trek';
   const guideFee = booking.guidePayment?.guideFee || 0;
 
   return (
-    <div style={{ background:'#fff', borderRadius:16, border:`1px solid ${st.border}`, padding:'20px', marginBottom:12, boxShadow:'0 2px 8px rgba(0,0,0,0.04)' }}>
-      {/* Header */}
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:10, marginBottom:14 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <div style={{ width:38, height:38, borderRadius:10, background:'#EEF4FB', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1.3rem', flexShrink:0 }}>
-            {icon}
-          </div>
-          <div>
-            <div style={{ fontWeight:800, color:'#0a2818', fontSize:14 }}>{item?.name || `${label} Booking`}</div>
-            <div style={{ fontSize:11, color:'#6b7280', marginTop:2 }}>
-              <span style={{ background:'#EEF4FB', color:'#1B4F8A', padding:'2px 8px', borderRadius:20, fontWeight:700, marginRight:6 }}>{label}</span>
-              #{String(booking._id).slice(-8).toUpperCase()}
+    <>
+      <tr>
+        {/* Tourist */}
+        <td>
+          <div className="gb-icon-cell">
+            <div className="gb-avatar" style={{ background:'linear-gradient(135deg,#0a2818,#4ade80)' }}>
+              {(tourist?.firstName?.[0] || tourist?.username?.[0] || 'T').toUpperCase()}
+            </div>
+            <div>
+              <div style={{ fontWeight:700, color:'#0f172a', fontSize:13 }}>{tourist?.firstName || tourist?.username || 'Tourist'}</div>
+              <div style={{ fontSize:11, color:'#9ca3af' }}>{tourist?.email}</div>
             </div>
           </div>
-        </div>
-        <div style={{ textAlign:'right' }}>
-          <span style={{ display:'inline-block', padding:'4px 12px', borderRadius:20, background:st.bg, color:st.color, fontSize:12, fontWeight:700, border:`1px solid ${st.border}`, marginBottom:6 }}>
-            {st.label}
-          </span>
-          {guideFee > 0 && (
-            <div style={{ fontSize:13, fontWeight:800, color:'#16a34a' }}>
-              Your fee: NPR {fmt(guideFee)}
+        </td>
+        {/* Type */}
+        <td>
+          {type === 'package'
+            ? <span className="gb-type-badge" style={{ background:'#F5F3FF', color:'#7C3AED', border:'1px solid #e9d5ff' }}><Package size={10} /> Package</span>
+            : <span className="gb-type-badge" style={{ background:'#EEF4FB', color:'#1B4F8A', border:'1px solid #bfdbfe' }}><Mountain size={10} /> Trek</span>
+          }
+        </td>
+        {/* Item */}
+        <td>
+          <div className="gb-icon-cell">
+            <ItemIcon type={type} size={30} />
+            <div>
+              <div style={{ fontWeight:600, color:'#0f172a', fontSize:13 }}>{item?.name || `${type==='package'?'Package':'Trek'} Booking`}</div>
+              <div style={{ fontSize:11, color:'#9ca3af' }}>#{String(booking._id).slice(-8).toUpperCase()}</div>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Tourist info */}
-      <div style={{ background:'#f8faf8', borderRadius:10, padding:'12px 14px', marginBottom:14, display:'flex', alignItems:'center', gap:10 }}>
-        <div style={{ width:34, height:34, borderRadius:'50%', background:'linear-gradient(135deg,#16a34a,#4ade80)', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight:700, fontSize:13, flexShrink:0 }}>
-          {(tourist?.firstName?.[0] || tourist?.username?.[0] || 'T').toUpperCase()}
-        </div>
-        <div>
-          <div style={{ fontWeight:700, color:'#0a2818', fontSize:13 }}>{tourist?.firstName || tourist?.username || 'Tourist'}</div>
-          <div style={{ fontSize:12, color:'#6b7280' }}>{tourist?.email}</div>
-          {tourist?.phone && <div style={{ fontSize:12, color:'#6b7280' }}>{tourist?.phone}</div>}
-        </div>
-      </div>
-
-      {/* Details grid */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))', gap:10, marginBottom:14 }}>
-        {[
-          { label:'Start Date', val: booking.startDate ? new Date(booking.startDate).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : 'TBD' },
-          { label:'Guests',     val:`${booking.numberOfGuests} person${booking.numberOfGuests>1?'s':''}` },
-          { label:'Duration',   val:`${item?.duration || '?'} days` },
-          { label:'Revenue Split', val:'75% / 25%' },
-        ].map(({ label, val }) => (
-          <div key={label}>
-            <div style={{ fontSize:11, color:'#9ca3af', marginBottom:2, textTransform:'uppercase', letterSpacing:'0.04em', fontWeight:600 }}>{label}</div>
-            <div style={{ fontSize:13, fontWeight:600, color:'#0a2818' }}>{val}</div>
           </div>
-        ))}
-      </div>
+        </td>
+        {/* Date */}
+        <td style={{ whiteSpace:'nowrap', color:'#374151', fontSize:12 }}>{fmtDate(booking.startDate)}</td>
+        {/* Guests */}
+        <td style={{ textAlign:'center', fontWeight:600 }}>{booking.numberOfGuests || 1}</td>
+        {/* Earnings */}
+        <td style={{ fontWeight:800, color:'#16a34a', whiteSpace:'nowrap' }}>
+          {guideFee > 0 ? `NPR ${fmt(guideFee)}` : '—'}
+        </td>
+        {/* Status */}
+        <td>
+          <span className="gb-badge" style={{ background:st.bg, color:st.color, border:`1px solid ${st.border}` }}>{st.label}</span>
+        </td>
+        {/* Actions */}
+        <td>
+          <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+            <button className="gb-btn gb-btn-gray" style={{ padding:'5px 8px' }} onClick={() => setOpen(v=>!v)} title="Details">
+              {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
+            <button className="gb-btn gb-btn-chat" style={{ padding:'5px 8px' }} onClick={() => onChat(booking._id)} title="Chat with tourist">
+              <MessageSquare size={14} />
+            </button>
+          </div>
+        </td>
+      </tr>
 
-      {booking.specialRequests && (
-        <div style={{ background:'#f0fdf4', borderRadius:8, padding:'10px 14px', fontSize:13, color:'#374151', marginBottom:10 }}>
-          <strong>Special requests:</strong> {booking.specialRequests}
-        </div>
+      {/* Expanded */}
+      {open && (
+        <tr className="gb-expand-row">
+          <td colSpan={8}>
+            <div className="gb-expand-body">
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))', gap:10, marginBottom:12 }}>
+                <div><div style={{ fontSize:10, color:'#9ca3af', fontWeight:700, textTransform:'uppercase', marginBottom:2 }}>Duration</div><div style={{ fontSize:13, fontWeight:600 }}>{item?.duration || '?'} days</div></div>
+                <div><div style={{ fontSize:10, color:'#9ca3af', fontWeight:700, textTransform:'uppercase', marginBottom:2 }}>Revenue Split</div><div style={{ fontSize:13, fontWeight:600, color:'#16a34a' }}>75% you / 25% platform</div></div>
+                {booking.guidePayment?.platformFee > 0 && <div><div style={{ fontSize:10, color:'#9ca3af', fontWeight:700, textTransform:'uppercase', marginBottom:2 }}>Platform Fee</div><div style={{ fontSize:13, fontWeight:600 }}>NPR {fmt(booking.guidePayment.platformFee)}</div></div>}
+                {tourist?.phone && <div><div style={{ fontSize:10, color:'#9ca3af', fontWeight:700, textTransform:'uppercase', marginBottom:2 }}>Phone</div><div style={{ fontSize:13, fontWeight:600 }}>{tourist.phone}</div></div>}
+              </div>
+              {booking.specialRequests && (
+                <div style={{ background:'#f0fdf4', borderRadius:8, padding:'8px 12px', fontSize:12, color:'#374151', marginBottom:8 }}>
+                  <strong>Special requests:</strong> {booking.specialRequests}
+                </div>
+              )}
+              {booking.guideNotes && (
+                <div style={{ background:'#FFFAEB', borderRadius:8, padding:'8px 12px', fontSize:12, color:'#B54708', border:'1px solid #fcd34d' }}>
+                  <strong>Admin note:</strong> {booking.guideNotes}
+                </div>
+              )}
+            </div>
+          </td>
+        </tr>
       )}
-
-      {booking.guideNotes && (
-        <div style={{ background:'#FFFAEB', borderRadius:8, padding:'10px 14px', fontSize:12, color:'#B54708', border:'1px solid #fcd34d' }}>
-          <strong>Admin note:</strong> {booking.guideNotes}
-        </div>
-      )}
-    </div>
+    </>
   );
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function GuideBookings() {
-  // Direct guide bookings (tourist books guide directly)
-  const [bookings,    setBookings]    = useState([]);
-  const [loadingDirect, setLoadingDirect] = useState(true);
-  const [tab,         setTab]         = useState('all');
+  const navigate = useNavigate();
 
-  // Assigned package/trek bookings (admin assigns guide to booking)
-  const [pkgBookings,  setPkgBookings]  = useState([]);
-  const [trekBookings, setTrekBookings] = useState([]);
+  const [bookings,        setBookings]        = useState([]);
+  const [loadingDirect,   setLoadingDirect]   = useState(true);
+  const [tab,             setTab]             = useState('all');
+
+  const [pkgBookings,     setPkgBookings]     = useState([]);
+  const [trekBookings,    setTrekBookings]    = useState([]);
   const [loadingAssigned, setLoadingAssigned] = useState(true);
-  const [assignedTab,  setAssignedTab]  = useState('all');
+  const [assignedTab,     setAssignedTab]     = useState('all');
 
-  // UI
-  const [activeSection, setActiveSection] = useState('direct'); // 'direct' | 'assigned'
+  const [activeSection, setActiveSection] = useState('direct');
   const [toast,         setToast]         = useState('');
+
+  // Sort state
+  const [sortField, setSortField] = useState('date');
+  const [sortDir,   setSortDir]   = useState('desc');
 
   const notify = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
 
   const fetchDirect = async () => {
     setLoadingDirect(true);
-    try {
-      const data = await guideDashboardService.getBookings(tab);
-      setBookings(data.bookings || []);
-    } catch { notify('Error loading bookings'); }
+    try { const data = await guideDashboardService.getBookings(tab); setBookings(data.bookings || []); }
+    catch { notify('Error loading bookings'); }
     finally { setLoadingDirect(false); }
   };
 
@@ -228,45 +319,79 @@ export default function GuideBookings() {
   useEffect(() => { fetchDirect(); },  [tab]);
   useEffect(() => { fetchAssigned(); }, []);
 
-  const handleAccept = async (id, msg) => {
-    try { await guideDashboardService.acceptBooking(id, msg); notify('✅ Booking accepted!'); fetchDirect(); }
-    catch (e) { notify(e.response?.data?.message || 'Error accepting booking'); }
-  };
-  const handleReject = async (id, msg) => {
-    if (!window.confirm('Reject this booking request?')) return;
-    try { await guideDashboardService.rejectBooking(id, msg); notify('Booking rejected.'); fetchDirect(); }
-    catch (e) { notify(e.response?.data?.message || 'Error rejecting booking'); }
-  };
-  const handleComplete = async (id) => {
-    if (!window.confirm('Mark this tour as completed?')) return;
-    try { await guideDashboardService.completeBooking(id); notify('✅ Tour marked as completed!'); fetchDirect(); }
-    catch (e) { notify(e.response?.data?.message || 'Error'); }
-  };
-  const handleCancel = async (id) => {
-    const reason = window.prompt('Reason for cancellation (optional):');
-    if (reason === null) return;
-    try { await guideDashboardService.cancelBooking(id, reason); notify('Booking cancelled.'); fetchDirect(); }
-    catch (e) { notify(e.response?.data?.message || 'Error cancelling booking'); }
+  const handleAccept   = async (id, msg) => { try { await guideDashboardService.acceptBooking(id, msg);   notify('✅ Booking accepted!');          fetchDirect(); } catch (e) { notify(e.response?.data?.message || 'Error'); } };
+  const handleReject   = async (id, msg) => { if (!window.confirm('Reject this booking?')) return;        try { await guideDashboardService.rejectBooking(id, msg);   notify('Booking rejected.');            fetchDirect(); } catch (e) { notify(e.response?.data?.message || 'Error'); } };
+  const handleComplete = async (id)      => { if (!window.confirm('Mark as completed?')) return;           try { await guideDashboardService.completeBooking(id);      notify('✅ Tour marked as completed!');  fetchDirect(); } catch (e) { notify(e.response?.data?.message || 'Error'); } };
+  const handleCancel   = async (id)      => { const r = window.prompt('Reason (optional):'); if (r===null) return; try { await guideDashboardService.cancelBooking(id, r); notify('Booking cancelled.'); fetchDirect(); } catch (e) { notify(e.response?.data?.message || 'Error'); } };
+  const handleChat     = (bookingId)     => navigate(`/guide/chat/${bookingId}`);
+  const handleUserChat = (bookingId)     => navigate(`/guide/chat/${bookingId}`);
+
+  // Sort function
+  const applySortTo = (arr, getDate, getEarnings) => {
+    return [...arr].sort((a, b) => {
+      let va, vb;
+      if (sortField === 'date')     { va = new Date(getDate(a)||0); vb = new Date(getDate(b)||0); }
+      if (sortField === 'earnings') { va = getEarnings(a); vb = getEarnings(b); }
+      if (sortField === 'status')   { va = a.status; vb = b.status; }
+      if (va < vb) return sortDir === 'asc' ? -1 : 1;
+      if (va > vb) return sortDir === 'asc' ?  1 : -1;
+      return 0;
+    });
   };
 
-  // Filter assigned bookings by tab
+  const toggleSort = (field) => {
+    if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortField(field); setSortDir('desc'); }
+  };
+
+  const sortedDirect = applySortTo(bookings, b => b.startDate || b.createdAt, b => b.totalPrice || 0);
+
   const allAssigned = [
-    ...pkgBookings.map(b => ({ ...b, _assignedType:'package' })),
+    ...pkgBookings.map(b  => ({ ...b, _assignedType:'package' })),
     ...trekBookings.map(b => ({ ...b, _assignedType:'trek' })),
-  ].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+  ];
+  const filteredAssigned = (assignedTab === 'all' ? allAssigned : allAssigned.filter(b => b.status === assignedTab));
+  const sortedAssigned   = applySortTo(filteredAssigned, b => b.startDate || b.createdAt, b => b.guidePayment?.guideFee || 0);
 
-  const filteredAssigned = assignedTab === 'all'
-    ? allAssigned
-    : allAssigned.filter(b => b.status === assignedTab);
-
-  const assignedCount = allAssigned.length;
   const directCount   = bookings.length;
+  const assignedCount = allAssigned.length;
+
+  const TableHeader = ({ showEarningsLabel = 'Earnings' }) => (
+    <thead>
+      <tr>
+        <th>Tourist</th>
+        <th>Type</th>
+        <th>Booking</th>
+        <th className="sortable" onClick={() => toggleSort('date')}>
+          Date <SortIcon field="date" sortField={sortField} sortDir={sortDir} />
+        </th>
+        <th style={{ textAlign:'center' }}>Guests</th>
+        <th className="sortable" onClick={() => toggleSort('earnings')}>
+          {showEarningsLabel} <SortIcon field="earnings" sortField={sortField} sortDir={sortDir} />
+        </th>
+        <th className="sortable" onClick={() => toggleSort('status')}>
+          Status <SortIcon field="status" sortField={sortField} sortDir={sortDir} />
+        </th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+  );
 
   return (
-    <div>
-      <div style={{ marginBottom:20 }}>
-        <h2 style={{ fontSize:20, fontWeight:800, color:'#0a2818', margin:0 }}>Booking Management</h2>
-        <p style={{ color:'#6b7280', fontSize:13, margin:'4px 0 0' }}>Manage your direct bookings and assigned trips.</p>
+    <div className="gb-root">
+      <style>{S}</style>
+
+      <div style={{ marginBottom:20, display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:12 }}>
+        <div>
+          <h2 style={{ fontSize:20, fontWeight:800, color:'#0a2818', margin:0 }}>Booking Management</h2>
+          <p style={{ color:'#6b7280', fontSize:13, margin:'4px 0 0' }}>Manage your direct bookings and assigned trips.</p>
+        </div>
+        <button
+          onClick={() => { fetchDirect(); fetchAssigned(); }}
+          style={{ display:'flex', alignItems:'center', gap:6, padding:'8px 14px', background:'#f0fdf4', border:'1.5px solid #d1fae5', borderRadius:10, cursor:'pointer', fontSize:12, fontWeight:700, color:'#16a34a', fontFamily:'inherit' }}
+        >
+          <RefreshCw size={13} /> Refresh
+        </button>
       </div>
 
       {toast && (
@@ -277,97 +402,103 @@ export default function GuideBookings() {
 
       {/* Section switcher */}
       <div style={{ display:'flex', gap:8, marginBottom:20 }}>
-        <button
-          onClick={() => setActiveSection('direct')}
-          style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 20px', borderRadius:12, border:'1.5px solid', fontFamily:'inherit', fontSize:13, fontWeight:700, cursor:'pointer', transition:'all 0.15s',
-            background: activeSection==='direct' ? '#0a2818' : '#fff',
-            borderColor: activeSection==='direct' ? '#0a2818' : '#e5f0e8',
-            color:        activeSection==='direct' ? '#fff'    : '#374151',
-          }}
-        >
-          🧭 Direct Bookings
-          <span style={{ background: activeSection==='direct'?'rgba(255,255,255,0.2)':'#f0fdf4', color: activeSection==='direct'?'#fff':'#16a34a', borderRadius:20, padding:'1px 8px', fontSize:11 }}>
-            {directCount}
-          </span>
-        </button>
-        <button
-          onClick={() => setActiveSection('assigned')}
-          style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 20px', borderRadius:12, border:'1.5px solid', fontFamily:'inherit', fontSize:13, fontWeight:700, cursor:'pointer', transition:'all 0.15s',
-            background: activeSection==='assigned' ? '#1B4F8A' : '#fff',
-            borderColor: activeSection==='assigned' ? '#1B4F8A' : '#e5f0e8',
-            color:        activeSection==='assigned' ? '#fff'    : '#374151',
-          }}
-        >
-          📦🥾 Assigned Trips
-          <span style={{ background: activeSection==='assigned'?'rgba(255,255,255,0.2)':'#EEF4FB', color: activeSection==='assigned'?'#fff':'#1B4F8A', borderRadius:20, padding:'1px 8px', fontSize:11 }}>
-            {assignedCount}
-          </span>
-        </button>
+        {[
+          { id:'direct',   label:'🧭 Direct Bookings', count:directCount,   bg:'#0a2818' },
+          { id:'assigned', label:'📦🥾 Assigned Trips', count:assignedCount, bg:'#1B4F8A' },
+        ].map(s => (
+          <button key={s.id} onClick={() => setActiveSection(s.id)} style={{
+            display:'flex', alignItems:'center', gap:8, padding:'10px 20px',
+            borderRadius:12, border:'1.5px solid', fontFamily:'inherit',
+            fontSize:13, fontWeight:700, cursor:'pointer', transition:'all 0.15s',
+            background: activeSection===s.id ? s.bg : '#fff',
+            borderColor: activeSection===s.id ? s.bg : '#e5f0e8',
+            color: activeSection===s.id ? '#fff' : '#374151',
+          }}>
+            {s.label}
+            <span style={{ background: activeSection===s.id?'rgba(255,255,255,0.2)':'#f0fdf4', color: activeSection===s.id?'#fff':'#16a34a', borderRadius:20, padding:'1px 8px', fontSize:11 }}>
+              {s.count}
+            </span>
+          </button>
+        ))}
       </div>
 
-      {/* ── SECTION: Direct bookings ── */}
+      {/* ── DIRECT BOOKINGS ── */}
       {activeSection === 'direct' && (
         <>
-          <div style={{ display:'flex', gap:6, marginBottom:20, flexWrap:'wrap' }}>
+          {/* Tab filters */}
+          <div style={{ display:'flex', gap:6, marginBottom:16, flexWrap:'wrap', alignItems:'center' }}>
+            <Filter size={13} color="#9ca3af" />
             {GUIDE_TABS.map(t => (
-              <button key={t} onClick={() => setTab(t)} style={{ padding:'7px 16px', borderRadius:20, fontSize:13, fontWeight:600, cursor:'pointer', border:'1.5px solid', fontFamily:'inherit', background:tab===t?'#16a34a':'#fff', borderColor:tab===t?'#16a34a':'#d1fae5', color:tab===t?'#fff':'#374151', transition:'all 0.15s' }}>
+              <button key={t} onClick={() => setTab(t)} style={{ padding:'6px 14px', borderRadius:20, fontSize:12, fontWeight:600, cursor:'pointer', border:'1.5px solid', fontFamily:'inherit', background:tab===t?'#16a34a':'#fff', borderColor:tab===t?'#16a34a':'#d1fae5', color:tab===t?'#fff':'#374151', transition:'all 0.15s' }}>
                 {t.charAt(0).toUpperCase()+t.slice(1)}
               </button>
             ))}
           </div>
 
-          {loadingDirect ? (
-            <div style={{ textAlign:'center', padding:'48px', color:'#6b7280' }}>
-              <div style={{ width:36, height:36, border:'3px solid #d1fae5', borderTop:'3px solid #16a34a', borderRadius:'50%', animation:'spin 0.9s linear infinite', margin:'0 auto 12px' }} />
-              Loading bookings…
-            </div>
-          ) : bookings.length === 0 ? (
-            <div style={{ textAlign:'center', padding:'60px 24px', background:'#fff', borderRadius:16, border:'1px solid #e5f0e8' }}>
-              <CalendarDays size={40} color="#d1fae5" style={{ margin:'0 auto 12px', display:'block' }} />
-              <div style={{ fontWeight:700, fontSize:15, color:'#0a2818', marginBottom:6 }}>No {tab==='all'?'':tab} bookings</div>
-              <div style={{ color:'#6b7280', fontSize:13 }}>
-                {tab==='pending' ? 'New booking requests will appear here.' : 'No bookings found for this filter.'}
+          <div style={{ background:'#fff', borderRadius:14, border:'1px solid #e5f0e8', overflow:'hidden', boxShadow:'0 2px 8px rgba(0,0,0,0.04)' }}>
+            {loadingDirect ? (
+              <div style={{ padding:48, textAlign:'center' }}><div className="gb-spinner" /><p style={{ color:'#9ca3af', fontSize:13, marginTop:12 }}>Loading bookings…</p></div>
+            ) : sortedDirect.length === 0 ? (
+              <div style={{ padding:'48px 24px', textAlign:'center' }}>
+                <CalendarDays size={40} color="#d1fae5" style={{ margin:'0 auto 12px', display:'block' }} />
+                <div style={{ fontWeight:700, color:'#0a2818', marginBottom:4 }}>No {tab==='all'?'':tab} bookings</div>
+                <div style={{ fontSize:13, color:'#6b7280' }}>{tab==='pending'?'New requests will appear here.':'No bookings for this filter.'}</div>
               </div>
-            </div>
-          ) : (
-            bookings.map(b => (
-              <GuideBookingCard key={b._id} booking={b} onAccept={handleAccept} onReject={handleReject} onComplete={handleComplete} onCancel={handleCancel} />
-            ))
-          )}
+            ) : (
+              <div style={{ overflowX:'auto' }}>
+                <table className="gb-table">
+                  <TableHeader showEarningsLabel="Earnings" />
+                  <tbody>
+                    {sortedDirect.map(b => (
+                      <DirectRow key={b._id} booking={b} onAccept={handleAccept} onReject={handleReject} onComplete={handleComplete} onCancel={handleCancel} onChat={handleChat} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </>
       )}
 
-      {/* ── SECTION: Assigned trips ── */}
+      {/* ── ASSIGNED TRIPS ── */}
       {activeSection === 'assigned' && (
         <>
-          <div style={{ background:'#EEF4FB', borderRadius:12, padding:'12px 16px', marginBottom:16, fontSize:13, color:'#1B4F8A', border:'1px solid #93c5fd' }}>
-            📋 These are packages and treks that an admin has assigned you to guide. Contact the tourist to plan ahead.
+          <div style={{ background:'#EEF4FB', borderRadius:10, padding:'10px 14px', marginBottom:14, fontSize:12, color:'#1B4F8A', border:'1px solid #93c5fd', display:'flex', alignItems:'center', gap:8 }}>
+            <Package size={14} /> Packages and treks assigned to you by admin. Chat with the tourist to plan ahead.
           </div>
 
-          <div style={{ display:'flex', gap:6, marginBottom:20, flexWrap:'wrap' }}>
+          {/* Tab filters */}
+          <div style={{ display:'flex', gap:6, marginBottom:16, flexWrap:'wrap', alignItems:'center' }}>
+            <Filter size={13} color="#9ca3af" />
             {ASSIGNED_TABS.map(t => (
-              <button key={t} onClick={() => setAssignedTab(t)} style={{ padding:'7px 16px', borderRadius:20, fontSize:13, fontWeight:600, cursor:'pointer', border:'1.5px solid', fontFamily:'inherit', background:assignedTab===t?'#1B4F8A':'#fff', borderColor:assignedTab===t?'#1B4F8A':'#93c5fd', color:assignedTab===t?'#fff':'#374151', transition:'all 0.15s' }}>
+              <button key={t} onClick={() => setAssignedTab(t)} style={{ padding:'6px 14px', borderRadius:20, fontSize:12, fontWeight:600, cursor:'pointer', border:'1.5px solid', fontFamily:'inherit', background:assignedTab===t?'#1B4F8A':'#fff', borderColor:assignedTab===t?'#1B4F8A':'#93c5fd', color:assignedTab===t?'#fff':'#374151', transition:'all 0.15s' }}>
                 {t.charAt(0).toUpperCase()+t.slice(1)}
               </button>
             ))}
           </div>
 
-          {loadingAssigned ? (
-            <div style={{ textAlign:'center', padding:'48px', color:'#6b7280' }}>
-              <div style={{ width:36, height:36, border:'3px solid #93c5fd', borderTop:'3px solid #1B4F8A', borderRadius:'50%', animation:'spin 0.9s linear infinite', margin:'0 auto 12px' }} />
-              Loading assigned trips…
-            </div>
-          ) : filteredAssigned.length === 0 ? (
-            <div style={{ textAlign:'center', padding:'60px 24px', background:'#fff', borderRadius:16, border:'1px solid #e5f0e8' }}>
-              <div style={{ fontSize:'2.5rem', marginBottom:12 }}>📦</div>
-              <div style={{ fontWeight:700, fontSize:15, color:'#0a2818', marginBottom:6 }}>No assigned trips</div>
-              <div style={{ color:'#6b7280', fontSize:13 }}>When an admin assigns you to a package or trek, it will appear here.</div>
-            </div>
-          ) : (
-            filteredAssigned.map(b => (
-              <AssignedBookingCard key={b._id} booking={b} type={b._assignedType} />
-            ))
-          )}
+          <div style={{ background:'#fff', borderRadius:14, border:'1px solid #e5f0e8', overflow:'hidden', boxShadow:'0 2px 8px rgba(0,0,0,0.04)' }}>
+            {loadingAssigned ? (
+              <div style={{ padding:48, textAlign:'center' }}><div className="gb-spinner" style={{ borderTopColor:'#1B4F8A', borderColor:'#bfdbfe' }} /><p style={{ color:'#9ca3af', fontSize:13, marginTop:12 }}>Loading assigned trips…</p></div>
+            ) : sortedAssigned.length === 0 ? (
+              <div style={{ padding:'48px 24px', textAlign:'center' }}>
+                <Package size={40} color="#d1fae5" style={{ margin:'0 auto 12px', display:'block' }} />
+                <div style={{ fontWeight:700, color:'#0a2818', marginBottom:4 }}>No assigned trips</div>
+                <div style={{ fontSize:13, color:'#6b7280' }}>When an admin assigns you to a package or trek, it will appear here.</div>
+              </div>
+            ) : (
+              <div style={{ overflowX:'auto' }}>
+                <table className="gb-table">
+                  <TableHeader showEarningsLabel="Your Fee" />
+                  <tbody>
+                    {sortedAssigned.map(b => (
+                      <AssignedRow key={b._id} booking={b} type={b._assignedType} onChat={handleUserChat} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </>
       )}
 

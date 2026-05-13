@@ -45,11 +45,11 @@ const TREKKING_COSTS = [
 
 // ─── CSS ────────────────────────────────────────────────────────────────
 const STYLES = `
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 .ce-root {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Roboto', sans-serif;
   background: #f8faf8; min-height: 100vh;
   padding-top: 68px; color: #0f172a;
 }
@@ -121,7 +121,7 @@ const STYLES = `
 .ce-select {
   width:100%; padding:11px 36px 11px 14px;
   border:1.5px solid #d1fae5; border-radius:10px;
-  font-size:14px; font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:14px; font-family:'Roboto',sans-serif;
   color:#0f172a; outline:none; background:#fff;
   -webkit-appearance:none;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
@@ -139,7 +139,7 @@ const STYLES = `
   width:100%; padding:12px 14px 12px 38px;
   border:1.5px solid #d1fae5; border-radius:10px;
   font-size:1rem; font-weight:700;
-  font-family:'Plus Jakarta Sans',sans-serif; color:#0f172a;
+  font-family:'Roboto',sans-serif; color:#0f172a;
   outline:none; transition:border 0.15s;
 }
 .ce-amount-input:focus { border-color:#16a34a; box-shadow:0 0 0 3px rgba(22,163,74,0.08); }

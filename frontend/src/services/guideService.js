@@ -60,7 +60,7 @@ const guideService = {
   },
 
   assignGuideToPackageBooking: async (bookingId, guideId, notes = '') => {
-    const response = await api.put(`/bookings/${bookingId}/assign-guide`, { guideId, notes });
+    const response = await api.put(`/package-bookings/${bookingId}/assign-guide`, { guideId, notes });
     return response.data;
   },
 
@@ -70,7 +70,7 @@ const guideService = {
   },
 
   getMyAssignedPackageBookings: async () => {
-    const response = await api.get('/bookings/guide/assigned');
+    const response = await api.get('/package-bookings/guide/assigned');
     return response.data;
   },
 

@@ -143,21 +143,31 @@ exports.getAllPackageBookings = async (req, res) => {
 
 // PUT /api/bookings/:id/cancel
 exports.cancelPackageBooking = async (req, res) => {
+  console.log('[cancel] id:', req.params.id);
   try {
     const booking = await PackageBooking.findById(req.params.id);
+    console.log('[cancel] found booking status:', booking?.status);
+    console.log('[cancel] booking.user:', booking?.user?.toString());
+    console.log('[cancel] req.user.id:', req.user?.id);
+    console.log('[cancel] req.user._id:', req.user?._id?.toString());
+
     if (!booking) return res.status(404).json({ message: 'Booking not found' });
-    if (booking.user.toString() !== req.user.id)
+
+    const userId = (req.user.id || req.user._id)?.toString();
+    if (booking.user.toString() !== userId)
       return res.status(403).json({ message: 'Access denied' });
+
     if (['cancelled', 'completed'].includes(booking.status))
       return res.status(400).json({ message: 'Booking cannot be cancelled' });
 
     booking.status             = 'cancelled';
-    booking.cancellationReason = req.body.cancellationReason;
+    booking.cancellationReason = req.body?.cancellationReason || '';
     await booking.save();
 
-    res.json({ success: true, message: 'Booking cancelled', booking });
+    res.json({ success: true, message: 'Booking cancelled successfully', booking });
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('[cancelPackageBooking] ERROR:', err);
+    res.status(500).json({ message: err.message || 'Server error' });
   }
 };
 
@@ -248,6 +258,27 @@ exports.getAssignedPackageBookings = async (req, res) => {
       .populate('user',    'username firstName lastName email phone')
       .sort({ createdAt: -1 });
     res.json({ success: true, count: bookings.length, bookings });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
+
+
+// GET /api/bookings/:id
+exports.getPackageBookingById = async (req, res) => {
+  try {
+    const booking = await PackageBooking.findById(req.params.id)
+      .populate('package',       'name price duration mainImage description itinerary')
+      .populate('user',          'username firstName lastName email phone')
+      .populate('assignedGuide', 'username firstName lastName email phone guideProfile');
+ 
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    if (booking.user._id.toString() !== req.user.id && req.user.role !== 'admin')
+      return res.status(403).json({ message: 'Access denied' });
+ 
+    res.json({ success: true, booking });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }

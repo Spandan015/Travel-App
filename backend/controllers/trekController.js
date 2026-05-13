@@ -1,25 +1,20 @@
 const Trek   = require('../models/Trek');
 const Region = require('../models/Region');
+const User   = require('../models/User');
 
-// ── helpers ───────────────────────────────────────────────────────────────────
 const autoSlug = (name) =>
   name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
-// ── PUBLIC ────────────────────────────────────────────────────────────────────
-
-// GET /api/treks  — all active treks, optional ?region=<regionId or slug>
+// GET /api/treks
 exports.getAll = async (req, res) => {
   try {
     const { region, difficulty, search, featured, popular } = req.query;
     const filter = { isActive: true };
-
-    if (difficulty) filter.difficulty = difficulty;
+    if (difficulty)        filter.difficulty = difficulty;
     if (featured === 'true') filter.isFeatured = true;
     if (popular  === 'true') filter.isPopular  = true;
-    if (search) filter.$text = { $search: search };
-
+    if (search)            filter.$text = { $search: search };
     if (region) {
-      // region can be a Mongo ID or a slug — handle both
       if (region.match(/^[0-9a-fA-F]{24}$/)) {
         filter.region = region;
       } else {
@@ -27,14 +22,12 @@ exports.getAll = async (req, res) => {
         if (r) filter.region = r._id;
       }
     }
-
     const treks = await Trek.find(filter)
       .populate('region', 'name slug coverGradient image')
+      .populate('availableGuides', 'username firstName lastName email guideProfile')
       .sort({ isPopular: -1, createdAt: -1 });
-
     res.json({ success: true, treks, total: treks.length });
   } catch (err) {
-    console.error('getAll treks error:', err);
     res.status(500).json({ message: 'Error fetching treks' });
   }
 };
@@ -43,7 +36,8 @@ exports.getAll = async (req, res) => {
 exports.getBySlug = async (req, res) => {
   try {
     const trek = await Trek.findOne({ slug: req.params.slug, isActive: true })
-      .populate('region', 'name slug coverGradient image tagline');
+      .populate('region', 'name slug coverGradient image tagline')
+      .populate('availableGuides', 'username firstName lastName email guideProfile');
     if (!trek) return res.status(404).json({ message: 'Trek not found' });
     res.json({ success: true, trek });
   } catch (err) {
@@ -51,11 +45,12 @@ exports.getBySlug = async (req, res) => {
   }
 };
 
-// GET /api/treks/region/:regionId  — treks for a specific region (by Mongo ID)
+// GET /api/treks/region/:regionId
 exports.getByRegion = async (req, res) => {
   try {
     const treks = await Trek.find({ region: req.params.regionId, isActive: true })
       .populate('region', 'name slug')
+      .populate('availableGuides', 'username firstName lastName guideProfile')
       .sort({ isPopular: -1, price: 1 });
     res.json({ success: true, treks });
   } catch (err) {
@@ -63,13 +58,12 @@ exports.getByRegion = async (req, res) => {
   }
 };
 
-// ── ADMIN ─────────────────────────────────────────────────────────────────────
-
 // GET /api/treks/admin/all
 exports.getAllAdmin = async (req, res) => {
   try {
     const treks = await Trek.find()
       .populate('region', 'name slug')
+      .populate('availableGuides', 'username firstName lastName email guideProfile')
       .sort({ createdAt: -1 });
     res.json({ success: true, treks });
   } catch (err) {
@@ -95,7 +89,8 @@ exports.create = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     const trek = await Trek.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
-      .populate('region', 'name slug');
+      .populate('region', 'name slug')
+      .populate('availableGuides', 'username firstName lastName email guideProfile');
     if (!trek) return res.status(404).json({ message: 'Trek not found' });
     res.json({ success: true, message: 'Trek updated successfully', trek });
   } catch (err) {
@@ -137,5 +132,44 @@ exports.togglePopular = async (req, res) => {
     res.json({ success: true, trek });
   } catch (err) {
     res.status(500).json({ message: 'Error updating trek' });
+  }
+};
+
+// ════════════════════════════════════════════════════════
+// PUT /api/treks/:id/guides  (admin)
+// Body: { guideIds: ['userId1', 'userId2', ...] }
+// Sets which guides are available for this trek
+// ════════════════════════════════════════════════════════
+exports.manageTrekGuides = async (req, res) => {
+  try {
+    const { guideIds } = req.body;
+    if (!Array.isArray(guideIds)) {
+      return res.status(400).json({ message: 'guideIds must be an array' });
+    }
+
+    // Validate all IDs are real guide users
+    const guides = await User.find({
+      _id: { $in: guideIds },
+      role: 'guide',
+    }).select('_id username firstName lastName guideProfile');
+
+    const validIds = guides.map(g => g._id);
+
+    const trek = await Trek.findByIdAndUpdate(
+      req.params.id,
+      { availableGuides: validIds },
+      { new: true }
+    ).populate('availableGuides', 'username firstName lastName email guideProfile');
+
+    if (!trek) return res.status(404).json({ message: 'Trek not found' });
+
+    res.json({
+      success: true,
+      message: `${validIds.length} guide(s) linked to this trek`,
+      availableGuides: trek.availableGuides,
+    });
+  } catch (err) {
+    console.error('manageTrekGuides error:', err);
+    res.status(500).json({ message: err.message });
   }
 };

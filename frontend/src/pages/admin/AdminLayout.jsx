@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -15,10 +15,9 @@ const Icons = {
   ChevronLeft:  () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>,
   ChevronRight: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>,
   Menu:         () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
-  LogOut:       () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
-  Search:       () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>,
-  Bell:         () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>,
+  LogOut:       () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
   Globe:        () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>,
+  EditProfile:  () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
 };
 
 const NAV_SECTIONS = [
@@ -48,19 +47,54 @@ const NAV_SECTIONS = [
   },
 ];
 
+// Reusable avatar component — shows photo if available, else initial
+function Avatar({ profileImage, initial, size, fontSize, style = {} }) {
+  const base = {
+    width: size, height: size, borderRadius: '50%',
+    background: 'linear-gradient(135deg,#16a34a,#4ade80)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontSize, fontWeight: 800, color: '#fff',
+    flexShrink: 0, overflow: 'hidden',
+    ...style,
+  };
+  return (
+    <div style={base}>
+      {profileImage
+        ? <img src={profileImage} alt="avatar" style={{ width:'100%', height:'100%', objectFit:'cover' }}
+            onError={e => { e.target.style.display = 'none'; }} />
+        : initial}
+    </div>
+  );
+}
+
 export default function AdminLayout({ children, title, subtitle }) {
   const { user, logout } = useAuth();
-  const location  = useLocation();
-  const navigate  = useNavigate();
-  const [collapsed,  setCollapsed]  = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [searchVal,  setSearchVal]  = useState('');
+  const location        = useLocation();
+  const navigate        = useNavigate();
+  const [collapsed,   setCollapsed]   = useState(false);
+  const [mobileOpen,  setMobileOpen]  = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef(null);
+
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
 
   const handleLogout = () => { logout(); navigate('/login'); };
   const c = collapsed;
 
-  const userName    = user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username || 'Admin';
-  const userInitial = (user?.firstName?.[0] || user?.username?.[0] || 'A').toUpperCase();
+  const userName     = user?.firstName && user?.lastName
+    ? `${user.firstName} ${user.lastName}`
+    : user?.username || 'Admin';
+  const userEmail    = user?.email || '';
+  const userInitial  = (user?.firstName?.[0] || user?.username?.[0] || 'A').toUpperCase();
+  const profileImage = user?.profileImage || '';
 
   return (
     <>
@@ -69,7 +103,10 @@ export default function AdminLayout({ children, title, subtitle }) {
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
         .al-root{display:flex;min-height:100vh;font-family:'Roboto',sans-serif;background:#F5F9F5;}
         .al-sidebar{width:${c?'64px':'236px'};min-height:100vh;background:linear-gradient(180deg,#0a2818 0%,#0d3320 100%);display:flex;flex-direction:column;transition:width 0.22s ease;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow:hidden;border-right:1px solid rgba(255,255,255,0.06);}
-        @media(max-width:900px){.al-sidebar{transform:translateX(${mobileOpen?'0':'-100%'});width:236px !important;transition:transform 0.22s ease;}.al-overlay{display:${mobileOpen?'block':'none'} !important;}}
+        @media(max-width:900px){
+          .al-sidebar{transform:translateX(${mobileOpen?'0':'-100%'});width:236px !important;transition:transform 0.22s ease;}
+          .al-overlay{display:${mobileOpen?'block':'none'} !important;}
+        }
         .al-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99;}
         .al-logo{display:flex;align-items:center;gap:10px;padding:${c?'16px 14px':'16px 16px'};border-bottom:1px solid rgba(255,255,255,0.07);text-decoration:none;overflow:hidden;flex-shrink:0;}
         .al-logo-box{width:34px;height:34px;border-radius:9px;flex-shrink:0;background:linear-gradient(135deg,#16a34a,#4ade80);display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 2px 8px rgba(22,163,74,0.4);}
@@ -87,7 +124,6 @@ export default function AdminLayout({ children, title, subtitle }) {
         .al-item-txt{opacity:${c?0:1};transition:opacity 0.13s;flex:1;overflow:hidden;}
         .al-footer{border-top:1px solid rgba(255,255,255,0.07);padding:10px 8px;flex-shrink:0;}
         .al-user{display:flex;align-items:center;gap:9px;padding:9px 11px;overflow:hidden;margin-bottom:2px;}
-        .al-avatar{width:30px;height:30px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,#16a34a,#4ade80);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;}
         .al-user-info{overflow:hidden;opacity:${c?0:1};transition:opacity 0.13s;}
         .al-user-name{font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
         .al-user-role{font-size:10px;color:rgba(255,255,255,0.35);}
@@ -97,21 +133,29 @@ export default function AdminLayout({ children, title, subtitle }) {
         .al-foot-txt{opacity:${c?0:1};transition:opacity 0.13s;}
         .al-main{flex:1;margin-left:${c?'64px':'236px'};min-height:100vh;display:flex;flex-direction:column;transition:margin-left 0.22s ease;}
         @media(max-width:900px){.al-main{margin-left:0 !important;}}
-        .al-topbar{height:58px;background:#fff;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:50;gap:12px;}
-        .al-topbar-left{display:flex;align-items:center;gap:12px;flex:1;min-width:0;}
+        .al-topbar{height:58px;background:#fff;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;padding:0 20px;position:sticky;top:0;z-index:50;gap:12px;}
         .al-menu-btn{display:none;background:none;border:none;cursor:pointer;padding:5px;border-radius:7px;color:#64748B;flex-shrink:0;}
         @media(max-width:900px){.al-menu-btn{display:flex;align-items:center;}}
-        .al-search-wrap{display:flex;align-items:center;gap:8px;background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:9px;padding:7px 13px;flex:1;max-width:380px;transition:border 0.15s;}
-        .al-search-wrap:focus-within{border-color:#16a34a;background:#fff;}
-        .al-search-icon{color:#94A3B8;display:flex;flex-shrink:0;}
-        .al-search-inp{border:none;outline:none;font-size:13px;font-family:'Roboto',sans-serif;color:#0F172A;background:transparent;flex:1;min-width:0;}
-        .al-search-inp::placeholder{color:#94A3B8;}
-        .al-topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
-        .al-bell-btn{width:36px;height:36px;border-radius:9px;border:1.5px solid #E2E8F0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#64748B;transition:all 0.13s;}
-        .al-bell-btn:hover{border-color:#16a34a;color:#16a34a;}
-        .al-topbar-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#16a34a,#4ade80);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;cursor:pointer;}
+        .al-topbar-spacer{flex:1;}
+        .al-topbar-right{display:flex;align-items:center;gap:12px;}
+        .al-page-info{text-align:right;}
         .al-page-title{font-size:15px;font-weight:800;color:#0F172A;}
         .al-page-sub{font-size:11.5px;color:#94A3B8;margin-top:1px;}
+        .al-profile-wrap{position:relative;}
+        .al-topbar-avatar-btn{width:36px;height:36px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:border-color 0.15s,box-shadow 0.15s;padding:0;background:none;overflow:hidden;}
+        .al-topbar-avatar-btn:hover,.al-topbar-avatar-btn.open{border-color:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,0.18);}
+        .al-profile-dropdown{position:absolute;top:calc(100% + 10px);right:0;width:224px;background:#fff;border:1px solid #E2E8F0;border-radius:14px;box-shadow:0 10px 36px rgba(0,0,0,0.13);overflow:hidden;z-index:200;animation:dropIn 0.14s ease;}
+        @keyframes dropIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
+        .al-pd-header{padding:14px 16px 12px;border-bottom:1px solid #F1F5F9;background:#F8FAFC;}
+        .al-pd-name{font-size:13px;font-weight:700;color:#0F172A;line-height:1.2;margin-top:8px;}
+        .al-pd-email{font-size:11px;color:#94A3B8;margin-top:3px;word-break:break-all;}
+        .al-pd-badge{display:inline-block;margin-top:6px;font-size:10px;font-weight:700;background:#ECFDF3;color:#16a34a;padding:2px 9px;border-radius:20px;}
+        .al-pd-body{padding:6px;}
+        .al-pd-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;font-size:13px;font-weight:500;color:#374151;text-decoration:none;cursor:pointer;border:none;background:none;width:100%;font-family:'Roboto',sans-serif;transition:background 0.12s,color 0.12s;}
+        .al-pd-item:hover{background:#F0FDF4;color:#16a34a;}
+        .al-pd-item.danger{color:#DC2626;}
+        .al-pd-item.danger:hover{background:#FEF2F2;color:#DC2626;}
+        .al-pd-sep{height:1px;background:#F1F5F9;margin:4px 6px;}
         .al-content{flex:1;padding:22px 24px;}
         @media(max-width:640px){.al-content{padding:14px;}}
       `}</style>
@@ -155,8 +199,9 @@ export default function AdminLayout({ children, title, subtitle }) {
           </nav>
 
           <div className="al-footer">
+            {/* ✅ Sidebar avatar — shows photo */}
             <div className="al-user">
-              <div className="al-avatar">{userInitial}</div>
+              <Avatar profileImage={profileImage} initial={userInitial} size={30} fontSize="11px" />
               <div className="al-user-info">
                 <div className="al-user-name">{userName}</div>
                 <div className="al-user-role">Administrator</div>
@@ -175,24 +220,59 @@ export default function AdminLayout({ children, title, subtitle }) {
 
         <div className="al-main">
           <header className="al-topbar">
-            <div className="al-topbar-left">
-              <button className="al-menu-btn" onClick={() => setMobileOpen(v => !v)}><Icons.Menu /></button>
-              <div className="al-search-wrap">
-                <span className="al-search-icon"><Icons.Search /></span>
-                <input className="al-search-inp" placeholder="Search…" value={searchVal} onChange={e => setSearchVal(e.target.value)} />
-              </div>
-            </div>
+            <button className="al-menu-btn" onClick={() => setMobileOpen(v => !v)}>
+              <Icons.Menu />
+            </button>
+            <div className="al-topbar-spacer" />
             <div className="al-topbar-right">
               {title && (
-                <div style={{marginRight:8}}>
+                <div className="al-page-info">
                   <div className="al-page-title">{title}</div>
                   {subtitle && <div className="al-page-sub">{subtitle}</div>}
                 </div>
               )}
-              <button className="al-bell-btn"><Icons.Bell /></button>
-              <div className="al-topbar-avatar">{userInitial}</div>
+
+              {/* ✅ Topbar avatar — shows photo */}
+              <div className="al-profile-wrap" ref={profileRef}>
+                <button
+                  className={`al-topbar-avatar-btn${profileOpen?' open':''}`}
+                  onClick={() => setProfileOpen(v => !v)}
+                >
+                  <Avatar profileImage={profileImage} initial={userInitial} size={32} fontSize="12px" />
+                </button>
+
+                {profileOpen && (
+                  <div className="al-profile-dropdown">
+                    <div className="al-pd-header">
+                      <Avatar profileImage={profileImage} initial={userInitial} size={42} fontSize="16px" />
+                      <div className="al-pd-name">{userName}</div>
+                      {userEmail && <div className="al-pd-email">{userEmail}</div>}
+                      <span className="al-pd-badge">Administrator</span>
+                    </div>
+                    <div className="al-pd-body">
+                      <Link
+                        to="/admin/edit-profile"
+                        className="al-pd-item"
+                        onClick={() => setProfileOpen(false)}
+                      >
+                        <Icons.EditProfile />
+                        Edit Profile
+                      </Link>
+                      <div className="al-pd-sep" />
+                      <button
+                        className="al-pd-item danger"
+                        onClick={() => { setProfileOpen(false); handleLogout(); }}
+                      >
+                        <Icons.LogOut />
+                        Sign out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </header>
+
           <div className="al-content">{children}</div>
         </div>
       </div>

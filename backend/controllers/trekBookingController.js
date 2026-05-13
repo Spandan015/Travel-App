@@ -135,19 +135,23 @@ exports.getAllTrekBookings = async (req, res) => {
 exports.cancelTrekBooking = async (req, res) => {
   try {
     const booking = await TrekBooking.findById(req.params.id);
-    if (!booking) return res.status(404).json({ message: 'Booking not found' });
-    if (booking.user.toString() !== req.user.id)
+    if (!booking) return res.status(404).json({ message: 'Trek booking not found' });
+ 
+    const userId = (req.user.id || req.user._id)?.toString();
+    if (booking.user.toString() !== userId)
       return res.status(403).json({ message: 'Access denied' });
+ 
     if (['cancelled', 'completed'].includes(booking.status))
       return res.status(400).json({ message: 'Booking cannot be cancelled' });
-
+ 
     booking.status             = 'cancelled';
-    booking.cancellationReason = req.body.cancellationReason;
+    booking.cancellationReason = req.body?.cancellationReason || '';
     await booking.save();
-
-    res.json({ success: true, message: 'Booking cancelled', booking });
+ 
+    res.json({ success: true, message: 'Trek booking cancelled successfully', booking });
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('[cancelTrekBooking] ERROR:', err);
+    res.status(500).json({ message: err.message || 'Server error' });
   }
 };
 
@@ -234,6 +238,28 @@ exports.getAssignedTrekBookings = async (req, res) => {
       .populate('user', 'username firstName lastName email phone')
       .sort({ createdAt: -1 });
     res.json({ success: true, count: bookings.length, bookings });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
+
+
+// ── Add this to trekBookingController.js ─────────────────────────
+// GET /api/trek-bookings/:id
+exports.getTrekBookingById = async (req, res) => {
+  try {
+    const booking = await TrekBooking.findById(req.params.id)
+      .populate('trek',          'name price duration coverImage description itinerary')
+      .populate('user',          'username firstName lastName email phone')
+      .populate('assignedGuide', 'username firstName lastName email phone guideProfile');
+ 
+    if (!booking) return res.status(404).json({ message: 'Booking not found' });
+    if (booking.user._id.toString() !== req.user.id && req.user.role !== 'admin')
+      return res.status(403).json({ message: 'Access denied' });
+ 
+    res.json({ success: true, booking });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }

@@ -6,8 +6,8 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser]     = useState(null);
-  const [token, setToken]   = useState(() => localStorage.getItem('nt_token'));
+  const [user, setUser]       = useState(null);
+  const [token, setToken]     = useState(() => localStorage.getItem('nt_token'));
   const [loading, setLoading] = useState(true);
 
   // Restore session on mount
@@ -33,7 +33,16 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  // ── Unified Login (all roles: user / guide / admin) ──────────────────────
+  // ── Update user in state + localStorage after profile edits ──────────────
+  const updateUser = (updatedFields) => {
+    setUser((prev) => {
+      const merged = { ...prev, ...updatedFields };
+      localStorage.setItem('nt_user', JSON.stringify(merged));
+      return merged;
+    });
+  };
+
+  // ── Unified Login ─────────────────────────────────────────────────────────
   const login = async ({ email, password }) => {
     const { data } = await axios.post(`${API}/auth/login`, { email, password });
     saveSession(data.token, data.user);
@@ -52,7 +61,7 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
-  // ── Admin Registration (secret key + OTP flow) ───────────────────────────
+  // ── Admin Registration ────────────────────────────────────────────────────
   const sendAdminRegistrationOTP = async (payload) => {
     const { data } = await axios.post(`${API}/auth/register-admin/send-otp`, payload);
     return data;
@@ -64,7 +73,7 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
-  // ── Guide Registration (OTP + profile fields) ────────────────────────────
+  // ── Guide Registration ────────────────────────────────────────────────────
   const sendGuideRegistrationOTP = async (payload) => {
     const { data } = await axios.post(`${API}/auth/register-guide/send-otp`, payload);
     return data;
@@ -72,7 +81,7 @@ export const AuthProvider = ({ children }) => {
 
   const verifyGuideRegistrationOTP = async (payload) => {
     const { data } = await axios.post(`${API}/auth/register-guide/verify-otp`, payload);
-    return data; // guide accounts are pending — no token yet
+    return data;
   };
 
   // ── Logout ────────────────────────────────────────────────────────────────
@@ -82,19 +91,18 @@ export const AuthProvider = ({ children }) => {
   axios.defaults.headers.common['Authorization'] = token ? `Bearer ${token}` : '';
 
   const isAuthenticated = !!token && !!user;
-  const isAdmin  = user?.role === 'admin';
-  const isGuide  = user?.role === 'guide';
-  const isUser   = user?.role === 'user';
+  const isAdmin = user?.role === 'admin';
+  const isGuide = user?.role === 'guide';
+  const isUser  = user?.role === 'user';
 
   return (
     <AuthContext.Provider value={{
       user, token, loading,
       isAuthenticated, isAdmin, isGuide, isUser,
-      login,
+      login, logout, updateUser,
       sendRegistrationOTP, verifyRegistrationOTP,
       sendAdminRegistrationOTP, verifyAdminRegistrationOTP,
       sendGuideRegistrationOTP, verifyGuideRegistrationOTP,
-      logout,
     }}>
       {children}
     </AuthContext.Provider>

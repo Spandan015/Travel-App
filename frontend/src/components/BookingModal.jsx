@@ -1,10 +1,4 @@
 // src/components/BookingModal.jsx
-// Generic booking modal with eSewa payment integration.
-// Props:
-//   type             — 'hotel' | 'package' | 'trek'
-//   item             — the hotel / package / trek object
-//   onClose          — close handler
-//   selectedRoomType — (hotel only) room type name selected on HotelDetail page
 import { useState, useContext } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -21,24 +15,19 @@ const INITIAL = {
   specialRequests: '',
 };
 
-// ── helpers ──────────────────────────────────────────────────────────────────
 const nightsBetween = (a, b) => {
   if (!a || !b) return 0;
   return Math.max(0, Math.ceil((new Date(b) - new Date(a)) / 86_400_000));
 };
 
-// ── NEW: get price for a specific room type (falls back to hotel base price) ─
 const getRoomTypePrice = (item, roomTypeName) => {
   if (!roomTypeName || !item?.roomTypes?.length) return null;
-  const rt = item.roomTypes.find(
-    r => r.type && r.type.toLowerCase() === roomTypeName.toLowerCase()
-  );
+  const rt = item.roomTypes.find(r => r.type?.toLowerCase() === roomTypeName.toLowerCase());
   return rt?.price || null;
 };
 
 const getItemPrice = (type, item, selectedRoomType) => {
   if (type === 'hotel') {
-    // Use selected room type price if available, else base price
     const rtPrice = getRoomTypePrice(item, selectedRoomType);
     return rtPrice || item?.pricePerNight || 0;
   }
@@ -58,7 +47,6 @@ const getItemLocation = (type, item) => {
   return '';
 };
 
-// ── booking endpoint by type ──────────────────────────────────────────────────
 const BOOKING_ENDPOINT = {
   hotel:   '/hotel-bookings',
   package: '/package-bookings',
@@ -66,99 +54,118 @@ const BOOKING_ENDPOINT = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// NEW: accept selectedRoomType prop
-export default function BookingModal({ type = 'hotel', item, onClose, selectedRoomType }) {
+// Props:
+//   type             — 'hotel' | 'package' | 'trek'
+//   item             — the hotel / package / trek object
+//   onClose          — close handler
+//   selectedRoomType — (hotel only)
+//   guideId          — (package/trek) selected guide's _id
+//   guideRequested   — (package/trek) whether user wants a guide
+// ─────────────────────────────────────────────────────────────────────────────
+export default function BookingModal({
+  type = 'hotel',
+  item,
+  onClose,
+  selectedRoomType,
+  guideId          = null,
+  guideObject      = null,   // full guide object from GuidePicker
+  guideRequested   = false,
+}) {
   const { user }   = useContext(AuthContext);
   const navigate   = useNavigate();
   const today      = new Date().toISOString().split('T')[0];
 
-  const [form, setForm] = useState(INITIAL);
-
-  // ── NEW: allow room type to be changed from inside the modal too ──────────
+  const [form,     setForm]     = useState(INITIAL);
   const [roomType, setRoomType] = useState(selectedRoomType || null);
-
-  const [step, setStep]     = useState('details'); // 'details' | 'summary' | 'paying'
-  const [error, setError]   = useState('');
-  const [loading, setLoading] = useState(false);
+  const [step,     setStep]     = useState('details');
+  const [error,    setError]    = useState('');
+  const [loading,  setLoading]  = useState(false);
 
   if (!user) { navigate('/login'); return null; }
   if (!item)  return null;
 
   const nights   = nightsBetween(form.checkInDate, form.checkOutDate);
-
-  // ── NEW: use room-type price if one is selected ───────────────────────────
   const baseRate = getItemPrice(type, item, roomType);
 
-  // Price calculation
-  const baseAmount  = type === 'hotel' ? baseRate * nights * form.rooms : baseRate;
+  // ── Guide fee calculation ────────────────────────────────────────────────
+  // guideObject is the full guide from GuidePicker (flat fields: dailyRate, specializations etc)
+  // Fall back to searching item.availableGuides if guideObject not passed
+  const resolvedGuide = guideObject || (guideId && item?.availableGuides
+    ? item.availableGuides.find(g => (g._id?.toString() || g.toString()) === guideId?.toString())
+    : null);
+  const guideDailyRate = resolvedGuide?.dailyRate || resolvedGuide?.guideProfile?.dailyRate || 0;
+  const guideDays      = item?.duration || 1;
+  const guideFeeTotal  = guideRequested && guideId && guideDailyRate ? guideDailyRate * guideDays : 0;
+
+  const baseAmount  = type === 'hotel'
+    ? baseRate * nights * form.rooms
+    : baseRate * (form.adults + form.children);
   const serviceFee  = Math.round(baseAmount * 0.10);
   const tax         = Math.round(baseAmount * 0.13);
-  const total       = baseAmount + serviceFee + tax;
+  const total       = baseAmount + serviceFee + tax + guideFeeTotal;
 
-  // ── NEW: availability check for selected room type ────────────────────────
   const selectedRt = roomType && item?.roomTypes?.length
     ? item.roomTypes.find(r => r.type?.toLowerCase() === roomType.toLowerCase())
     : null;
   const selectedRtAvailable = selectedRt
     ? (selectedRt.availableRooms != null ? selectedRt.availableRooms : selectedRt.totalRooms || 0)
-    : Infinity; // no room types = no limit
-  // ─────────────────────────────────────────────────────────────────────────
+    : Infinity;
 
-  // ── Step 1: validate & proceed ───────────────────────────────────────────
   const handleProceed = () => {
     setError('');
     if (type === 'hotel') {
       if (!form.checkInDate || !form.checkOutDate) return setError('Please select check-in and check-out dates.');
       if (nights <= 0) return setError('Check-out must be after check-in.');
-      // NEW: check room availability before proceeding
-      if (item?.roomTypes?.length > 0 && !roomType)
-        return setError('Please select a room type.');
-      if (selectedRtAvailable <= 0)
-        return setError(`The selected room type (${roomType}) is sold out. Please go back and choose another.`);
-      if (form.rooms > selectedRtAvailable)
-        return setError(`Only ${selectedRtAvailable} room(s) of type "${roomType}" are available.`);
+      if (item?.roomTypes?.length > 0 && !roomType) return setError('Please select a room type.');
+      if (selectedRtAvailable <= 0) return setError(`The selected room type (${roomType}) is sold out.`);
+      if (form.rooms > selectedRtAvailable) return setError(`Only ${selectedRtAvailable} room(s) available.`);
     }
     if ((type === 'package' || type === 'trek') && !form.startDate)
       return setError('Please select a start date.');
+    if ((type === 'package' || type === 'trek') && guideRequested && !guideId)
+      return setError('You toggled "Add a Guide" but no guide was selected. Please select a guide or turn off the guide option.');
     setStep('summary');
   };
 
-  // ── Step 2: create booking → eSewa ───────────────────────────────────────
   const handlePayWithEsewa = async () => {
     setLoading(true);
     setError('');
     try {
-      // 1️⃣ Build payload per type
       let bookingPayload;
+
       if (type === 'hotel') {
         bookingPayload = {
-          hotelId:        item._id,
-          checkInDate:    form.checkInDate,
-          checkOutDate:   form.checkOutDate,
-          numberOfGuests: form.adults + form.children,
-          numberOfRooms:  form.rooms,
+          hotelId:         item._id,
+          checkInDate:     form.checkInDate,
+          checkOutDate:    form.checkOutDate,
+          numberOfGuests:  form.adults + form.children,
+          numberOfRooms:   form.rooms,
           specialRequests: form.specialRequests,
-          // ── NEW: send selected room type to the API ──────────────────────
-          roomType:       roomType || undefined,
-          // ─────────────────────────────────────────────────────────────────
+          roomType:        roomType || undefined,
         };
       } else if (type === 'package') {
         bookingPayload = {
-          packageId:      item._id,
-          startDate:      form.startDate,
-          numberOfGuests: form.adults + form.children,
+          packageId:       item._id,
+          startDate:       form.startDate,
+          numberOfGuests:  form.adults + form.children,
           specialRequests: form.specialRequests,
+          // ── Guide fields — embedded in the single package booking ─────────
+          guideId:         guideRequested && guideId ? guideId : null,
+          guideRequested:  guideRequested && !!guideId,
         };
       } else if (type === 'trek') {
         bookingPayload = {
-          trekId:         item._id,
-          startDate:      form.startDate,
-          numberOfGuests: form.adults + form.children,
+          trekId:          item._id,
+          startDate:       form.startDate,
+          numberOfGuests:  form.adults + form.children,
           specialRequests: form.specialRequests,
+          // ── Guide fields — embedded in the single trek booking ────────────
+          guideId:         guideRequested && guideId ? guideId : null,
+          guideRequested:  guideRequested && !!guideId,
         };
       }
 
-      // 2️⃣ Create booking
+      // Create booking
       const { data: bookingRes } = await axios.post(
         `${API}${BOOKING_ENDPOINT[type]}`,
         bookingPayload,
@@ -167,14 +174,13 @@ export default function BookingModal({ type = 'hotel', item, onClose, selectedRo
 
       const bookingId = bookingRes.booking._id;
 
-      // 3️⃣ Initiate eSewa payment
+      // Initiate eSewa payment
       const { data: esewaRes } = await axios.post(
         `${API}/esewa/initiate`,
         { bookingId, bookingType: type },
         { headers: { Authorization: `Bearer ${getToken()}` } }
       );
 
-      // 4️⃣ Redirect to eSewa sandbox
       setStep('paying');
       setTimeout(() => redirectToEsewa(esewaRes), 500);
     } catch (err) {
@@ -194,7 +200,11 @@ export default function BookingModal({ type = 'hotel', item, onClose, selectedRo
     </div>
   );
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // Guide name for display
+  const guideName = resolvedGuide
+    ? (`${resolvedGuide.firstName || resolvedGuide.username || ''} ${resolvedGuide.lastName || ''}`.trim())
+    : guideId ? 'Guide' : null;
+
   return (
     <div style={S.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
       <div style={S.modal}>
@@ -223,19 +233,24 @@ export default function BookingModal({ type = 'hotel', item, onClose, selectedRo
             style={S.itemImg}
             onError={e => { e.target.src = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=200&q=60'; }}
           />
-          <div>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <div style={S.itemName}>{getItemName(type, item)}</div>
             <div style={S.itemLoc}>📍 {getItemLocation(type, item)}</div>
             <div style={S.itemPrice}>
               NPR {baseRate.toLocaleString()}
               {type === 'hotel' ? ' / night' : ' / person'}
-              {/* NEW: show which room type price is being used */}
               {type === 'hotel' && roomType && (
-                <span style={{ fontSize: 11, fontWeight: 500, color: '#15803d', marginLeft: 6 }}>
-                  ({roomType})
-                </span>
+                <span style={{ fontSize: 11, fontWeight: 500, color: '#15803d', marginLeft: 6 }}>({roomType})</span>
               )}
             </div>
+            {/* Guide badge in strip */}
+            {guideRequested && guideId && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, background: '#f0fdf4', color: '#15803d', border: '1px solid #d1fae5', padding: '2px 8px', borderRadius: 20 }}>
+                  🧭 + Guide included
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -245,7 +260,6 @@ export default function BookingModal({ type = 'hotel', item, onClose, selectedRo
         {/* ── STEP: details ── */}
         {step === 'details' && (
           <div style={S.body}>
-            {/* Hotel: check-in/out dates */}
             {type === 'hotel' && (
               <section style={S.section}>
                 <div style={S.sectionTitle}>SELECT DATES</div>
@@ -261,59 +275,62 @@ export default function BookingModal({ type = 'hotel', item, onClose, selectedRo
                       onChange={e => set('checkOutDate', e.target.value)} />
                   </div>
                 </div>
-                {nights > 0 && (
-                  <div style={S.nightBadge}>🌙 {nights} night{nights > 1 ? 's' : ''}</div>
-                )}
+                {nights > 0 && <div style={S.nightBadge}>🌙 {nights} night{nights > 1 ? 's' : ''}</div>}
               </section>
             )}
 
-            {/* Package / Trek: start date */}
             {(type === 'package' || type === 'trek') && (
               <section style={S.section}>
                 <div style={S.sectionTitle}>SELECT START DATE</div>
                 <input style={S.input} type="date" min={today} value={form.startDate}
                   onChange={e => set('startDate', e.target.value)} />
                 {item?.duration && form.startDate && (
-                  <div style={{ fontSize: 12, color: '#64748b', marginTop: 8 }}>
-                    Duration: {item.duration} days
-                  </div>
+                  <div style={{ fontSize: 12, color: '#64748b', marginTop: 8 }}>Duration: {item.duration} days</div>
                 )}
               </section>
             )}
 
-            {/* ── NEW: Room type selector inside modal (for hotel) ─────────── */}
             {type === 'hotel' && item?.roomTypes?.length > 0 && (
               <section style={S.section}>
                 <div style={S.sectionTitle}>ROOM TYPE *</div>
-                <select
-                  style={{ ...S.input, cursor: 'pointer' }}
-                  value={roomType || ''}
-                  onChange={e => setRoomType(e.target.value || null)}
-                >
+                <select style={{ ...S.input, cursor: 'pointer' }} value={roomType || ''} onChange={e => setRoomType(e.target.value || null)}>
                   {!roomType && <option value="">— Select a room type —</option>}
                   {item.roomTypes.map((rt, i) => {
-                    const avail = rt.availableRooms != null ? rt.availableRooms : (rt.totalRooms || 0);
+                    const avail   = rt.availableRooms != null ? rt.availableRooms : (rt.totalRooms || 0);
                     const soldOut = avail <= 0;
                     return (
                       <option key={i} value={rt.type} disabled={soldOut}>
-                        {rt.type}
-                        {rt.price ? ` — NPR ${Number(rt.price).toLocaleString()}` : ''}
-                        {soldOut ? ' (Sold out)' : ` (${avail} left)`}
+                        {rt.type}{rt.price ? ` — NPR ${Number(rt.price).toLocaleString()}` : ''}{soldOut ? ' (Sold out)' : ` (${avail} left)`}
                       </option>
                     );
                   })}
                 </select>
-                {/* Availability hint for selected room type */}
                 {selectedRt && selectedRtAvailable > 0 && selectedRtAvailable <= 3 && (
-                  <div style={{ fontSize: 12, color: '#92400e', fontWeight: 600, marginTop: 6 }}>
-                    ⚠️ Only {selectedRtAvailable} room(s) left for this type!
-                  </div>
+                  <div style={{ fontSize: 12, color: '#92400e', fontWeight: 600, marginTop: 6 }}>⚠️ Only {selectedRtAvailable} room(s) left!</div>
                 )}
               </section>
             )}
-            {/* ─────────────────────────────────────────────────────────────── */}
 
-            {/* Guests & Rooms */}
+            {/* Guide info box (package/trek only) */}
+            {(type === 'package' || type === 'trek') && guideRequested && guideId && (
+              <section style={S.section}>
+                <div style={S.sectionTitle}>SELECTED GUIDE</div>
+                <div style={{ background: '#f0fdf4', border: '1.5px solid #d1fae5', borderRadius: 10, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#052e16,#16a34a)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>
+                    🧭
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: '#052e16' }}>{guideName || 'Guide Selected'}</div>
+                    <div style={{ fontSize: 11, color: '#16a34a', marginTop: 2 }}>
+                      {guideDailyRate > 0
+                        ? `NPR ${Number(guideDailyRate).toLocaleString()}/day × ${guideDays} days = NPR ${Number(guideFeeTotal).toLocaleString()}`
+                        : 'Included in booking'}
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+
             <section style={S.section}>
               <div style={S.sectionTitle}>GUESTS {type === 'hotel' ? '& ROOMS' : ''}</div>
               <div style={S.counterItem}>
@@ -328,30 +345,24 @@ export default function BookingModal({ type = 'hotel', item, onClose, selectedRo
                 <div style={S.counterItem}>
                   <div>
                     <div style={S.counterLabel}>Rooms</div>
-                    {/* NEW: show max available for this room type */}
-                    {selectedRt && (
-                      <div style={S.counterSub}>Max {selectedRtAvailable} available</div>
-                    )}
+                    {selectedRt && <div style={S.counterSub}>Max {selectedRtAvailable} available</div>}
                   </div>
                   {counter('rooms', 1, Math.min(5, selectedRtAvailable || 5))}
                 </div>
               )}
             </section>
 
-            {/* Special requests */}
             <section style={S.section}>
               <div style={S.sectionTitle}>SPECIAL REQUESTS (OPTIONAL)</div>
               <textarea
                 style={{ ...S.input, resize: 'vertical', minHeight: 72, paddingTop: 10 }}
-                placeholder="e.g. Early check-in, dietary requirements…"
+                placeholder="e.g. dietary requirements, preferences…"
                 value={form.specialRequests}
                 onChange={e => set('specialRequests', e.target.value)}
               />
             </section>
 
-            <button style={S.primaryBtn} onClick={handleProceed}>
-              Continue to Summary →
-            </button>
+            <button style={S.primaryBtn} onClick={handleProceed}>Continue to Summary →</button>
           </div>
         )}
 
@@ -366,16 +377,19 @@ export default function BookingModal({ type = 'hotel', item, onClose, selectedRo
                   <div style={S.summaryRow}><span>Check-out</span><strong>{form.checkOutDate}</strong></div>
                   <div style={S.summaryRow}><span>Nights</span><strong>{nights}</strong></div>
                   <div style={S.summaryRow}><span>Rooms</span><strong>{form.rooms}</strong></div>
-                  {/* NEW: show selected room type in summary */}
-                  {roomType && (
-                    <div style={S.summaryRow}><span>Room Type</span><strong>{roomType}</strong></div>
-                  )}
+                  {roomType && <div style={S.summaryRow}><span>Room Type</span><strong>{roomType}</strong></div>}
                 </>
               )}
               {(type === 'package' || type === 'trek') && (
                 <div style={S.summaryRow}><span>Start Date</span><strong>{form.startDate}</strong></div>
               )}
               <div style={S.summaryRow}><span>Guests</span><strong>{form.adults + form.children}</strong></div>
+              {guideRequested && guideId && (
+                <div style={S.summaryRow}>
+                  <span>Guide</span>
+                  <strong style={{ color: '#15803d' }}>🧭 {guideName || 'Selected'}</strong>
+                </div>
+              )}
               {form.specialRequests && (
                 <div style={S.summaryRow}><span>Requests</span><strong style={{ maxWidth: 200, textAlign: 'right', fontSize: 12 }}>{form.specialRequests}</strong></div>
               )}
@@ -392,6 +406,13 @@ export default function BookingModal({ type = 'hotel', item, onClose, selectedRo
                 </span>
                 <span>NPR {baseAmount.toLocaleString()}</span>
               </div>
+              {/* Guide fee line */}
+              {guideRequested && guideFeeTotal > 0 && (
+                <div style={{ ...S.priceRow, color: '#15803d' }}>
+                  <span>🧭 Guide fee ({guideDays} day{guideDays > 1 ? 's' : ''})</span>
+                  <span>NPR {Number(guideFeeTotal).toLocaleString()}</span>
+                </div>
+              )}
               <div style={S.priceRow}><span>Service fee (10%)</span><span>NPR {serviceFee.toLocaleString()}</span></div>
               <div style={S.priceRow}><span>Tax (13%)</span><span>NPR {tax.toLocaleString()}</span></div>
               <div style={S.totalRow}>
@@ -400,15 +421,12 @@ export default function BookingModal({ type = 'hotel', item, onClose, selectedRo
               </div>
             </div>
 
-            {/* eSewa pay button */}
             <button
               style={{ ...S.esewaBtn, opacity: loading ? 0.7 : 1 }}
               onClick={handlePayWithEsewa}
               disabled={loading}
             >
-              {loading ? (
-                <span>Processing…</span>
-              ) : (
+              {loading ? <span>Processing…</span> : (
                 <>
                   <img
                     src="https://esewa.com.np/common/images/esewa_logo.png"
@@ -428,12 +446,9 @@ export default function BookingModal({ type = 'hotel', item, onClose, selectedRo
         {step === 'paying' && (
           <div style={{ ...S.body, textAlign: 'center', padding: '40px 24px' }}>
             <div style={S.spinner} />
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>
-              Redirecting to eSewa…
-            </div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Redirecting to eSewa…</div>
             <div style={{ fontSize: 13, color: '#64748b' }}>
-              You'll be taken to the eSewa sandbox to complete your payment.
-              <br />Please do not close or refresh this page.
+              You'll be taken to eSewa to complete your payment.<br />Please do not close or refresh this page.
             </div>
           </div>
         )}
@@ -442,7 +457,6 @@ export default function BookingModal({ type = 'hotel', item, onClose, selectedRo
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
 const S = {
   overlay:     { position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000, padding: 16, backdropFilter: 'blur(6px)' },
   modal:       { background: '#fff', borderRadius: 20, width: '100%', maxWidth: 520, maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 32px 80px rgba(0,0,0,0.3)', fontFamily: "'Plus Jakarta Sans', 'Roboto', sans-serif" },
@@ -474,7 +488,7 @@ const S = {
   priceBox:    { background: '#f8fafc', borderRadius: 12, padding: 16, border: '1px solid #e2e8f0', marginBottom: 16 },
   priceRow:    { display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#64748b', marginBottom: 7 },
   totalRow:    { display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 800, color: '#0f172a', borderTop: '1px solid #e2e8f0', paddingTop: 10, marginTop: 4, letterSpacing: '-0.02em' },
-  esewaBtn:    { width: '100%', padding: '14px', background: '#60bb46', color: '#fff', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 10, fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(96,187,70,0.35)', transition: 'all 0.2s' },
+  esewaBtn:    { width: '100%', padding: '14px', background: '#60bb46', color: '#fff', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 10, fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(96,187,70,0.35)' },
   backBtn:     { width: '100%', padding: '11px', background: '#fff', color: '#64748b', border: '1.5px solid #e2e8f0', borderRadius: 12, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' },
   primaryBtn:  { width: '100%', padding: 14, background: '#16a34a', color: '#fff', border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' },
   spinner:     { width: 40, height: 40, border: '3px solid #dcfce7', borderTop: '3px solid #16a34a', borderRadius: '50%', animation: 'bm-spin 0.9s linear infinite', margin: '0 auto 20px' },

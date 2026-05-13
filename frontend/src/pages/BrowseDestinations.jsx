@@ -33,7 +33,7 @@ export default function BrowseDestinations() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
 
         :root {
           --green-primary: #16a34a;
@@ -58,7 +58,7 @@ export default function BrowseDestinations() {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         .bd-root {
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           background: var(--bg-page);
           min-height: 100vh;
           padding-top: 68px;
@@ -158,7 +158,7 @@ export default function BrowseDestinations() {
           border: 1.5px solid var(--border);
           border-radius: var(--radius-sm);
           font-size: 13px;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: ' Roboto', sans-serif;
           color: var(--text-primary);
           outline: none;
           background: #fff;
@@ -182,7 +182,7 @@ export default function BrowseDestinations() {
           font-weight: 500;
           color: var(--text-primary);
           background: none;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           width: 100%;
           text-align: left;
         }
@@ -227,7 +227,7 @@ export default function BrowseDestinations() {
           font-weight: 700;
           text-decoration: none;
           transition: background 0.2s;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: ' Roboto', sans-serif;
         }
         .bd-info-btn:hover { background: var(--green-mid); }
 
@@ -257,7 +257,7 @@ export default function BrowseDestinations() {
           border: 1.5px solid var(--border);
           border-radius: 10px;
           font-size: 13px;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           color: var(--text-secondary);
           outline: none;
           background: #fff;
@@ -406,7 +406,7 @@ export default function BrowseDestinations() {
           font-size: 12.5px;
           font-weight: 700;
           cursor: pointer;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           transition: all 0.2s;
           white-space: nowrap;
           text-decoration: none;
@@ -445,7 +445,7 @@ export default function BrowseDestinations() {
           font-weight: 700;
           font-size: 14px;
           transition: background 0.2s;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
         }
         .bd-cta-primary:hover { background: var(--green-mid); }
         .bd-cta-secondary {
@@ -458,7 +458,7 @@ export default function BrowseDestinations() {
           font-size: 14px;
           border: 1px solid rgba(255,255,255,0.15);
           transition: background 0.2s;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
         }
         .bd-cta-secondary:hover { background: rgba(255,255,255,0.15); }
 
@@ -485,7 +485,7 @@ export default function BrowseDestinations() {
           {/* ── SIDEBAR ── */}
           <aside className="bd-sidebar">
 
-            {/* Difficulty filter */}
+            {/* Difficulty filter
             <div className="bd-filter-card">
               <div className="bd-filter-head">
                 <h3>Filters</h3>
@@ -525,7 +525,7 @@ export default function BrowseDestinations() {
                   <option>5,000m+</option>
                 </select>
               </div>
-            </div>
+            </div> */}
 
             {/* Info / CTA card */}
             <div className="bd-info-card">
@@ -545,11 +545,7 @@ export default function BrowseDestinations() {
                 {regions.length === 1 ? 'region' : 'regions'}
                 <span> available</span>
               </div>
-              <select className="bd-sort-select" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>
-                <option>Sort: Default</option>
-                <option>Altitude: High → Low</option>
-                <option>Difficulty: Easy first</option>
-              </select>
+              
             </div>
 
             {loading ? (

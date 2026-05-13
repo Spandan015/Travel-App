@@ -1,78 +1,72 @@
 const mongoose = require('mongoose');
 
 const trekSchema = new mongoose.Schema({
-  // Basic Info
   name:        { type: String, required: true, trim: true },
   slug:        { type: String, required: true, unique: true, lowercase: true, trim: true },
   region:      { type: mongoose.Schema.Types.ObjectId, ref: 'Region', required: true },
   tagline:     { type: String },
   overview:    { type: String, required: true },
 
-  // Trek Stats (shown in "Trip At Glance")
-  duration:       { type: Number, required: true },       // days
-  maxAltitude:    { type: Number },                       // meters
+  duration:       { type: Number, required: true },
+  maxAltitude:    { type: Number },
   difficulty:     { type: String, enum: ['Easy','Moderate','Challenging','Expert'], default: 'Moderate' },
-  bestSeason:     { type: String },                       // e.g. "Autumn & Spring"
-  tripType:       { type: String, default: 'Tea House' }, // Tea House / Camping
+  bestSeason:     { type: String },
+  tripType:       { type: String, default: 'Tea House' },
   transportation: { type: String, default: 'Flight' },
   accommodation:  { type: String, default: 'Lodge' },
-  groupSize:      { type: String },                       // e.g. "2-16 people"
-  startPoint:     { type: String },                       // e.g. "Lukla"
-  endPoint:       { type: String },                       // e.g. "Kathmandu"
+  groupSize:      { type: String },
+  startPoint:     { type: String },
+  endPoint:       { type: String },
 
-  // Pricing
-  price:         { type: Number, required: true },        // NPR per person
-  priceUSD:      { type: Number },                        // USD per person
+  price:         { type: Number, required: true },
+  priceUSD:      { type: Number },
   priceIncludes: [{ type: String }],
   priceExcludes: [{ type: String }],
 
-  // Day-by-day Itinerary
   itinerary: [{
     day:           { type: Number, required: true },
-    title:         { type: String, required: true },      // e.g. "KTM to Lukla Flight and Phadking"
+    title:         { type: String, required: true },
     description:   { type: String },
-    elevation:     { type: Number },                      // meters
-    distance:      { type: String },                      // e.g. "10-12km"
-    walkingHours:  { type: String },                      // e.g. "5-6 hours"
+    elevation:     { type: Number },
+    distance:      { type: String },
+    walkingHours:  { type: String },
     meals:         { type: String, default: 'Breakfast, Lunch & Dinner' },
     accommodation: { type: String, default: 'Lodge' },
   }],
 
-  // Gear List
-  gearList: [{ type: String }],
-
-  // FAQs
+  gearList:  [{ type: String }],
   faqs: [{
     question: { type: String },
     answer:   { type: String },
   }],
+  highlights:  [{ type: String }],
+  images:      [{ type: String }],
+  coverImage:  { type: String },
 
-  // Highlights
-  highlights: [{ type: String }],
-
-  // Images
-  images:    [{ type: String }],
-  coverImage: { type: String },
-
-  // Altitude profile data points (for chart)
   altitudeProfile: [{
     day:       { type: Number },
     elevation: { type: Number },
     label:     { type: String },
   }],
 
-  // Permits required
-  permits: [{ type: String }],   // e.g. ["TIMS Card", "Sagarmatha NP Permit"]
+  permits: [{ type: String }],
 
-  // Status
-  isActive:  { type: Boolean, default: true },
-  isPopular: { type: Boolean, default: false },
-  isFeatured:{ type: Boolean, default: false },
+  isActive:   { type: Boolean, default: true },
+  isPopular:  { type: Boolean, default: false },
+  isFeatured: { type: Boolean, default: false },
 
-  // Meta
   totalReviews: { type: Number, default: 0 },
   rating:       { type: Number, default: 0, min: 0, max: 5 },
-  addedBy:      { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+
+  // ── Guide Assignment ───────────────────────────────────────────────────────
+  // Admin pre-links specific guides to this trek.
+  // Users see only these guides when booking.
+  availableGuides: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+
+  addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });
 
 trekSchema.index({ slug: 1 });

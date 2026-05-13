@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
+const multer = require('multer');
 
 const {
   sendRegistrationOTP,
@@ -16,24 +18,37 @@ const {
 
 const { protect } = require('../middleware/authMiddleware');
 
-// ─── Public ───────────────────────────────────────────────────────────────────
+// ── Multer for user profile image uploads ─────────────────────────
+const userImageStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '../uploads/user-profiles'));
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+    cb(null, `user-${req.user._id}-${Date.now()}${ext}`);
+  },
+});
+const uploadUserImage = multer({
+  storage: userImageStorage,
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) cb(null, true);
+    else cb(new Error('Only image files are allowed'), false);
+  },
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
+
+// ─── Public ───────────────────────────────────────────────────────
 router.post('/login', login);
-
-// User registration (OTP flow)
-router.post('/register/send-otp', sendRegistrationOTP);
-router.post('/register/verify-otp', verifyRegistrationOTP);
-
-// Admin registration (secret key + OTP flow)
-router.post('/register-admin/send-otp', sendAdminRegistrationOTP);
+router.post('/register/send-otp',         sendRegistrationOTP);
+router.post('/register/verify-otp',       verifyRegistrationOTP);
+router.post('/register-admin/send-otp',   sendAdminRegistrationOTP);
 router.post('/register-admin/verify-otp', verifyAdminRegistrationOTP);
-
-// Guide registration (OTP + guide profile fields)
-router.post('/register-guide/send-otp', sendGuideRegistrationOTP);
+router.post('/register-guide/send-otp',   sendGuideRegistrationOTP);
 router.post('/register-guide/verify-otp', verifyGuideRegistrationOTP);
 
-// ─── Protected ────────────────────────────────────────────────────────────────
-router.get('/profile', protect, getUserProfile);
-router.put('/profile', protect, updateProfile);
+// ─── Protected ────────────────────────────────────────────────────
+router.get('/profile',         protect, getUserProfile);
+router.put('/profile',         protect, uploadUserImage.single('profileImage'), updateProfile);
 router.put('/change-password', protect, changePassword);
 
 module.exports = router;

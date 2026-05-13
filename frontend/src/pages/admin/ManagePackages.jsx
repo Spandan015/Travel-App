@@ -2,21 +2,36 @@ import { useState, useEffect, useRef } from 'react';
 import AdminLayout from './AdminLayout';
 import axios from 'axios';
 
+import GuideLinker from '../../components/GuideLinker';
+
 const API   = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const token = () => localStorage.getItem('nt_token');
 
-const DIFFICULTIES  = ['Easy','Moderate','Challenging','Strenuous','Expert'];
-const CATEGORIES    = ['Trekking','Cultural','Adventure','Wildlife','Spiritual','Photography','Cycling','Rafting','Family','Luxury'];
-const INCLUDES_OPTS = ['Accommodation','Meals (B/L/D)','Guide','Porter','Transport','Permits','Equipment','Insurance','Airport Pickup','Welcome Dinner'];
-const REGIONS       = ['Khumbu / Everest','Annapurna','Langtang','Manaslu','Mustang','Dolpo','Kanchenjunga','Makalu','Rolwaling','Kathmandu Valley','Pokhara','Chitwan','Lumbini','Other'];
-const SEASONS       = ['Spring (Mar–May)','Summer (Jun–Aug)','Autumn (Sep–Nov)','Winter (Dec–Feb)'];
+const DIFFICULTIES  = ['Easy','Moderate','Challenging'];
+const CATEGORIES    = [
+  'Sightseeing','Cultural','Heritage','Wildlife Safari','Wellness & Yoga',
+  'Honeymoon','Adventure','Rafting','Weekend Getaway','Luxury','Religious','Family'
+];
+const INCLUDES_OPTS = [
+  'Accommodation','Meals (B/L/D)','Guide','Transport','Airport Pickup',
+  'Welcome Dinner','Entrance Fees','Boat Ride','Safari Jeep','Spa/Wellness',
+  'Paragliding','Elephant Ride','Candle-light Dinner','Insurance'
+];
+const REGIONS = [
+  'Kathmandu Valley','Pokhara','Chitwan','Lumbini','Nagarkot',
+  'Bandipur','Dhulikhel','Janakpur','Bardia','Mustang','Other'
+];
+const SEASONS = ['Spring (Mar–May)','Summer (Jun–Aug)','Autumn (Sep–Nov)','Winter (Dec–Feb)'];
 
-const DIFF_COLOR = { Easy:'#027A48', Moderate:'#B54708', Challenging:'#B42318', Strenuous:'#B42318', Expert:'#6B21A8' };
-const DIFF_BG    = { Easy:'#ECFDF3', Moderate:'#FFFAEB', Challenging:'#FEF3F2', Strenuous:'#FEF3F2', Expert:'#F5F3FF' };
+const PRICE_TIERS  = ['Budget','Mid-range','Luxury'];
+const AUDIENCES    = ['Solo','Couple','Family','Group','International Tourist','Nepali Traveller'];
+
+const DIFF_COLOR = { Easy:'#027A48', Moderate:'#B54708', Challenging:'#B42318' };
+const DIFF_BG    = { Easy:'#ECFDF3', Moderate:'#FFFAEB', Challenging:'#FEF3F2' };
 
 const EMPTY_DAY = { day:1, title:'', description:'', elevation:'', distance:'' };
 const EMPTY = {
-  title:'', category:'Trekking', difficulty:'Moderate', duration:'',
+  title:'', category:'Sightseeing', difficulty:'Easy', duration:'',
   groupSize:{ min:1, max:15 },
   price:{ amount:'', currency:'NPR', perPerson:true },
   description:'', highlights:[''],
@@ -26,6 +41,8 @@ const EMPTY = {
   region:'', destination:'',
   lat:'', lng:'',
   bestSeason:[], images:[''],
+  priceTier:'Mid-range',
+  targetAudience:[],
   isActive:true, isFeatured:false,
 };
 
@@ -134,7 +151,7 @@ function MapPicker({ lat, lng, onChange }) {
       if (!containerRef.current || leafletRef.current) return;
       const L = window.L;
       const map = L.map(containerRef.current, {
-        center: [lat || 27.9881, lng || 86.9250], // Default: Everest region
+        center: [lat || 27.7172, lng || 85.3240], // Default: Kathmandu
         zoom: lat ? 10 : 7,
       });
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -174,7 +191,7 @@ function MapPicker({ lat, lng, onChange }) {
     <div>
       <div className="mp-map-picker-wrap">
         <div ref={containerRef} style={{ height: 320 }} />
-        <div className="mp-map-hint">📍 Click anywhere to pin the trekking destination</div>
+        <div className="mp-map-hint">📍 Click anywhere to pin the destination</div>
         {lat && lng && <button className="mp-map-clear-btn" onClick={handleClear} type="button">✕ Clear Pin</button>}
       </div>
       <div className="mp-coords-display">
@@ -228,19 +245,22 @@ export default function ManagePackages() {
     if (p.includes?.activities?.length) incl.push(...p.includes.activities);
     setForm({
       ...EMPTY, ...p,
-      title:       p.name || p.title || '',
-      region:      p.region || '',
-      destination: p.destination || p.location || '',
-      lat:         p.lat || '',
-      lng:         p.lng || '',
-      price:       { amount:String(displayPrice(p)), currency:'NPR', perPerson:true },
-      groupSize:   { min:1, max:p.maxGroupSize||15 },
-      highlights:  p.highlights?.length ? p.highlights : [''],
-      excludes:    p.excludes?.length   ? p.excludes   : [''],
-      itinerary:   p.itinerary?.length  ? p.itinerary  : [{ ...EMPTY_DAY }],
-      includes:    incl,
-      bestSeason:  p.bestSeason || [],
-      images:      Array.isArray(p.images) && p.images.length ? p.images : [''],
+      title:          p.name || p.title || '',
+      region:         p.region || '',
+      destination:    p.destination || p.location || '',
+      lat:            p.lat || '',
+      lng:            p.lng || '',
+      price:          { amount:String(displayPrice(p)), currency:'NPR', perPerson:true },
+      groupSize:      { min:1, max:p.maxGroupSize||15 },
+      highlights:     p.highlights?.length ? p.highlights : [''],
+      excludes:       p.excludes?.length   ? p.excludes   : [''],
+      itinerary:      p.itinerary?.length  ? p.itinerary  : [{ ...EMPTY_DAY }],
+      includes:       incl,
+      bestSeason:     p.bestSeason || [],
+      images:         Array.isArray(p.images) && p.images.length ? p.images : [''],
+      priceTier:      p.priceTier || 'Mid-range',
+      targetAudience: p.targetAudience || [],
+      availableGuides: p.availableGuides || [],
     });
     setEditId(p._id); setFormTab('basic'); setTab('form');
   };
@@ -253,27 +273,29 @@ export default function ManagePackages() {
     setSaving(true);
     try {
       const payload = {
-        name:          form.title.trim(),
-        description:   form.description.trim(),
-        duration:      Number(form.duration),
-        price:         Number(form.price.amount),
-        maxGroupSize:  Number(form.groupSize?.max) || 15,
-        difficulty:    form.difficulty === 'Strenuous' ? 'Challenging' : form.difficulty,
-        category:      form.category,
-        region:        form.region,
-        destination:   form.destination,
-        location:      form.destination || form.region,   // ✅ also set location for compatibility
-        lat:           form.lat ? parseFloat(form.lat) : null,
-        lng:           form.lng ? parseFloat(form.lng) : null,
-        images:        form.images.filter(i => i.trim()),
-        isActive:      form.isActive,
-        isFeatured:    form.isFeatured,
-        startLocation: form.startLocation,
-        endLocation:   form.endLocation,
-        bestSeason:    form.bestSeason,
-        highlights:    form.highlights.filter(h => h.trim()),
-        excludes:      form.excludes.filter(e => e.trim()),
-        itinerary:     form.itinerary.map(d => ({ day:d.day, title:d.title, description:d.description, elevation:d.elevation, distance:d.distance })),
+        name:           form.title.trim(),
+        description:    form.description.trim(),
+        duration:       Number(form.duration),
+        price:          Number(form.price.amount),
+        maxGroupSize:   Number(form.groupSize?.max) || 15,
+        difficulty:     form.difficulty,
+        category:       form.category,
+        region:         form.region,
+        destination:    form.destination,
+        location:       form.destination || form.region,
+        lat:            form.lat ? parseFloat(form.lat) : null,
+        lng:            form.lng ? parseFloat(form.lng) : null,
+        images:         form.images.filter(i => i.trim()),
+        isActive:       form.isActive,
+        isFeatured:     form.isFeatured,
+        startLocation:  form.startLocation,
+        endLocation:    form.endLocation,
+        bestSeason:     form.bestSeason,
+        highlights:     form.highlights.filter(h => h.trim()),
+        excludes:       form.excludes.filter(e => e.trim()),
+        itinerary:      form.itinerary.map(d => ({ day:d.day, title:d.title, description:d.description, elevation:d.elevation, distance:d.distance })),
+        priceTier:      form.priceTier,
+        targetAudience: form.targetAudience,
         includes: {
           accommodation: form.includes.includes('Accommodation'),
           transport:     form.includes.includes('Transport'),
@@ -331,8 +353,8 @@ export default function ManagePackages() {
     );
   });
 
-  const FORM_TABS = ['basic','destination','itinerary','includes','images'];
-  const FTAB_LABELS = { basic:'Basic Info', destination:'Destination & Map', itinerary:'Itinerary', includes:"What's Included", images:'Images' };
+  const FORM_TABS = ['basic','destination','itinerary','includes','images', 'guides'];
+  const FTAB_LABELS = { basic:'Basic Info', destination:'Destination & Map', itinerary:'Itinerary', includes:"What's Included", images:'Images', guides:'🧭 Guides' };
 
   return (
     <AdminLayout title="Packages" subtitle={`${packages.length} travel packages`}>
@@ -357,7 +379,7 @@ export default function ManagePackages() {
         {tab === 'list' ? (
           <>
             <div className="mp-toprow">
-              <div><h2 style={{ fontSize:19, fontWeight:800, color:'#0a2818' }}>Packages</h2><p style={{ fontSize:13, color:'#9ca3af', marginTop:2 }}>Manage your travel packages</p></div>
+              <div><h2 style={{ fontSize:19, fontWeight:800, color:'#0a2818' }}>Packages</h2><p style={{ fontSize:13, color:'#9ca3af', marginTop:2 }}>Manage your tour & sightseeing packages</p></div>
               <span style={{ fontSize:13, color:'#9ca3af', alignSelf:'center' }}>Showing {filtered.length} of {packages.length}</span>
             </div>
             <div className="mp-filterbar">
@@ -384,7 +406,7 @@ export default function ManagePackages() {
               ) : (
                 <div style={{ overflowX:'auto' }}>
                   <table className="mp-table">
-                    <thead><tr><th>Package</th><th>Region</th><th>Category</th><th>Difficulty</th><th>Duration</th><th>Price</th><th>Map Pin</th><th>Status</th><th></th></tr></thead>
+                    <thead><tr><th>Package</th><th>Region</th><th>Category</th><th>Price Tier</th><th>Duration</th><th>Price</th><th>Map Pin</th><th>Status</th><th></th></tr></thead>
                     <tbody>
                       {filtered.map(p => (
                         <tr key={p._id}>
@@ -396,7 +418,7 @@ export default function ManagePackages() {
                           </td>
                           <td style={{ color:'#6b7280' }}>{p.region || p.destination || '—'}</td>
                           <td><span style={{ background:'#f0fdf4', padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:600, color:'#15803d' }}>{p.category||'—'}</span></td>
-                          <td><span style={{ background:DIFF_BG[p.difficulty]||'#f0fdf4', color:DIFF_COLOR[p.difficulty]||'#15803d', padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:700 }}>{p.difficulty||'—'}</span></td>
+                          <td><span style={{ background:'#fffaeb', padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:600, color:'#b54708' }}>{p.priceTier||'—'}</span></td>
                           <td style={{ color:'#6b7280' }}>{p.duration?`${p.duration} days`:'—'}</td>
                           <td style={{ fontWeight:700, color:'#0a2818' }}>NPR {Number(displayPrice(p)||0).toLocaleString()}</td>
                           <td>
@@ -430,14 +452,23 @@ export default function ManagePackages() {
               {/* ── BASIC INFO ── */}
               {formTab === 'basic' && (
                 <div className="mp-grid2">
-                  <div className="mp-field mp-full"><label className="mp-label">Package Title *</label><input className="mp-inp" placeholder="e.g. Everest Base Camp Trek" value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))} /></div>
+                  <div className="mp-field mp-full"><label className="mp-label">Package Title *</label><input className="mp-inp" placeholder="e.g. Kathmandu Cultural Day Tour" value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))} /></div>
                   <div className="mp-field"><label className="mp-label">Category</label><select className="mp-select" value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))}>{CATEGORIES.map(c=><option key={c}>{c}</option>)}</select></div>
                   <div className="mp-field"><label className="mp-label">Difficulty</label><select className="mp-select" value={form.difficulty} onChange={e=>setForm(f=>({...f,difficulty:e.target.value}))}>{DIFFICULTIES.map(d=><option key={d}>{d}</option>)}</select></div>
-                  <div className="mp-field"><label className="mp-label">Duration (days) *</label><input className="mp-inp" type="number" placeholder="14" value={form.duration} onChange={e=>setForm(f=>({...f,duration:e.target.value}))} /></div>
-                  <div className="mp-field"><label className="mp-label">Price (NPR) *</label><input className="mp-inp" type="number" placeholder="45000" value={form.price.amount} onChange={e=>setForm(f=>({...f,price:{...f.price,amount:e.target.value}}))} /></div>
+                  <div className="mp-field"><label className="mp-label">Duration (days) *</label><input className="mp-inp" type="number" placeholder="3" value={form.duration} onChange={e=>setForm(f=>({...f,duration:e.target.value}))} /></div>
+                  <div className="mp-field"><label className="mp-label">Price (NPR) *</label><input className="mp-inp" type="number" placeholder="15000" value={form.price.amount} onChange={e=>setForm(f=>({...f,price:{...f.price,amount:e.target.value}}))} /></div>
+                  <div className="mp-field"><label className="mp-label">Price Tier</label><select className="mp-select" value={form.priceTier} onChange={e=>setForm(f=>({...f,priceTier:e.target.value}))}>{PRICE_TIERS.map(t=><option key={t}>{t}</option>)}</select></div>
                   <div className="mp-field"><label className="mp-label">Max Group Size</label><input className="mp-inp" type="number" placeholder="15" value={form.groupSize.max} onChange={e=>setForm(f=>({...f,groupSize:{...f.groupSize,max:e.target.value}}))} /></div>
                   <div className="mp-field"><label className="mp-label">Start Location</label><input className="mp-inp" placeholder="e.g. Kathmandu" value={form.startLocation} onChange={e=>setForm(f=>({...f,startLocation:e.target.value}))} /></div>
                   <div className="mp-field"><label className="mp-label">End Location</label><input className="mp-inp" placeholder="e.g. Kathmandu" value={form.endLocation} onChange={e=>setForm(f=>({...f,endLocation:e.target.value}))} /></div>
+                  <div className="mp-field mp-full">
+                    <label className="mp-label">Target Audience</label>
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginTop:4 }}>
+                      {AUDIENCES.map(a=>(
+                        <button key={a} type="button" className={`mp-tag${form.targetAudience.includes(a)?' on':''}`} onClick={()=>toggleArr('targetAudience',a)}>{a}</button>
+                      ))}
+                    </div>
+                  </div>
                   <div className="mp-field mp-full"><label className="mp-label">Description *</label><textarea className="mp-textarea" placeholder="Describe this package…" value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} /></div>
                   <div className="mp-field mp-full">
                     <label className="mp-label">Highlights</label>
@@ -454,7 +485,7 @@ export default function ManagePackages() {
                 <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
                   <div className="mp-grid2">
                     <div className="mp-field">
-                      <label className="mp-label">Trekking Region</label>
+                      <label className="mp-label">Region</label>
                       <select className="mp-select" value={form.region} onChange={e=>setForm(f=>({...f,region:e.target.value}))}>
                         <option value="">— Select region —</option>
                         {REGIONS.map(r=><option key={r}>{r}</option>)}
@@ -462,7 +493,7 @@ export default function ManagePackages() {
                     </div>
                     <div className="mp-field">
                       <label className="mp-label">Destination / Area</label>
-                      <input className="mp-inp" placeholder="e.g. Everest Base Camp, Namche Bazaar" value={form.destination} onChange={e=>setForm(f=>({...f,destination:e.target.value}))} />
+                      <input className="mp-inp" placeholder="e.g. Thamel, Lakeside Pokhara" value={form.destination} onChange={e=>setForm(f=>({...f,destination:e.target.value}))} />
                     </div>
                     <div className="mp-field mp-full">
                       <label className="mp-label">Best Season</label>
@@ -478,7 +509,7 @@ export default function ManagePackages() {
                   <div>
                     <label className="mp-label" style={{ marginBottom:8, display:'block' }}>📍 Pin Destination on Map</label>
                     <p style={{ fontSize:12, color:'#6b7280', marginBottom:12 }}>
-                      Click on the map to mark the trekking destination. This shows users exactly where the trek is located.
+                      Click on the map to mark the destination. This shows users exactly where the tour is located.
                     </p>
                     <MapPicker
                       lat={form.lat ? parseFloat(form.lat) : null}
@@ -504,9 +535,7 @@ export default function ManagePackages() {
                         {form.itinerary.length>1&&<button className="mp-btn-del" onClick={()=>removeDay(i)}>✕ Remove</button>}
                       </div>
                       <div className="mp-grid2">
-                        <div className="mp-field mp-full"><label className="mp-label">Day Title</label><input className="mp-inp" placeholder="e.g. Fly to Lukla – Trek to Phakding" value={day.title} onChange={e=>updateDay(i,'title',e.target.value)} /></div>
-                        <div className="mp-field"><label className="mp-label">Elevation (m)</label><input className="mp-inp" placeholder="2860" value={day.elevation} onChange={e=>updateDay(i,'elevation',e.target.value)} /></div>
-                        <div className="mp-field"><label className="mp-label">Distance (km)</label><input className="mp-inp" placeholder="8" value={day.distance} onChange={e=>updateDay(i,'distance',e.target.value)} /></div>
+                        <div className="mp-field mp-full"><label className="mp-label">Day Title</label><input className="mp-inp" placeholder="e.g. Kathmandu Heritage Walk" value={day.title} onChange={e=>updateDay(i,'title',e.target.value)} /></div>
                         <div className="mp-field mp-full"><label className="mp-label">Description</label><textarea className="mp-textarea" style={{ minHeight:70 }} placeholder="What happens on this day…" value={day.description} onChange={e=>updateDay(i,'description',e.target.value)} /></div>
                       </div>
                     </div>
@@ -548,6 +577,17 @@ export default function ManagePackages() {
                   {form.images.map((img,i)=><div key={i} style={{ display:'flex',gap:8,marginBottom:8 }}><input className="mp-inp" placeholder={`Image URL ${i+1}`} value={img} onChange={e=>{const imgs=[...form.images];imgs[i]=e.target.value;setForm(f=>({...f,images:imgs}));}} />{form.images.length>1&&<button className="mp-btn-del" onClick={()=>setForm(f=>({...f,images:f.images.filter((_,j)=>j!==i)}))}>✕</button>}</div>)}
                   <button className="mp-back-btn" style={{ marginTop:4 }} onClick={()=>setForm(f=>({...f,images:[...f.images,'']}))}>+ Add URL</button>
                 </div>
+              )}
+
+              {/* ── GUIDES ── */}
+              {formTab === 'guides' && (
+                <GuideLinker
+                  itemId={editId}
+                  itemType="package"
+                  itemName={form.title}
+                  initialGuides={form.availableGuides || []}
+                  onSave={(ids) => setForm(f => ({ ...f, availableGuides: ids }))}
+                />
               )}
             </div>
 

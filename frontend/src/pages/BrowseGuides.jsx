@@ -57,7 +57,7 @@ const BrowseGuides = () => {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
 
         :root {
           --green-primary: #16a34a;
@@ -82,7 +82,7 @@ const BrowseGuides = () => {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         .bg-root {
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           background: var(--bg-page);
           min-height: 100vh;
           padding-top: 68px;
@@ -147,7 +147,7 @@ const BrowseGuides = () => {
         .bg-search-input {
           border: none;
           outline: none;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           font-size: 13.5px;
           color: var(--text-primary);
           background: transparent;
@@ -157,7 +157,7 @@ const BrowseGuides = () => {
         .bg-search-seg-select {
           border: none;
           outline: none;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           font-size: 13px;
           color: var(--text-secondary);
           background: transparent;
@@ -170,7 +170,7 @@ const BrowseGuides = () => {
           background: var(--green-primary);
           color: #fff;
           border: none;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           font-size: 14px;
           font-weight: 700;
           padding: 14px 32px;
@@ -232,7 +232,7 @@ const BrowseGuides = () => {
           background: none;
           border: none;
           cursor: pointer;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
         }
         .bg-filter-section { margin-bottom: 20px; }
         .bg-filter-section:last-child { margin-bottom: 0; }
@@ -251,7 +251,7 @@ const BrowseGuides = () => {
           border: 1.5px solid var(--border);
           border-radius: var(--radius-sm);
           font-size: 13px;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           color: var(--text-primary);
           outline: none;
           background: #fff;
@@ -286,7 +286,7 @@ const BrowseGuides = () => {
           border: 1.5px solid var(--border);
           border-radius: 10px;
           font-size: 13px;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           color: var(--text-secondary);
           outline: none;
           background: #fff;
@@ -469,7 +469,7 @@ const BrowseGuides = () => {
           font-size: 12.5px;
           font-weight: 700;
           cursor: pointer;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           transition: all 0.2s;
           white-space: nowrap;
           text-decoration: none;
@@ -588,7 +588,7 @@ const BrowseGuides = () => {
           font-size: 12.5px;
           font-weight: 600;
           cursor: pointer;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           transition: all 0.2s;
           text-decoration: none;
           display: inline-flex;
@@ -605,7 +605,7 @@ const BrowseGuides = () => {
           font-size: 12.5px;
           font-weight: 700;
           cursor: pointer;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
           transition: all 0.2s;
           background: var(--green-primary);
           color: #fff;
@@ -642,7 +642,7 @@ const BrowseGuides = () => {
           font-weight: 700;
           font-size: 14px;
           transition: background 0.2s;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
         }
         .bg-cta-primary:hover { background: var(--green-mid); }
         .bg-cta-secondary {
@@ -655,7 +655,7 @@ const BrowseGuides = () => {
           font-size: 14px;
           border: 1px solid rgba(255,255,255,0.15);
           transition: background 0.2s;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-family: 'Roboto', sans-serif;
         }
         .bg-cta-secondary:hover { background: rgba(255,255,255,0.15); }
 

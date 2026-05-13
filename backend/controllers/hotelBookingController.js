@@ -171,14 +171,15 @@ exports.cancelHotelBooking = async (req, res) => {
   try {
     const booking = await HotelBooking.findById(req.params.id);
     if (!booking) return res.status(404).json({ message: 'Hotel booking not found' });
-    if (booking.user.toString() !== req.user.id && req.user.role !== 'admin') {
+ 
+    const userId = (req.user.id || req.user._id)?.toString();
+    if (booking.user.toString() !== userId && req.user.role !== 'admin')
       return res.status(403).json({ message: 'Access denied' });
-    }
-    if (['cancelled', 'completed'].includes(booking.status)) {
+ 
+    if (['cancelled', 'completed'].includes(booking.status))
       return res.status(400).json({ message: 'Booking cannot be cancelled' });
-    }
-
-    // ── Restore availability if a room type was booked ────────────────────────
+ 
+    // Restore room availability if a room type was booked
     if (booking.roomType && booking.hotel) {
       const hotel = await Hotel.findById(booking.hotel);
       if (hotel) {
@@ -187,7 +188,6 @@ exports.cancelHotelBooking = async (req, res) => {
         );
         if (rtIndex !== -1) {
           const rt = hotel.roomTypes[rtIndex];
-          // Cap at totalRooms so we never exceed original capacity
           const newAvailable = Math.min(
             (rt.availableRooms || 0) + (booking.numberOfRooms || 1),
             rt.totalRooms || rt.availableRooms
@@ -199,15 +199,15 @@ exports.cancelHotelBooking = async (req, res) => {
         }
       }
     }
-    // ─────────────────────────────────────────────────────────────────────────
-
+ 
     booking.status             = 'cancelled';
-    booking.cancellationReason = req.body.cancellationReason;
+    booking.cancellationReason = req.body.cancellationReason || '';
     await booking.save();
-
+ 
     res.json({ success: true, message: 'Hotel booking cancelled successfully', booking });
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('[cancelHotelBooking] ERROR:', err);
+    res.status(500).json({ message: err.message || 'Server error' });
   }
 };
 

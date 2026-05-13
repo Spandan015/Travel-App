@@ -81,11 +81,11 @@ const CAT_COLORS = {
 
 // ─── CSS ────────────────────────────────────────────────────────────────
 const STYLES = `
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap');
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 .bpp-root {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Roboto', sans-serif;
   background: #f8faf8; min-height: 100vh;
   padding-top: 68px; color: #0f172a;
 }
@@ -149,7 +149,7 @@ const STYLES = `
 .bpp-label { font-size:11px; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; color:#6b7280; margin-bottom:6px; display:block; }
 .bpp-input, .bpp-select {
   width:100%; padding:10px 14px; border:1.5px solid #d1fae5;
-  border-radius:10px; font-size:14px; font-family:'Plus Jakarta Sans',sans-serif;
+  border-radius:10px; font-size:14px; font-family:'Roboto',sans-serif;
   color:#0f172a; outline:none; background:#fff; transition:border 0.15s;
 }
 .bpp-input:focus, .bpp-select:focus { border-color:#16a34a; box-shadow:0 0 0 3px rgba(22,163,74,0.08); }
@@ -177,7 +177,7 @@ const STYLES = `
 .bpp-item-input {
   width:120px; padding:8px 12px; border:1.5px solid #d1fae5; border-radius:8px;
   font-size:13px; font-weight:700; color:#0f172a;
-  font-family:'Plus Jakarta Sans',sans-serif; outline:none; text-align:right;
+  font-family:'Roboto',sans-serif; outline:none; text-align:right;
   transition:border 0.15s;
 }
 .bpp-item-input:focus { border-color:#16a34a; }
@@ -186,14 +186,14 @@ const STYLES = `
 .bpp-custom-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
 .bpp-custom-name {
   flex:1; padding:9px 12px; border:1.5px solid #d1fae5; border-radius:8px;
-  font-size:13px; font-family:'Plus Jakarta Sans',sans-serif; outline:none;
+  font-size:13px; font-family:'Roboto',sans-serif; outline:none;
   color:#0f172a; transition:border 0.15s;
 }
 .bpp-custom-name:focus { border-color:#16a34a; }
 .bpp-custom-amt {
   width:110px; padding:9px 12px; border:1.5px solid #d1fae5; border-radius:8px;
   font-size:13px; font-weight:700; color:#0f172a; text-align:right;
-  font-family:'Plus Jakarta Sans',sans-serif; outline:none; transition:border 0.15s;
+  font-family:'Roboto',sans-serif; outline:none; transition:border 0.15s;
 }
 .bpp-custom-amt:focus { border-color:#16a34a; }
 .bpp-del-btn {
@@ -205,7 +205,7 @@ const STYLES = `
 .bpp-add-custom {
   width:100%; padding:10px; border:1.5px dashed #d1fae5; border-radius:10px;
   background:none; color:#16a34a; font-size:13px; font-weight:700;
-  cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; margin-top:4px;
+  cursor:pointer; font-family:'Roboto',sans-serif; margin-top:4px;
   transition:all 0.15s;
 }
 .bpp-add-custom:hover { background:#f0fdf4; border-style:solid; }
@@ -256,7 +256,7 @@ const STYLES = `
 .bpp-copy-btn {
   width:100%; padding:13px; background:#16a34a; color:#fff; border:none;
   border-radius:12px; font-size:14px; font-weight:700; cursor:pointer;
-  font-family:'Plus Jakarta Sans',sans-serif; transition:all 0.2s; letter-spacing:0.01em;
+  font-family:'Roboto',sans-serif; transition:all 0.2s; letter-spacing:0.01em;
 }
 .bpp-copy-btn:hover { background:#15803d; transform:translateY(-1px); }
 .bpp-copy-btn.copied { background:#0a2818; }

@@ -136,7 +136,7 @@ export default function PackageDetails() {
     : [];
   const fallback = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80';
   const basePrice    = pkg ? (typeof pkg.price === 'object' ? pkg.price?.amount : pkg.price) : 0;
-  const guideFeeTotal = selectedGuide ? (selectedGuide.guideProfile?.dailyRate || 0) * (pkg?.duration || 1) : 0;
+  const guideFeeTotal = selectedGuide ? (selectedGuide.dailyRate || selectedGuide.guideProfile?.dailyRate || 0) * (pkg?.duration || 1) : 0;
   const totalPrice    = Number(basePrice || 0) + guideFeeTotal;
 
   const canBook = !guideRequested || (guideRequested && selectedGuide);
@@ -336,6 +336,27 @@ export default function PackageDetails() {
                 <GuidePicker
                   duration={pkg.duration || 1}
                   onGuideSelect={handleGuideSelect}
+                  preloadedGuides={
+                    pkg.availableGuides && pkg.availableGuides.length > 0
+                      ? pkg.availableGuides.map(g => {
+                          const gp = g.guideProfile || {};
+                          return {
+                            _id: g._id || g,
+                            firstName: g.firstName || g.username || '',
+                            lastName: g.lastName || '',
+                            profileImage: gp.profileImage || g.profileImage || null,
+                            specializations: gp.specialties || gp.specializations || [],
+                            languages: gp.languages || [],
+                            rating: gp.rating || 0,
+                            dailyRate: gp.dailyRate || 0,
+                            hourlyRate: gp.hourlyRate || 0,
+                            yearsExperience: gp.experience || 0,
+                            availability: gp.availability !== false,
+                            userId: g._id || g,
+                          };
+                        })
+                      : null
+                  }
                 />
               </div>
 
@@ -384,6 +405,7 @@ export default function PackageDetails() {
           type="package"
           item={pkg}
           guideId={selectedGuide?._id || null}
+          guideObject={selectedGuide}
           guideRequested={guideRequested}
           onClose={() => setShowBookingModal(false)}
         />

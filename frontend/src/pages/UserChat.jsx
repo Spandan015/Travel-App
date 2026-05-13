@@ -7,6 +7,9 @@ import chatService from '../services/chatService';
 const fmt     = (d) => new Date(d).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 const fmtDate = (d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
+const TYPE_ICON  = { guide: '🧭', package: '📦', trek: '🥾' };
+const TYPE_LABEL = { guide: 'Guide Booking', package: 'Package', trek: 'Trek' };
+
 export default function UserChat() {
   const { user }              = useAuth();
   const { bookingId }         = useParams();
@@ -21,33 +24,27 @@ export default function UserChat() {
   const bottomRef             = useRef(null);
   const pollRef               = useRef(null);
 
-  // Load chat list (all accepted/completed guide bookings)
   useEffect(() => {
     chatService.getMyChats()
       .then((d) => { setChats(d.chats || []); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 
-  // Load messages for active chat + poll every 5s
   useEffect(() => {
     if (!activeChat) return;
     setError('');
-
     const load = () =>
       chatService.getMessages(activeChat)
         .then((d) => { setMsgs(d.messages || []); setError(''); })
         .catch((err) => {
-          if (err.response?.status === 403) {
-            setError('Chat is only available for accepted bookings.');
-          }
+          const msg = err.response?.data?.message || '';
+          setError(msg || 'Chat unavailable for this booking.');
         });
-
     load();
     pollRef.current = setInterval(load, 5000);
     return () => clearInterval(pollRef.current);
   }, [activeChat]);
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -61,20 +58,20 @@ export default function UserChat() {
       setMsgs((prev) => [...prev, d.message]);
       setText('');
     } catch (err) {
-      if (err.response?.status === 403) setError('Chat unavailable for this booking.');
-    } finally {
-      setSending(false);
-    }
+      setError(err.response?.data?.message || 'Failed to send message.');
+    } finally { setSending(false); }
   };
 
   const openChat = (bId) => {
     setActiveChat(bId);
+    setMsgs([]);
     navigate(`/my-chats/${bId}`, { replace: true });
   };
 
-  // The other party is always the guide (from the user's perspective)
-  const activeBooking = chats.find((c) => c.booking._id === activeChat);
-  const otherParty = activeBooking?.booking?.guide || null;
+  const activeEntry  = chats.find((c) => c.booking._id === activeChat);
+  const otherParty   = activeEntry?.otherParty || null;
+  const activeItem   = activeEntry?.itemName   || '';
+  const activeType   = activeEntry?.type       || 'guide';
 
   if (loading) {
     return (
@@ -96,94 +93,77 @@ export default function UserChat() {
       `}</style>
 
       <div className="uc-wrap" style={{ padding: '24px 24px 0', maxWidth: 1100, margin: '0 auto' }}>
-
-        {/* Page header */}
         <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Link to="/bookings" style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6b7280', textDecoration: 'none', fontSize: 13, fontWeight: 500 }}>
-            <ArrowLeft size={16} /> Back to Bookings
-          </Link>
           <span style={{ color: '#d1d5db' }}>|</span>
-          <h1 style={{ fontSize: 20, fontWeight: 800, color: '#0a2818' }}>My Guide Chats</h1>
+          
         </div>
 
-        {/* No accepted bookings at all */}
         {chats.length === 0 ? (
-          <div style={{
-            background: '#fff', border: '1px solid #e5f0e8', borderRadius: 16,
-            padding: '64px 32px', textAlign: 'center',
-            animation: 'fadeIn 0.4s ease',
-          }}>
+          <div style={{ background: '#fff', border: '1px solid #e5f0e8', borderRadius: 16, padding: '64px 32px', textAlign: 'center', animation: 'fadeIn 0.4s ease' }}>
             <Inbox size={48} color="#d1fae5" style={{ margin: '0 auto 16px', display: 'block' }} />
-            <div style={{ fontSize: 18, fontWeight: 700, color: '#0a2818', marginBottom: 8 }}>No active guide chats yet</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#0a2818', marginBottom: 8 }}>No active chats yet</div>
             <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 24, lineHeight: 1.6 }}>
-              Chat becomes available once a guide <strong>accepts</strong> your booking request.<br />
-              Book a guide and wait for their confirmation.
+              Chat becomes available once you book a package or trek with a guide,<br />
+              or a guide accepts your direct booking request.
             </div>
-            <Link to="/browse-guides" style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              background: '#16a34a', color: '#fff', textDecoration: 'none',
-              padding: '11px 24px', borderRadius: 10, fontWeight: 600, fontSize: 14,
-            }}>
-              Find a Guide →
+            <Link to="/browse-packages" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#16a34a', color: '#fff', textDecoration: 'none', padding: '11px 24px', borderRadius: 10, fontWeight: 600, fontSize: 14 }}>
+              Browse Packages →
             </Link>
           </div>
         ) : (
-          <div style={{
-            display: 'flex', height: 'calc(100vh - 140px)',
-            background: '#fff', borderRadius: 16,
-            border: '1px solid #e5f0e8', overflow: 'hidden',
-          }}>
+          <div style={{ display: 'flex', height: 'calc(100vh - 140px)', background: '#fff', borderRadius: 16, border: '1px solid #e5f0e8', overflow: 'hidden' }}>
 
-            {/* ── Chat list panel ── */}
-            <div style={{
-              width: 280, borderRight: '1px solid #e5f0e8',
-              display: 'flex', flexDirection: 'column', flexShrink: 0,
-            }}>
+            {/* ── Chat list ── */}
+            <div style={{ width: 300, borderRight: '1px solid #e5f0e8', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
               <div style={{ padding: '16px 18px', borderBottom: '1px solid #e5f0e8' }}>
                 <div style={{ fontWeight: 800, fontSize: 15, color: '#0a2818' }}>Messages</div>
-                <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>Accepted bookings only</div>
+                <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 2 }}>{chats.length} conversation{chats.length !== 1 ? 's' : ''}</div>
               </div>
 
               <div style={{ flex: 1, overflowY: 'auto' }}>
-                {chats.map(({ booking, lastMessage, unreadCount }) => {
-                  // From user's view, other party is the guide
-                  const guide    = booking.guide;
+                {chats.map(({ booking, type, otherParty: op, itemName, itemImage, lastMessage, unreadCount }) => {
                   const isActive = activeChat === booking._id;
+                  const name = `${op?.firstName || ''} ${op?.lastName || ''}`.trim() || op?.username || 'Guide';
+                  const avatar = op?.profileImage || op?.guideProfile?.profileImage;
                   return (
                     <button
                       key={booking._id}
                       onClick={() => openChat(booking._id)}
                       style={{
                         display: 'flex', alignItems: 'center', gap: 12,
-                        width: '100%', padding: '14px 18px', border: 'none',
+                        width: '100%', padding: '13px 18px', border: 'none',
                         background: isActive ? '#f0fdf4' : 'transparent',
                         borderLeft: isActive ? '3px solid #16a34a' : '3px solid transparent',
                         cursor: 'pointer', textAlign: 'left',
-                        borderBottom: '1px solid #f8faf8',
-                        transition: 'background 0.15s',
+                        borderBottom: '1px solid #f8faf8', transition: 'background 0.15s',
                       }}
                     >
                       {/* Avatar */}
-                      <div style={{
-                        width: 40, height: 40, borderRadius: '50%', background: '#16a34a',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: '#fff', fontWeight: 700, fontSize: 14, flexShrink: 0, overflow: 'hidden',
-                      }}>
-                        {guide?.profileImage || guide?.guideProfile?.profileImage
-                          ? <img src={guide.profileImage || guide.guideProfile?.profileImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.style.display = 'none'; }} />
-                          : (guide?.firstName?.[0] || guide?.username?.[0] || 'G').toUpperCase()
-                        }
+                      <div style={{ position: 'relative', flexShrink: 0 }}>
+                        <div style={{ width: 42, height: 42, borderRadius: '50%', background: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 15, overflow: 'hidden' }}>
+                          {avatar
+                            ? <img src={avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => e.target.style.display='none'} />
+                            : name.charAt(0).toUpperCase()
+                          }
+                        </div>
+                        {/* Type badge */}
+                        <div style={{ position: 'absolute', bottom: -2, right: -2, width: 18, height: 18, borderRadius: '50%', background: '#fff', border: '1.5px solid #e5f0e8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9 }}>
+                          {TYPE_ICON[type]}
+                        </div>
                       </div>
 
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: '#0a2818', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {guide?.firstName || guide?.username || 'Guide'}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: '#0a2818', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
+                            {name}
                           </span>
-                          {lastMessage && <span style={{ fontSize: 10, color: '#9ca3af', flexShrink: 0 }}>{fmtDate(lastMessage.createdAt)}</span>}
+                          {lastMessage && <span style={{ fontSize: 10, color: '#9ca3af', flexShrink: 0, marginLeft: 6 }}>{fmtDate(lastMessage.createdAt)}</span>}
                         </div>
-                        <div style={{ fontSize: 11, color: '#9ca3af', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>
-                          {lastMessage ? lastMessage.text : booking.destination?.name || 'Booking chat'}
+                        <div style={{ fontSize: 11, color: '#6b7280', fontWeight: 600, marginBottom: 2 }}>
+                          {TYPE_ICON[type]} {itemName}
+                        </div>
+                        <div style={{ fontSize: 11, color: '#9ca3af', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {lastMessage ? lastMessage.text : 'Start the conversation'}
                         </div>
                       </div>
 
@@ -203,38 +183,32 @@ export default function UserChat() {
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' }}>
                 <MessageSquare size={48} color="#d1fae5" />
                 <div style={{ fontWeight: 700, color: '#0a2818', marginTop: 12, fontSize: 15 }}>Select a conversation</div>
-                <div style={{ fontSize: 13, marginTop: 4 }}>Choose a guide chat from the left.</div>
+                <div style={{ fontSize: 13, marginTop: 4 }}>Choose a chat from the left.</div>
               </div>
             ) : (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
-                {/* Chat header */}
-                <div style={{ padding: '14px 20px', borderBottom: '1px solid #e5f0e8', display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <button
-                    onClick={() => { setActiveChat(null); navigate('/my-chats', { replace: true }); }}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center' }}
-                  >
+                {/* Header */}
+                <div style={{ padding: '14px 20px', borderBottom: '1px solid #e5f0e8', display: 'flex', alignItems: 'center', gap: 14, background: '#fff' }}>
+                  <button onClick={() => { setActiveChat(null); navigate('/my-chats', { replace: true }); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}>
                     <ArrowLeft size={18} color="#6b7280" />
                   </button>
-
                   {otherParty && (
                     <>
-                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14, flexShrink: 0, overflow: 'hidden' }}>
-                        {otherParty?.profileImage || otherParty?.guideProfile?.profileImage
-                          ? <img src={otherParty.profileImage || otherParty.guideProfile?.profileImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.style.display = 'none'; }} />
-                          : (otherParty?.firstName?.[0] || otherParty?.username?.[0] || 'G').toUpperCase()
+                      <div style={{ width: 38, height: 38, borderRadius: '50%', background: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 14, flexShrink: 0, overflow: 'hidden' }}>
+                        {(otherParty.profileImage || otherParty.guideProfile?.profileImage)
+                          ? <img src={otherParty.profileImage || otherParty.guideProfile?.profileImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => e.target.style.display='none'} />
+                          : (`${otherParty.firstName || otherParty.username || 'G'}`).charAt(0).toUpperCase()
                         }
                       </div>
                       <div>
                         <div style={{ fontWeight: 700, color: '#0a2818', fontSize: 14 }}>
-                          {otherParty?.firstName || otherParty?.username || 'Your Guide'}
+                          {`${otherParty.firstName || ''} ${otherParty.lastName || ''}`.trim() || otherParty.username}
                         </div>
                         <div style={{ fontSize: 11, color: '#9ca3af' }}>
-                          {activeBooking?.booking?.destination?.name || 'Guide booking'}
+                          {TYPE_ICON[activeType]} {activeItem}
                           {' · '}
-                          <span style={{ color: '#16a34a', fontWeight: 600 }}>
-                            {activeBooking?.booking?.status}
-                          </span>
+                          <span style={{ color: '#16a34a', fontWeight: 600 }}>{activeEntry?.booking?.status}</span>
                         </div>
                       </div>
                     </>
@@ -268,7 +242,7 @@ export default function UserChat() {
                           <div style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', alignItems: 'flex-end', gap: 8 }}>
                             {!isMine && (
                               <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#e5f0e8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#16a34a', flexShrink: 0 }}>
-                                {(otherParty?.firstName?.[0] || otherParty?.username?.[0] || 'G').toUpperCase()}
+                                {(m.sender?.firstName?.[0] || m.sender?.username?.[0] || 'G').toUpperCase()}
                               </div>
                             )}
                             <div style={{
@@ -295,36 +269,20 @@ export default function UserChat() {
                 </div>
 
                 {/* Input */}
-                <form
-                  onSubmit={handleSend}
-                  style={{ padding: '12px 20px', borderTop: '1px solid #e5f0e8', display: 'flex', gap: 10, alignItems: 'center', background: '#fff' }}
-                >
+                <form onSubmit={handleSend} style={{ padding: '12px 20px', borderTop: '1px solid #e5f0e8', display: 'flex', gap: 10, alignItems: 'center', background: '#fff' }}>
                   <input
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     placeholder={error ? 'Chat unavailable' : 'Type a message…'}
                     disabled={!!error}
-                    style={{
-                      flex: 1, padding: '10px 16px',
-                      border: '1.5px solid #d1fae5', borderRadius: 24,
-                      fontSize: 14, outline: 'none', fontFamily: 'inherit',
-                      background: error ? '#f8fafc' : '#fff',
-                      transition: 'border 0.15s',
-                    }}
+                    style={{ flex: 1, padding: '10px 16px', border: '1.5px solid #d1fae5', borderRadius: 24, fontSize: 14, outline: 'none', fontFamily: 'inherit', background: error ? '#f8fafc' : '#fff', transition: 'border 0.15s' }}
                     onFocus={(e) => { if (!error) e.target.style.borderColor = '#16a34a'; }}
                     onBlur={(e) => { e.target.style.borderColor = '#d1fae5'; }}
                   />
                   <button
                     type="submit"
                     disabled={!text.trim() || sending || !!error}
-                    style={{
-                      width: 42, height: 42, borderRadius: '50%',
-                      background: text.trim() && !sending && !error ? '#16a34a' : '#d1fae5',
-                      border: 'none',
-                      cursor: text.trim() && !sending && !error ? 'pointer' : 'default',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      transition: 'background 0.15s', flexShrink: 0,
-                    }}
+                    style={{ width: 42, height: 42, borderRadius: '50%', background: text.trim() && !sending && !error ? '#16a34a' : '#d1fae5', border: 'none', cursor: text.trim() && !sending && !error ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s', flexShrink: 0 }}
                   >
                     <Send size={18} color={text.trim() && !sending && !error ? '#fff' : '#9ca3af'} />
                   </button>

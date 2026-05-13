@@ -3,13 +3,11 @@ const HotelBooking   = require('../models/HotelBooking');
 const PackageBooking = require('../models/PackageBooking');
 const TrekBooking    = require('../models/TrekBooking');
 
-// ── eSewa Sandbox Config ─────────────────────────────────────────────────────
 const ESEWA_PRODUCT_CODE = process.env.ESEWA_PRODUCT_CODE || 'EPAYTEST';
 const ESEWA_SECRET_KEY   = process.env.ESEWA_SECRET_KEY   || '8gBm/:&EnhH.1/q';
 const ESEWA_GATEWAY_URL  = 'https://rc-epay.esewa.com.np/api/epay/main/v2/form';
 const FRONTEND_URL       = process.env.FRONTEND_URL || 'http://localhost:5173';
 
-// ── HMAC-SHA256 Signature ────────────────────────────────────────────────────
 const generateSignature = (totalAmount, transactionUuid) => {
   const message = `total_amount=${totalAmount},transaction_uuid=${transactionUuid},product_code=${ESEWA_PRODUCT_CODE}`;
   return crypto.createHmac('sha256', ESEWA_SECRET_KEY).update(message).digest('base64');
@@ -21,7 +19,6 @@ const verifySignature = (data) => {
   return expected === data.signature;
 };
 
-// ── Get booking model by type ─────────────────────────────────────────────────
 const getBookingModel = (type) => {
   switch (type) {
     case 'hotel':   return HotelBooking;
@@ -31,7 +28,6 @@ const getBookingModel = (type) => {
   }
 };
 
-// ── Populate booking based on type ───────────────────────────────────────────
 const populateBooking = async (booking, type) => {
   try {
     const popMap = {
@@ -62,7 +58,8 @@ exports.initiatePayment = async (req, res) => {
     if (booking.paymentStatus === 'paid')
       return res.status(400).json({ message: 'This booking is already paid' });
 
-    const transactionUuid = `${bookingType}-${bookingId}-${Date.now()}`;
+    // ── FIX: use __ as separator so ObjectId (which contains no __) is safe ──
+    const transactionUuid = `${bookingType}__${bookingId}__${Date.now()}`;
     const totalAmount     = booking.totalPrice;
     const signature       = generateSignature(totalAmount, transactionUuid);
 
@@ -71,16 +68,16 @@ exports.initiatePayment = async (req, res) => {
     await booking.save();
 
     const formData = {
-      amount:                   totalAmount,
-      tax_amount:               0,
-      total_amount:             totalAmount,
-      transaction_uuid:         transactionUuid,
-      product_code:             ESEWA_PRODUCT_CODE,
-      product_service_charge:   0,
-      product_delivery_charge:  0,
-      success_url:              `${FRONTEND_URL}/payment/success`,
-      failure_url:              `${FRONTEND_URL}/payment/failure`,
-      signed_field_names:       'total_amount,transaction_uuid,product_code',
+      amount:                  totalAmount,
+      tax_amount:              0,
+      total_amount:            totalAmount,
+      transaction_uuid:        transactionUuid,
+      product_code:            ESEWA_PRODUCT_CODE,
+      product_service_charge:  0,
+      product_delivery_charge: 0,
+      success_url:             `${FRONTEND_URL}/payment/success`,
+      failure_url:             `${FRONTEND_URL}/payment/failure`,
+      signed_field_names:      'total_amount,transaction_uuid,product_code',
       signature,
     };
 
@@ -112,11 +109,38 @@ exports.verifyPayment = async (req, res) => {
     if (decoded.status !== 'COMPLETE')
       return res.status(400).json({ message: `Payment not complete. Status: ${decoded.status}` });
 
-    // Extract type and bookingId from transaction_uuid
-    // Format: "hotel-<24charObjectId>-<timestamp>"
-    const parts     = decoded.transaction_uuid.split('-');
-    const type      = parts[0];                    // "hotel" | "package" | "trek"
-    const bookingId = parts[1];                    // 24-char ObjectId
+    // ── FIX: split on __ to safely extract type and bookingId ────────────────
+    // Format: "package__<ObjectId>__<timestamp>"
+    const parts     = decoded.transaction_uuid.split('__');
+    const type      = parts[0];      // "hotel" | "package" | "trek"
+    const bookingId = parts[1];      // exact 24-char ObjectId
+
+    console.log('[eSewa verify] type:', type, 'bookingId:', bookingId);
+
+    if (!type || !bookingId) {
+      // Fallback: try old format with single dash (for existing bookings)
+      const oldParts = decoded.transaction_uuid.split('-');
+      const oldType  = oldParts[0];
+      // ObjectId is always 24 hex chars — find it in the parts
+      const oldId = oldParts.slice(1).find(p => /^[a-f0-9]{24}$/i.test(p));
+      if (!oldId) return res.status(400).json({ message: 'Cannot extract booking ID from transaction' });
+
+      const OldModel = getBookingModel(oldType || bookingType);
+      if (!OldModel) return res.status(400).json({ message: 'Invalid booking type' });
+
+      const oldBooking = await OldModel.findById(oldId);
+      if (!oldBooking) return res.status(404).json({ message: 'Booking not found (legacy)' });
+
+      oldBooking.paymentStatus   = 'paid';
+      oldBooking.paymentMethod   = 'esewa';
+      oldBooking.status          = 'confirmed';
+      oldBooking.esewaRefId      = decoded.transaction_code;
+      oldBooking.transactionUuid = decoded.transaction_uuid;
+      oldBooking.paidAt          = new Date();
+      await oldBooking.save();
+      await populateBooking(oldBooking, oldType);
+      return res.json({ success: true, message: 'Payment verified and booking confirmed', booking: oldBooking });
+    }
 
     const Model = getBookingModel(type || bookingType);
     if (!Model) return res.status(400).json({ message: 'Invalid booking type in transaction' });
@@ -124,7 +148,7 @@ exports.verifyPayment = async (req, res) => {
     const booking = await Model.findById(bookingId);
     if (!booking) return res.status(404).json({ message: 'Booking not found' });
 
-    // Already paid — return current state
+    // Already paid
     if (booking.paymentStatus === 'paid') {
       await populateBooking(booking, type);
       return res.json({
@@ -135,10 +159,6 @@ exports.verifyPayment = async (req, res) => {
       });
     }
 
-    if (!decoded.transaction_uuid.includes(bookingId))
-      return res.status(400).json({ message: 'Transaction does not belong to this booking' });
-
-    // Mark as paid
     booking.paymentStatus   = 'paid';
     booking.paymentMethod   = 'esewa';
     booking.status          = 'confirmed';
@@ -176,10 +196,10 @@ exports.getPaymentStatus = async (req, res) => {
 
     res.json({
       success: true,
-      paymentStatus:  booking.paymentStatus,
-      bookingStatus:  booking.status,
-      esewaRefId:     booking.esewaRefId,
-      paidAt:         booking.paidAt,
+      paymentStatus: booking.paymentStatus,
+      bookingStatus: booking.status,
+      esewaRefId:    booking.esewaRefId,
+      paidAt:        booking.paidAt,
       booking,
     });
   } catch (err) {

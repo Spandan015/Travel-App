@@ -51,10 +51,15 @@ import BrowsePlaces from './pages/BrowsePlaces';
 
 import DestinationDetail from './pages/DestinationDetail';
 
+import BookingDetail from './pages/BookingDetail';
+
+import AdminEditProfile from './pages/admin/AdminEditProfile';
+
 function AppContent() {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
   const isGuide = location.pathname.startsWith('/guide');
+  
 
   // ✅ FIX: hide Navbar AND Footer for both admin and guide
   const hideNav    = isAdmin || isGuide;
@@ -119,6 +124,10 @@ function AppContent() {
           <Route path="/admin/bookings"     element={<ProtectedRoute allowedRoles={['admin']}><ManageBookings /></ProtectedRoute>} />
 
           <Route path="/admin/guides"       element={<ProtectedRoute allowedRoles={['admin']}><ManageGuides /></ProtectedRoute>} /> 
+
+          <Route path="/bookings/:type/:id" element={<ProtectedRoute><BookingDetail /></ProtectedRoute>} />
+
+          <Route path="/admin/edit-profile" element={<ProtectedRoute allowedRoles={['admin']}><AdminEditProfile /></ProtectedRoute>} />
 
           {/* ── Fallback ── */}
           <Route path="*" element={<ComingSoon title="Page Not Found" />} />

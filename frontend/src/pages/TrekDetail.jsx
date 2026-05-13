@@ -177,7 +177,7 @@ export default function TrekDetail() {
   };
 
   const basePrice      = trek?.price || 0;
-  const guideFeeTotal  = selectedGuide ? (selectedGuide.guideProfile?.dailyRate || 0) * (trek?.duration || 1) : 0;
+  const guideFeeTotal  = selectedGuide ? (selectedGuide.dailyRate || selectedGuide.guideProfile?.dailyRate || 0) * (trek?.duration || 1) : 0;
   const totalPrice     = basePrice + guideFeeTotal;
   const canBook        = !guideRequested || (guideRequested && selectedGuide);
 
@@ -384,6 +384,27 @@ export default function TrekDetail() {
                 <GuidePicker
                   duration={trek.duration || 1}
                   onGuideSelect={handleGuideSelect}
+                  preloadedGuides={
+                    trek.availableGuides && trek.availableGuides.length > 0
+                      ? trek.availableGuides.map(g => {
+                          const gp = g.guideProfile || {};
+                          return {
+                            _id: g._id || g,
+                            firstName: g.firstName || g.username || '',
+                            lastName: g.lastName || '',
+                            profileImage: gp.profileImage || g.profileImage || null,
+                            specializations: gp.specialties || gp.specializations || [],
+                            languages: gp.languages || [],
+                            rating: gp.rating || 0,
+                            dailyRate: gp.dailyRate || 0,
+                            hourlyRate: gp.hourlyRate || 0,
+                            yearsExperience: gp.experience || 0,
+                            availability: gp.availability !== false,
+                            userId: g._id || g,
+                          };
+                        })
+                      : null
+                  }
                 />
               </div>
 
@@ -484,6 +505,7 @@ export default function TrekDetail() {
           type="trek"
           item={trek}
           guideId={selectedGuide?._id || null}
+          guideObject={selectedGuide}
           guideRequested={guideRequested}
           onClose={() => setShowBookingModal(false)}
         />

@@ -5,6 +5,7 @@ const {
   getAll, getBySlug, getByRegion,
   getAllAdmin, create, update,
   delete: deleteTrek, toggleStatus, togglePopular,
+  manageTrekGuides,
 } = require('../controllers/trekController');
 
 // ── Public ────────────────────────────────────────────────────────────────────
@@ -19,5 +20,6 @@ router.put('/:id',                 protect, adminOnly, update);
 router.delete('/:id',              protect, adminOnly, deleteTrek);
 router.put('/:id/toggle-status',   protect, adminOnly, toggleStatus);
 router.put('/:id/toggle-popular',  protect, adminOnly, togglePopular);
+router.put('/:id/guides',          protect, adminOnly, manageTrekGuides);
 
 module.exports = router;

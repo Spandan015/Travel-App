@@ -4,71 +4,57 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import {
   Clock, MapPin, Star, Search, ArrowRight,
-  Calendar, Users, Heart
+  Calendar, Users, Heart,
+  Map, DollarSign, RefreshCw, Compass,
+  ShieldCheck, UserCheck, FileText, CloudSun, Headphones, MessageSquare,
+  Mountain, Hotel, TreePine, Globe, Tent, Binoculars,
+  Navigation, Landmark, Waves, Leaf
 } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const tok = () => localStorage.getItem('nt_token');
 
-const STATIC_DESTINATIONS = [
-  {
-    name: 'Everest Region',
-    region: 'Khumbu',
-    tag: 'High Altitude',
-    photo: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=800&q=80',
-    properties: 48,
-  },
-  {
-    name: 'Annapurna Circuit',
-    region: 'Gandaki',
-    tag: 'Most Popular',
-    photo: 'https://images.unsplash.com/photo-1585409677983-0f6c41ca9c3b?w=800&q=80',
-    properties: 124,
-  },
-  {
-    name: 'Langtang Valley',
-    region: 'Bagmati',
-    tag: 'Hidden Gem',
-    photo: 'https://images.unsplash.com/photo-1605640840605-14ac1855827b?w=800&q=80',
-    properties: 31,
-  },
-  {
-    name: 'Mustang Region',
-    region: 'Gandaki',
-    tag: 'Restricted',
-    photo: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',
-    properties: 19,
-  },
-  {
-    name: 'Pokhara',
-    region: 'Gandaki',
-    tag: 'City Base',
-    photo: 'https://images.unsplash.com/photo-1571401835393-8c5f35328320?w=800&q=80',
-    properties: 499,
-  },
-  {
-    name: 'Chitwan',
-    region: 'Bagmati',
-    tag: 'Wildlife',
-    photo: 'https://images.unsplash.com/photo-1549366021-9f761d450615?w=800&q=80',
-    properties: 87,
-  },
+// Fallback icons per region difficulty / tag (used when no image available)
+const REGION_ICON_MAP = {
+  // difficulty-based
+  'Easy':          TreePine,
+  'Moderate':      Mountain,
+  'Challenging':   Mountain,
+  'Expert':        Mountain,
+  // tag-based
+  'High Altitude': Mountain,
+  'Most Popular':  Compass,
+  'Hidden Gem':    TreePine,
+  'Restricted':    Landmark,
+  'City Base':     Globe,
+  'Wildlife':      Binoculars,
+  'default':       Navigation,
+};
+
+// Gradient palettes cycling per card
+const DEST_GRADIENTS = [
+  'linear-gradient(135deg, #0d3320 0%, #16a34a 100%)',
+  'linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)',
+  'linear-gradient(135deg, #3b1f00 0%, #d97706 100%)',
+  'linear-gradient(135deg, #2d0a3f 0%, #7c3aed 100%)',
+  'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)',
+  'linear-gradient(135deg, #1a0a00 0%, #c2410c 100%)',
 ];
 
 const TOOLS = [
-  { icon: '🗺️', title: 'Itinerary Planner', desc: 'Build your day-by-day Nepal trip plan', link: '/itinerary-planner' },
-  { icon: '💰', title: 'Budget Calculator', desc: 'Estimate costs for your journey', link: '/budget-planner' },
-  { icon: '💱', title: 'Currency Exchanger', desc: 'Live NPR exchange rates', link: '/currency-exchanger' },
-  { icon: '🧭', title: 'Trail Maps', desc: 'Explore Nepal offline maps', link: '/browse-destinations' },
+  { icon: Map,         title: 'Itinerary Planner', desc: 'Build your day-by-day Nepal trip plan', link: '/itinerary-planner' },
+  { icon: DollarSign,  title: 'Budget Calculator',  desc: 'Estimate costs for your journey',      link: '/budget-planner' },
+  { icon: RefreshCw,   title: 'Currency Exchanger', desc: 'Live NPR exchange rates',              link: '/currency-exchanger' },
+  // { icon: Compass,     title: 'Trail Maps',          desc: 'Explore Nepal offline maps',          link: '/browse-destinations' },
 ];
 
 const WHY_ITEMS = [
-  { icon: '✓', title: 'Verified Hotels & Packages', desc: 'Every listing is reviewed and quality-checked by our local team in Nepal.' },
-  { icon: '🧭', title: 'Certified Local Guides', desc: 'Connect with 200+ government-verified trekking guides across all regions.' },
-  { icon: '📋', title: 'Permit Guidance', desc: 'Complete permit requirements and application process, all in one place.' },
-  { icon: '⛰️', title: 'Real-time Trail Info', desc: 'Up-to-date trail conditions, weather forecasts, and seasonal alerts.' },
-  { icon: '💬', title: '24/7 Support', desc: 'Emergency contact staffed by experienced Nepal travel coordinators.' },
-  { icon: '⭐', title: 'Honest Reviews', desc: 'Real itineraries from real travelers. No sponsored content, no bias.' },
+  { icon: ShieldCheck,    title: 'Verified Hotels & Packages',  desc: 'Every listing is reviewed and quality-checked by our local team in Nepal.' },
+  { icon: UserCheck,      title: 'Certified Local Guides',      desc: 'Connect with 200+ government-verified trekking guides across all regions.' },
+  { icon: FileText,       title: 'Permit Guidance',             desc: 'Complete permit requirements and application process, all in one place.' },
+  // { icon: CloudSun,       title: 'Real-time Trail Info',        desc: 'Up-to-date trail conditions, weather forecasts, and seasonal alerts.' },
+  { icon: Headphones,     title: '24/7 Support',                desc: 'Emergency contact staffed by experienced Nepal travel coordinators.' },
+  { icon: MessageSquare,  title: 'Honest Reviews',              desc: 'Real itineraries from real travelers. No sponsored content, no bias.' },
 ];
 
 const STATUS_CFG = {
@@ -85,8 +71,6 @@ const DIFF_COLORS = {
   Expert:      { bg: '#ede9fe', color: '#5b21b6' },
 };
 
-const TREK_TABS = ['All', 'Classic Treks', 'Off-Beat', 'High Altitude', 'Easy Hikes'];
-
 /* skeleton */
 const Skel = ({ w = '100%', h = 16, r = 8 }) => (
   <div style={{ width: w, height: h, borderRadius: r, background: 'linear-gradient(90deg,#e8f5ee 25%,#d4eddf 50%,#e8f5ee 75%)', backgroundSize: '200%', animation: 'shimmer 1.5s infinite' }} />
@@ -101,6 +85,8 @@ const isValidListing = (item) => {
   return true;
 };
 
+
+
 /* ══════════════════════════════════════════
    MAIN COMPONENT
 ══════════════════════════════════════════ */
@@ -111,9 +97,10 @@ export default function Home() {
   const [packages,      setPackages]      = useState([]);
   const [hotels,        setHotels]        = useState([]);
   const [guides,        setGuides]        = useState([]);
+  const [destinations,  setDestinations]  = useState([]);
   const [loadingPkgs,   setLoadingPkgs]   = useState(true);
   const [loadingHotels, setLoadingHotels] = useState(true);
-  const [activeTab,     setActiveTab]     = useState('All');
+  const [loadingDests,  setLoadingDests]  = useState(true);
   const [searchQuery,   setSearchQuery]   = useState('');
   const [searchType,    setSearchType]    = useState('hotels');
   const [checkIn,       setCheckIn]       = useState('');
@@ -127,9 +114,7 @@ export default function Home() {
   const [loadingBook,   setLoadingBook]   = useState(true);
 
   const firstName = user?.firstName || user?.username?.split(' ')[0] || 'Traveler';
-  const initials  = ((user?.firstName?.[0] || user?.username?.[0] || 'T') + (user?.lastName?.[0] || '')).toUpperCase();
   const hour      = new Date().getHours();
-  const greeting  = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
   useEffect(() => {
     setTimeout(() => setHeroVisible(true), 100);
@@ -138,6 +123,12 @@ export default function Home() {
       .then(r => setPackages((r.data.packages || r.data || []).filter(isValidListing).slice(0, 6)))
       .catch(() => setPackages([]))
       .finally(() => setLoadingPkgs(false));
+
+    // Fetch real regions directly from the regions API
+    axios.get(`${API}/regions`)
+      .then(r => setDestinations((r.data.regions || r.data || []).slice(0, 5)))
+      .catch(() => setDestinations([]))
+      .finally(() => setLoadingDests(false));
 
     axios.get(`${API}/hotels`)
       .then(r => setHotels((r.data.hotels || r.data || []).filter(isValidListing).slice(0, 6)))
@@ -224,7 +215,11 @@ export default function Home() {
         <div className="pkg-img-wrap">
           {imgUrl
             ? <img src={imgUrl} alt={pkg.name} className="pkg-img" onError={e => { e.target.style.display = 'none'; }} />
-            : <div className="pkg-img-placeholder">🏔️</div>}
+            : (
+              <div className="pkg-img-placeholder">
+                <Mountain size={48} color="#94a3b8" />
+              </div>
+            )}
           <div className="pkg-gradient" />
           <div className="pkg-badges">
             {pkg.category && <span className="pkg-badge">{pkg.category}</span>}
@@ -240,7 +235,7 @@ export default function Home() {
           {renderRating(pkg.rating, pkg.reviewCount)}
           <div className="pkg-meta">
             {pkg.duration && <span><Clock size={11} />&nbsp;{pkg.duration} days</span>}
-            {pkg.maxAltitude && <span>⛰ {(pkg.maxAltitude/1000).toFixed(1)}k m</span>}
+            {pkg.maxAltitude && <span><Mountain size={11} />&nbsp;{(pkg.maxAltitude/1000).toFixed(1)}k m</span>}
           </div>
           <div className="pkg-footer">
             <div>
@@ -265,7 +260,11 @@ export default function Home() {
         <div className="pkg-img-wrap">
           {imgUrl
             ? <img src={imgUrl} alt={hotel.name} className="pkg-img" onError={e => { e.target.style.display = 'none'; }} />
-            : <div className="pkg-img-placeholder">🏨</div>}
+            : (
+              <div className="pkg-img-placeholder">
+                <Hotel size={48} color="#94a3b8" />
+              </div>
+            )}
           <div className="pkg-gradient" />
           <div className="pkg-badges">
             {hotel.starRating && <span className="pkg-badge">{'★'.repeat(hotel.starRating)}</span>}
@@ -290,6 +289,52 @@ export default function Home() {
               </div>
             </div>
             <span className="pkg-btn">Book &nbsp;<ArrowRight size={14} /></span>
+          </div>
+        </div>
+      </Link>
+    );
+  };
+
+  /* ── DESTINATION CARD (real regions API data) ── */
+  const DestCard = ({ dest, index, large }) => {
+    // RegionDetail expects /destinations/:slug — use slug field, fall back to _id
+    const slug     = dest.slug || dest._id;
+    // Image: regions may store image as a URL string or uploads path
+    const imgUrl   = getImageUrl(dest.image || dest.coverImage || dest.photo);
+    const gradient = DEST_GRADIENTS[index % DEST_GRADIENTS.length];
+    // Pick icon based on difficulty, or fallback
+    const IconComp = REGION_ICON_MAP[dest.difficulty] || REGION_ICON_MAP[dest.tag] || REGION_ICON_MAP['default'];
+    // Tag to display: difficulty or a custom label
+    const tag      = dest.difficulty || dest.tag || 'Trek';
+    // Subtitle: bestSeason or trekDuration
+    const subtitle = dest.bestSeason || dest.trekDuration || '';
+
+    return (
+      <Link
+        to={`/destinations/${slug}`}
+        className={`dest-card${large ? ' large' : ' small'}`}
+      >
+        {imgUrl ? (
+          <img
+            src={imgUrl}
+            alt={dest.name}
+            className="dest-img"
+            loading="lazy"
+            onError={e => { e.target.style.display = 'none'; }}
+          />
+        ) : (
+          <div className="dest-icon-bg" style={{ background: gradient }}>
+            <IconComp size={large ? 64 : 40} color="rgba(255,255,255,0.25)" strokeWidth={1.2} />
+          </div>
+        )}
+        <div className="dest-overlay" />
+        <div className="dest-body">
+          <div className="dest-tag">{tag}</div>
+          <span className="dest-name">{dest.name}</span>
+          <div className="dest-count">
+            {dest.maxAltitude
+              ? `⛰ ${dest.maxAltitude.toLocaleString()}m${subtitle ? ` · ${subtitle}` : ''}`
+              : subtitle || 'Explore region'}
           </div>
         </div>
       </Link>
@@ -361,33 +406,6 @@ export default function Home() {
           animation: heroIn 1s cubic-bezier(0.22, 1, 0.36, 1) forwards 0.2s;
         }
 
-        .hero-pill {
-          display: inline-flex; align-items: center; gap: 8px;
-          background: rgba(255,255,255,0.08);
-          backdrop-filter: blur(16px);
-          border: 1px solid rgba(255,255,255,0.15);
-          border-radius: 100px;
-          padding: 7px 18px 7px 10px;
-          margin-bottom: 1.75rem;
-        }
-        .hero-pill-avatar {
-          width: 28px; height: 28px; border-radius: 50%;
-          background: linear-gradient(135deg, #16a34a, #4ade80);
-          display: flex; align-items: center; justify-content: center;
-          font-size: 10px; font-weight: 700; color: #fff;
-          flex-shrink: 0;
-        }
-        .hero-pill-dot {
-          width: 7px; height: 7px; border-radius: 50%;
-          background: #4ade80;
-          animation: pulse 2s infinite;
-        }
-        .hero-pill-text {
-          font-size: 13px; font-weight: 500;
-          color: rgba(255,255,255,0.88);
-          letter-spacing: 0.01em;
-        }
-
         .hero-title {
           font-family: 'Roboto', sans-serif;
           font-size: clamp(3rem, 8vw, 6rem);
@@ -431,33 +449,6 @@ export default function Home() {
           overflow: hidden;
           box-shadow: 0 24px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.1);
         }
-
-        .search-tabs {
-          display: flex;
-          flex-direction: column;
-          border-right: 1px solid #f1f5f9;
-          background: #fafaf9;
-          flex-shrink: 0;
-        }
-        .search-tab {
-          flex: 1;
-          padding: 0 16px;
-          border: none;
-          background: transparent;
-          font-size: 11px;
-          font-weight: 700;
-          cursor: pointer;
-          color: #94a3b8;
-          font-family: 'Roboto', sans-serif;
-          letter-spacing: 0.04em;
-          text-transform: uppercase;
-          transition: all 0.2s;
-          border-left: 2px solid transparent;
-          text-align: left;
-          white-space: nowrap;
-        }
-        .search-tab.active { color: #16a34a; border-left-color: #16a34a; background: #f0fdf4; }
-        .search-tab:hover:not(.active) { color: #374151; }
 
         .search-fields {
           flex: 1;
@@ -562,21 +553,6 @@ export default function Home() {
           flex-wrap: wrap; gap: 1rem;
           margin-bottom: 2rem;
         }
-        .tabs-list { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 1.25rem; }
-        .tab-btn {
-          border: 1px solid #e2e8f0;
-          background: #fff;
-          border-radius: 100px;
-          padding: 8px 18px;
-          font-size: 13px;
-          font-weight: 600;
-          cursor: pointer;
-          color: #64748b;
-          font-family: 'Roboto', sans-serif;
-          transition: all 0.2s;
-        }
-        .tab-btn:hover { border-color: #16a34a; color: #16a34a; }
-        .tab-btn.active { background: #0f172a; border-color: #0f172a; color: #fff; }
 
         .view-all {
           font-size: 13px; font-weight: 700; color: #16a34a;
@@ -624,7 +600,7 @@ export default function Home() {
         .pkg-img-placeholder {
           width: 100%; height: 100%;
           display: flex; align-items: center; justify-content: center;
-          font-size: 3rem; color: #94a3b8;
+          background: #f0fdf4;
         }
         .pkg-gradient {
           position: absolute; inset: 0;
@@ -740,7 +716,11 @@ export default function Home() {
         .dest-card:hover { transform: scale(1.02); }
         .dest-card.large { grid-column: span 2; aspect-ratio: 2/1; }
         .dest-card.small { aspect-ratio: 4/3; }
-        .dest-card:nth-child(3) { aspect-ratio: 1/1; }
+        /* fallback icon background fills the full card */
+        .dest-icon-bg {
+          position: absolute; inset: 0;
+          display: flex; align-items: center; justify-content: center;
+        }
         .dest-img {
           width: 100%; height: 100%;
           object-fit: cover;
@@ -785,6 +765,25 @@ export default function Home() {
           font-weight: 500;
         }
 
+        /* dest skeleton */
+        .dest-skel-card {
+          border-radius: 18px;
+          overflow: hidden;
+          background: linear-gradient(90deg,#f0fdf4 25%,#dcfce7 50%,#f0fdf4 75%);
+          background-size: 200%;
+          animation: shimmer 1.6s infinite;
+        }
+        .dest-skel-card.large { grid-column: span 2; aspect-ratio: 2/1; }
+        .dest-skel-card.small { aspect-ratio: 4/3; }
+
+        /* empty state */
+        .dest-empty {
+          grid-column: 1/-1;
+          text-align: center;
+          padding: 4rem;
+          color: #94a3b8;
+        }
+
         /* ═══ TOOLS ═══ */
         .tools-section { padding: 6rem 2rem; background: #071a0f; }
         .tools-inner { max-width: 1240px; margin: 0 auto; }
@@ -817,7 +816,14 @@ export default function Home() {
         }
         .tool-card:hover { border-color: rgba(74,222,128,0.25); transform: translateY(-4px); }
         .tool-card:hover::before { opacity: 1; }
-        .tool-icon { font-size: 1.75rem; margin-bottom: 1rem; display: block; }
+        .tool-icon-wrap {
+          width: 44px; height: 44px;
+          border-radius: 12px;
+          background: rgba(74,222,128,0.1);
+          border: 1px solid rgba(74,222,128,0.2);
+          display: flex; align-items: center; justify-content: center;
+          margin-bottom: 1rem;
+        }
         .tool-title { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 0.4rem; }
         .tool-desc { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.6; margin-bottom: 1.25rem; }
         .tool-cta { font-size: 12px; font-weight: 700; color: #4ade80; display: flex; align-items: center; gap: 4px; }
@@ -838,7 +844,7 @@ export default function Home() {
           background: #f0fdf4;
           border: 1px solid #bbf7d0;
           display: flex; align-items: center; justify-content: center;
-          font-size: 1.1rem; flex-shrink: 0;
+          flex-shrink: 0;
         }
         .why-title { font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-bottom: 5px; }
         .why-desc { font-size: 13px; color: #64748b; line-height: 1.65; }
@@ -875,6 +881,14 @@ export default function Home() {
           overflow: hidden;
           display: flex; align-items: center; justify-content: center;
           font-size: 1.4rem; font-weight: 700; color: #fff;
+          border: 3px solid #f0fdf4;
+        }
+        .guide-avatar-icon {
+          width: 72px; height: 72px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #0f172a, #16a34a);
+          margin: 0 auto 1rem;
+          display: flex; align-items: center; justify-content: center;
           border: 3px solid #f0fdf4;
         }
         .guide-name { font-weight: 700; color: #0f172a; margin-bottom: 3px; font-size: 0.9rem; }
@@ -973,7 +987,7 @@ export default function Home() {
           border-radius: 12px; background: #f8fafc;
           overflow: hidden; flex-shrink: 0;
           display: flex; align-items: center;
-          justify-content: center; font-size: 1.3rem;
+          justify-content: center;
           border: 1px solid #f1f5f9;
         }
         .booking-thumb img { width: 100%; height: 100%; object-fit: cover; }
@@ -992,12 +1006,11 @@ export default function Home() {
         .tool-row:hover { background: #f0fdf4; }
         .tool-row-icon {
           width: 34px; height: 34px; border-radius: 10px;
-          background: #f8fafc; border: 1px solid #f1f5f9;
+          background: #f0fdf4; border: 1px solid #dcfce7;
           display: flex; align-items: center;
-          justify-content: center; font-size: 1rem; flex-shrink: 0;
+          justify-content: center; flex-shrink: 0;
         }
         .tool-row-label { font-size: 13px; font-weight: 600; color: #374151; flex: 1; }
-        .tool-row-arrow { color: #94a3b8; font-size: 16px; }
 
         .hotel-explore-grid {
           display: grid;
@@ -1012,13 +1025,17 @@ export default function Home() {
           aspect-ratio: 3/2;
           display: block;
           text-decoration: none;
+          background: #0f172a;
         }
         .hotel-tile:hover .hotel-tile-img { transform: scale(1.07); }
         .hotel-tile-img {
           width: 100%; height: 100%;
           object-fit: cover;
-          background: #0f172a;
           transition: transform 0.4s ease;
+        }
+        .hotel-tile-icon-bg {
+          width: 100%; height: 100%;
+          display: flex; align-items: center; justify-content: center;
         }
         .hotel-tile-overlay {
           position: absolute; inset: 0;
@@ -1030,7 +1047,7 @@ export default function Home() {
         .hotel-tile-price { font-size: 11px; color: #4ade80; font-weight: 700; margin-top: 2px; }
 
         .no-bookings { text-align: center; padding: 3rem 1rem; }
-        .no-bookings-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .no-bookings-icon { margin-bottom: 0.75rem; display: flex; justify-content: center; }
         .no-bookings-text { font-size: 14px; color: #64748b; margin-bottom: 1.25rem; font-weight: 500; }
         .no-bookings-btn {
           display: inline-block; background: #0f172a; color: #fff;
@@ -1044,11 +1061,7 @@ export default function Home() {
         @media (max-width: 900px) {
           .dest-grid { grid-template-columns: 1fr 1fr; }
           .dest-card.large { grid-column: span 2; }
-          .dest-card:nth-child(3) { aspect-ratio: 4/3; }
           .hero-search { flex-direction: column; border-radius: 16px; }
-          .search-tabs { flex-direction: row; border-right: none; border-bottom: 1px solid #f1f5f9; }
-          .search-tab { border-left: none; border-bottom: 2px solid transparent; padding: 12px 16px; flex: 1; text-align: center; }
-          .search-tab.active { border-bottom-color: #16a34a; border-left-color: transparent; }
           .search-fields { grid-template-columns: 1fr; }
           .search-divider-v { display: none; }
           .search-submit { border-radius: 0 0 16px 16px; width: 100%; justify-content: center; }
@@ -1057,6 +1070,7 @@ export default function Home() {
         @media (max-width: 640px) {
           .dest-grid { grid-template-columns: 1fr; }
           .dest-card.large { grid-column: span 1; aspect-ratio: 16/9; }
+          .dest-skel-card.large { grid-column: span 1; aspect-ratio: 16/9; }
           .hero-stat { padding: 0 1.25rem; }
           .hero-stat-num { font-size: 1.5rem; }
           .pkg-grid { grid-template-columns: 1fr; }
@@ -1189,7 +1203,9 @@ export default function Home() {
                   : allBookings.length === 0
                     ? (
                       <div className="no-bookings">
-                        <div className="no-bookings-icon">📭</div>
+                        <div className="no-bookings-icon">
+                          <Tent size={40} color="#cbd5e1" />
+                        </div>
                         <div className="no-bookings-text">No bookings yet — start exploring Nepal!</div>
                         <Link to="/browse-packages" className="no-bookings-btn">Browse Packages</Link>
                       </div>
@@ -1204,7 +1220,11 @@ export default function Home() {
                           <div className="booking-thumb">
                             {imgUrl
                               ? <img src={imgUrl} alt="" onError={e => e.target.style.display = 'none'} />
-                              : (b._type === 'hotel' ? '🏨' : '🏔')}
+                              : (b._type === 'hotel'
+                                  ? <Hotel size={22} color="#94a3b8" />
+                                  : <Mountain size={22} color="#94a3b8" />
+                                )
+                            }
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div className="booking-name">{name}</div>
@@ -1232,15 +1252,22 @@ export default function Home() {
                   <div className="db-card-header">
                     <div className="db-card-title">Travel Tools</div>
                   </div>
-                  {TOOLS.map(t => (
-                    <Link key={t.title} to={t.link} className="tool-row">
-                      <div className="tool-row-icon">{t.icon}</div>
-                      <span className="tool-row-label">{t.title}</span>
-                      <ArrowRight size={16} color="#94a3b8" />
-                    </Link>
-                  ))}
+                  {TOOLS.map(t => {
+                    const IconComp = t.icon;
+                    return (
+                      <Link key={t.title} to={t.link} className="tool-row">
+                        <div className="tool-row-icon">
+                          <IconComp size={16} color="#16a34a" />
+                        </div>
+                        <span className="tool-row-label">{t.title}</span>
+                        <ArrowRight size={16} color="#94a3b8" />
+                      </Link>
+                    );
+                  })}
                   <Link to="/browse-guides" className="tool-row">
-                    <div className="tool-row-icon">🧭</div>
+                    <div className="tool-row-icon">
+                      <UserCheck size={16} color="#16a34a" />
+                    </div>
                     <span className="tool-row-label">Find a Guide</span>
                     <ArrowRight size={16} color="#94a3b8" />
                   </Link>
@@ -1265,7 +1292,12 @@ export default function Home() {
                           <Link key={h._id} to={`/hotels/${h._id}`} className="hotel-tile">
                             {imgUrl
                               ? <img src={imgUrl} alt={h.name} className="hotel-tile-img" onError={e => e.target.style.display = 'none'} />
-                              : <div className="hotel-tile-img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>🏨</div>}
+                              : (
+                                <div className="hotel-tile-icon-bg" style={{ background: 'linear-gradient(135deg,#1e3a5f,#2563eb)' }}>
+                                  <Hotel size={28} color="rgba(255,255,255,0.3)" strokeWidth={1.2} />
+                                </div>
+                              )
+                            }
                             <div className="hotel-tile-overlay" />
                             <div className="hotel-tile-body">
                               <div className="hotel-tile-name">{h.name}</div>
@@ -1325,11 +1357,6 @@ export default function Home() {
                   </div>
                   <Link to="/browse-packages" className="view-all">View all packages <ArrowRight size={14} /></Link>
                 </div>
-                <div className="tabs-list">
-                  {TREK_TABS.map(t => (
-                    <button key={t} className={`tab-btn${activeTab === t ? ' active' : ''}`} onClick={() => setActiveTab(t)}>{t}</button>
-                  ))}
-                </div>
                 <div className="pkg-grid" style={{ marginTop: '1.5rem' }}>
                   {loadingPkgs
                     ? Array(6).fill(0).map((_, i) => (
@@ -1346,7 +1373,7 @@ export default function Home() {
                       ? packages.map(pkg => <PkgCard key={pkg._id} pkg={pkg} />)
                       : (
                         <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem', color: '#94a3b8' }}>
-                          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏔️</div>
+                          <Mountain size={48} color="#cbd5e1" style={{ marginBottom: '1rem' }} />
                           <p style={{ fontWeight: 600 }}>Packages coming soon — check back shortly!</p>
                         </div>
                       )
@@ -1381,7 +1408,7 @@ export default function Home() {
                       ? hotels.slice(0, 3).map(h => <HotelCard key={h._id} hotel={h} />)
                       : (
                         <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem', color: '#94a3b8' }}>
-                          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏨</div>
+                          <Hotel size={48} color="#cbd5e1" style={{ marginBottom: '1rem' }} />
                           <p style={{ fontWeight: 600 }}>Hotels coming soon!</p>
                         </div>
                       )
@@ -1390,33 +1417,41 @@ export default function Home() {
               </div>
             </section>
 
-            {/* Destinations grid */}
+            {/* ══ DESTINATIONS — dynamic from packages ══ */}
             <section className="dest-section">
               <div className="dest-inner">
                 <div className="tabs-row">
                   <div>
                     <div className="section-eyebrow">Explore by region</div>
-                    <h2 className="section-title">14 distinct trekking regions</h2>
+                    <h2 className="section-title">Explore Distinct Trekking Regions</h2>
                     <p className="section-sub">Each region offers unique landscapes, culture, and challenges — find your perfect match.</p>
                   </div>
-                  <Link to="/browse-destinations" className="view-all">Explore all <ArrowRight size={14} /></Link>
+                  <Link to="/browse-packages" className="view-all">Explore all <ArrowRight size={14} /></Link>
                 </div>
+
                 <div className="dest-grid">
-                  {STATIC_DESTINATIONS.slice(0, 5).map((dest, i) => (
-                    <Link
-                      key={i}
-                      to="/browse-destinations"
-                      className={`dest-card${i === 0 ? ' large' : ' small'}`}
-                    >
-                      <img src={dest.photo} alt={dest.name} className="dest-img" loading="lazy" />
-                      <div className="dest-overlay" />
-                      <div className="dest-body">
-                        <div className="dest-tag">{dest.tag}</div>
-                        <span className="dest-name">{dest.name}</span>
-                        <div className="dest-count">📍 {dest.region} &nbsp;·&nbsp; {dest.properties} properties</div>
-                      </div>
-                    </Link>
-                  ))}
+                  {loadingDests
+                    ? (
+                      /* skeletons in correct grid layout */
+                      <>
+                        <div className="dest-skel-card large" />
+                        <div className="dest-skel-card small" />
+                        <div className="dest-skel-card small" />
+                        <div className="dest-skel-card small" />
+                        <div className="dest-skel-card small" />
+                      </>
+                    )
+                    : destinations.length === 0
+                      ? (
+                        <div className="dest-empty">
+                          <Navigation size={48} color="#cbd5e1" style={{ marginBottom: '1rem' }} />
+                          <p style={{ fontWeight: 600 }}>Regions loading — check back shortly!</p>
+                        </div>
+                      )
+                      : destinations.slice(0, 5).map((dest, i) => (
+                        <DestCard key={dest.name} dest={dest} index={i} large={i === 0} />
+                      ))
+                  }
                 </div>
               </div>
             </section>
@@ -1436,14 +1471,19 @@ export default function Home() {
               </div>
             </div>
             <div className="tools-grid">
-              {TOOLS.map((tool, i) => (
-                <Link key={i} to={tool.link} className="tool-card">
-                  <span className="tool-icon">{tool.icon}</span>
-                  <div className="tool-title">{tool.title}</div>
-                  <div className="tool-desc">{tool.desc}</div>
-                  <div className="tool-cta">Try it free <ArrowRight size={14} /></div>
-                </Link>
-              ))}
+              {TOOLS.map((tool, i) => {
+                const IconComp = tool.icon;
+                return (
+                  <Link key={i} to={tool.link} className="tool-card">
+                    <div className="tool-icon-wrap">
+                      <IconComp size={20} color="#4ade80" strokeWidth={1.8} />
+                    </div>
+                    <div className="tool-title">{tool.title}</div>
+                    <div className="tool-desc">{tool.desc}</div>
+                    <div className="tool-cta">Try it free <ArrowRight size={14} /></div>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -1461,15 +1501,20 @@ export default function Home() {
                   <p className="section-sub" style={{ margin: '0 auto' }}>We go beyond hotel listings — from permit prep to emergency support.</p>
                 </div>
                 <div className="why-grid">
-                  {WHY_ITEMS.map((item, i) => (
-                    <div key={i} className="why-item">
-                      <div className="why-icon">{item.icon}</div>
-                      <div>
-                        <div className="why-title">{item.title}</div>
-                        <div className="why-desc">{item.desc}</div>
+                  {WHY_ITEMS.map((item, i) => {
+                    const IconComp = item.icon;
+                    return (
+                      <div key={i} className="why-item">
+                        <div className="why-icon">
+                          <IconComp size={20} color="#16a34a" strokeWidth={1.8} />
+                        </div>
+                        <div>
+                          <div className="why-title">{item.title}</div>
+                          <div className="why-desc">{item.desc}</div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </section>
@@ -1493,8 +1538,9 @@ export default function Home() {
                         <Link key={guide._id} to={`/guides/${guide._id}`} className="guide-card">
                           <div className="guide-avatar">
                             {imgUrl
-                              ? <img src={imgUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                              : initial}
+                              ? <img src={imgUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.target.style.display='none'; }} />
+                              : <span style={{ fontSize: '1.4rem', fontWeight: 700 }}>{initial}</span>
+                            }
                           </div>
                           <div className="guide-name">{name}</div>
                           <div className="guide-specialty">{guide.specialization || guide.specialty || 'Trek Guide'}</div>

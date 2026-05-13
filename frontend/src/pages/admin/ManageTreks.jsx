@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from './AdminLayout';
 import axios from 'axios';
+import GuideLinker from '../../components/GuideLinker';
 
 const API   = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const tok   = () => localStorage.getItem('nt_token');
@@ -116,6 +117,7 @@ export default function ManageTreks() {
       images:        t.images?.length        ? t.images        : [''],
       itinerary:     t.itinerary?.length     ? t.itinerary     : [{ ...EMPTY_DAY }],
       faqs:          t.faqs?.length          ? t.faqs          : [{ ...EMPTY_FAQ }],
+      availableGuides: t.availableGuides || [],
     });
     setEditId(t._id); setFormTab('basic'); setView('form');
   };
@@ -194,7 +196,7 @@ export default function ManageTreks() {
     t.region?.name?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const FORM_TABS = ['basic','itinerary','pricing','extras'];
+  const FORM_TABS = ['basic','itinerary','pricing','extras','guides'];
 
   return (
     <AdminLayout title="Manage Treks" subtitle="Create full trek detail pages linked to regions">
@@ -288,7 +290,7 @@ export default function ManageTreks() {
 
             {/* Tab nav */}
             <div className="mt-tabs">
-              {[['basic','📋 Basic Info'],['itinerary','🗓 Itinerary'],['pricing','💰 Pricing'],['extras','📦 Extras']].map(([k,l])=>(
+              {[['basic','📋 Basic Info'],['itinerary','🗓 Itinerary'],['pricing','💰 Pricing'],['extras','📦 Extras'],['guides','🧭 Guides']].map(([k,l])=>(
                 <button key={k} className={`mt-tab${formTab===k?' on':''}`} onClick={()=>setFormTab(k)}>{l}</button>
               ))}
             </div>
@@ -549,6 +551,17 @@ export default function ManageTreks() {
                 </>
               )}
             </div>
+
+{/* ── GUIDES ── */}
+{formTab === 'guides' && (
+  <GuideLinker
+    itemId={editId}
+    itemType="trek"
+    itemName={form.name}
+    initialGuides={form.availableGuides || []}
+    onSave={(ids) => setForm(f => ({ ...f, availableGuides: ids }))}
+  />
+)}
 
             <div style={{display:'flex',justifyContent:'flex-end',gap:10,marginTop:20}}>
               <button className="mt-btn-sec" onClick={()=>setView('list')}>Cancel</button>
